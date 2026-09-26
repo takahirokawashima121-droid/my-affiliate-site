@@ -5,9 +5,12 @@ interface Props {
   href: string;
   shop: string;
   size?: 'sm' | 'lg';
+  /** 計測用のカード名（GA4 の affiliate_click イベントで送信） */
+  item?: string;
 }
 
-const { kind, href, shop, size = 'sm' } = Astro.props;
+const { kind, href, shop, size = 'sm', item } = Astro.props;
+const network = href.includes('a8.net') ? 'a8' : href.includes('moshimo.com') ? 'moshimo' : undefined;
 
 const styles = {
   sale: { label: '最安値で購入する', color: 'bg-rose-600 hover:bg-rose-700 focus-visible:outline-rose-600' },
@@ -19,6 +22,10 @@ const styles = {
   href={href}
   target="_blank"
   rel="sponsored nofollow noopener noreferrer"
+  data-aff-network={network}
+  data-aff-shop={shop}
+  data-aff-type={kind}
+  data-aff-item={item}
   class:list={[
     'flex flex-col items-center justify-center rounded-xl text-center font-bold text-white shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2',
     styles.color,

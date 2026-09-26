@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { SITE } from '../consts';
+import GoogleAnalytics from './GoogleAnalytics.astro';
 
 export interface Props {
   title?: string;
@@ -34,6 +35,7 @@ const ogImage = new URL(image, Astro.site);
 
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<GoogleAnalytics />
 <title>{fullTitle}</title>
 <meta name="description" content={description} />
 <link rel="canonical" href={canonical} />

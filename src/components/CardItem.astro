@@ -1,7 +1,7 @@
 ---
 import CardImage from './CardImage.astro';
 import AffiliateButton from './AffiliateButton.astro';
-import { cardPath, formatDateTime, formatYen, rarityClass, type Card } from '../utils/cards';
+import { cardLabel, cardPath, formatDateTime, formatYen, rarityClass, type Card } from '../utils/cards';
 
 interface Props {
   card: Card;
@@ -57,7 +57,7 @@ const spread = salePrice - buybackPrice;
 
   <!-- アフィリエイト導線 -->
   <div class="mt-auto grid grid-cols-2 gap-2 p-3">
-    <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} />
-    <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} />
+    <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} item={cardLabel(card)} />
+    <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} />
   </div>
 </article>

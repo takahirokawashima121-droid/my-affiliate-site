@@ -24,6 +24,10 @@ const buttons: { mall: MallKey; color: string }[] = [
         href={moshimoClickUrl(mall, keyword)}
         target="_blank"
         rel="sponsored nofollow noopener noreferrer"
+        data-aff-network="moshimo"
+        data-aff-shop={MALLS[mall].label}
+        data-aff-type="mall_search"
+        data-aff-item={keyword}
         class:list={[
           'flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-center text-base font-bold text-white shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2',
           color,

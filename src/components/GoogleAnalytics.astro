@@ -1,0 +1,43 @@
+---
+// Google Analytics 4（gtag.js）
+// - ページビュー: 各ページは通常のページ遷移のため、config で自動計測される
+// - アフィリエイトクリック: rel="sponsored" のリンクのクリックを affiliate_click イベントとして送信
+// - 開発環境（npm run dev）では計測しない
+import { SITE } from '../consts';
+
+const id = SITE.gaMeasurementId;
+const enabled = import.meta.env.PROD && Boolean(id);
+---
+
+{enabled && (
+  <Fragment>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${id}`}></script>
+    <script is:inline define:vars={{ id }}>
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () {
+        window.dataLayer.push(arguments);
+      };
+      window.gtag('js', new Date());
+      window.gtag('config', id);
+
+      // アフィリエイトリンクのクリック計測（左クリック・中クリックの両方）
+      const track = (event) => {
+        if (event.type === 'auxclick' && event.button !== 1) return;
+        const link = event.target instanceof Element && event.target.closest('a[rel~="sponsored"]');
+        if (!link) return;
+        const d = link.dataset;
+        window.gtag('event', 'affiliate_click', {
+          link_url: link.href,
+          link_domain: link.hostname,
+          link_text: (link.textContent || '').replace(/\s+/g, ' ').trim(),
+          affiliate_network: d.affNetwork || link.hostname,
+          affiliate_shop: d.affShop || '',
+          affiliate_type: d.affType || 'other',
+          item_name: d.affItem || '',
+        });
+      };
+      document.addEventListener('click', track, true);
+      document.addEventListener('auxclick', track, true);
+    </script>
+  </Fragment>
+)}

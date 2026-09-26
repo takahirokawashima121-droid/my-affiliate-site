@@ -14,7 +14,8 @@
 // - 検索キーワードは「${name} ${rarity} ${cardNumber} ポケカ」（src/utils/cardFormat.ts の cardSearchKeyword）
 // - カード名とカード番号（例: 096/071）の両方を商品名に含む商品だけを候補にする
 // - 候補が見つからない・APIエラーのカードは一切変更しない
-// - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）以外の項目は変更しない
+// - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）と商品画像（imageUrl）以外の項目は変更しない
+// - 商品画像は最安商品の1枚目を 300x300 に変換して保存。画像がない商品の場合は既存の imageUrl を維持する
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
 // - 1カードごとに1秒待機する
 
@@ -70,15 +71,50 @@ export function nowJst(date = new Date()) {
 }
 
 /** 販売側の項目だけを差し替えたカードを返す（買取・画像などはそのまま） */
-export function applySale(card, item, updatedAt = nowJst()) {
+export function applySale(card, item, updatedAt = nowJst(), imageUrl = pickImageUrl(item)) {
   return {
     ...card,
+    // 商品画像が取れなかった場合は既存の画像URLを維持する
+    imageUrl: imageUrl ?? card.imageUrl,
     salePrice: item.itemPrice,
     saleShop: SHOP_NAME,
     saleUrl: moshimoLinkUrl('rakuten', item.itemUrl),
     saleImpressionUrl: moshimoImpressionUrl('rakuten'),
     updatedAt,
   };
+}
+
+/** 保存する画像サイズ（楽天のサムネイルサーバーは ?_ex=幅x高さ で縮小画像を返す） */
+export const IMAGE_SIZE = '300x300';
+
+/**
+ * 商品の1枚目の画像URLを、表示に十分な解像度（300x300）に変換して返す。
+ * API の mediumImageUrls は ?_ex=128x128（formatVersion=2 は文字列、1 は { imageUrl } の配列）。
+ */
+export function pickImageUrl(item) {
+  const first = item.mediumImageUrls?.[0] ?? item.smallImageUrls?.[0];
+  const raw = typeof first === 'string' ? first : first?.imageUrl;
+  if (!raw) return undefined;
+  try {
+    const url = new URL(raw);
+    if (url.protocol !== 'https:') return undefined;
+    if (url.hostname === 'thumbnail.image.rakuten.co.jp') url.searchParams.set('_ex', IMAGE_SIZE);
+    return url.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+/** 画像URLが実際に画像を返すか確認する（API が存在しない画像のURLを返すことがあるため） */
+async function isImageAvailable(url) {
+  try {
+    const res = await fetch(url);
+    const type = res.headers.get('content-type') ?? '';
+    await res.body?.cancel();
+    return res.ok && type.startsWith('image/');
+  } catch {
+    return false;
+  }
 }
 
 async function searchRakuten(card, { appId, accessKey }) {
@@ -154,8 +190,19 @@ async function main() {
         console.log(`${label}\n  - 該当商品なし（検索結果 ${items.length}件）→ 変更しません`);
         continue;
       }
-      updated.set(card.id, applySale(card, best));
-      console.log(`${label}\n  ✓ ¥${card.salePrice.toLocaleString()} → ¥${best.itemPrice.toLocaleString()}（${best.shopName}）\n    ${best.itemName}`);
+      let imageUrl = pickImageUrl(best);
+      let imageNote = imageUrl ?? '（商品画像なし → 既存の値を維持）';
+      if (imageUrl && !(await isImageAvailable(imageUrl))) {
+        // 新しい画像が取得できない場合、既存の画像が有効ならそれを維持し、無効なら空にしてプレースホルダー表示にする
+        const keepExisting = card.imageUrl !== '' && card.imageUrl !== imageUrl && (await isImageAvailable(card.imageUrl));
+        imageNote = `（取得できない画像のため保存しません → ${keepExisting ? '既存の画像を維持' : 'プレースホルダー表示'}）`;
+        imageUrl = keepExisting ? card.imageUrl : '';
+      }
+      const next = applySale(card, best, nowJst(), imageUrl);
+      updated.set(card.id, next);
+      console.log(
+        `${label}\n  ✓ ¥${card.salePrice.toLocaleString()} → ¥${best.itemPrice.toLocaleString()}（${best.shopName}）\n    ${best.itemName}\n    画像: ${imageNote}`,
+      );
     } catch (error) {
       failed++;
       console.log(`${label}\n  ✗ エラー: ${error.message} → 変更しません`);

@@ -1,40 +1,77 @@
 ---
-// カード画像（imageUrl 未設定時はプレースホルダーを表示）
-import { cardLabel, type Card } from '../utils/cards';
+// カード画像
+// - imageUrl があれば画像を表示（楽天のサムネイルは 300px / 600px を srcset で出し分け）
+// - imageUrl が空、または画像の読み込みに失敗した場合は、カード名・レアリティ・型番を配置したプレースホルダーに切り替える
+import { cardModel, rarityClass, type Card } from '../utils/cards';
 
 interface Props {
   card: Card;
+  /** ファーストビューの画像は true（LCP 改善のため lazy にしない） */
   eager?: boolean;
+  /** 表示幅のヒント（srcset の選択に使用） */
+  sizes?: string;
   class?: string;
 }
 
-const { card, eager = false, class: className } = Astro.props;
-const { imageUrl } = card.data;
-const label = cardLabel(card);
+const { card, eager = false, sizes = '(min-width: 640px) 112px, 96px', class: className } = Astro.props;
+const { name, rarity, cardNumber, imageUrl } = card.data;
+const alt = `${name} ${rarity} [${cardNumber}]`;
+// 読み込みエラー時に画像を隠し、直後のプレースホルダーを表示する（JS バンドル不要のインラインハンドラ）
+const onImageError = 'this.hidden=true;this.nextElementSibling.hidden=false';
+
+// 楽天のサムネイルサーバー（?_ex=幅x高さ）なら高解像度版も用意する
+let srcset: string | undefined;
+if (imageUrl) {
+  try {
+    const url = new URL(imageUrl);
+    if (url.hostname === 'thumbnail.image.rakuten.co.jp') {
+      const at = (size: string) => {
+        url.searchParams.set('_ex', size);
+        return url.toString();
+      };
+      srcset = `${at('300x300')} 300w, ${at('600x600')} 600w`;
+    }
+  } catch {
+    // 相対パス（public/ 配下の画像）はそのまま使う
+  }
+}
 ---
 
-{imageUrl ? (
-  <img
-    src={imageUrl}
-    alt={label}
-    width="245"
-    height="342"
-    loading={eager ? 'eager' : 'lazy'}
-    fetchpriority={eager ? 'high' : undefined}
-    decoding="async"
-    class:list={['aspect-[63/88] w-full rounded-lg object-cover shadow', className]}
-  />
-) : (
+<div class:list={['@container relative aspect-[63/88] w-full overflow-hidden rounded-lg', className]}>
+  {imageUrl && (
+    <img
+      src={imageUrl}
+      srcset={srcset}
+      sizes={srcset ? sizes : undefined}
+      alt={alt}
+      width="300"
+      height="300"
+      loading={eager ? 'eager' : 'lazy'}
+      fetchpriority={eager ? 'high' : undefined}
+      decoding="async"
+      class="absolute inset-0 h-full w-full bg-white object-contain"
+      onerror={onImageError}
+    />
+  )}
+
+  <!-- プレースホルダー（画像なし・読み込み失敗時） -->
   <div
-    class:list={['flex aspect-[63/88] w-full flex-col items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400 ring-1 ring-slate-200', className]}
+    class="absolute inset-0 rounded-lg bg-gradient-to-br from-amber-300 via-fuchsia-400 to-indigo-500 p-[3%]"
     role="img"
-    aria-label={`${label}（画像準備中）`}
+    aria-label={`${alt}（画像準備中）`}
+    hidden={Boolean(imageUrl)}
   >
-    <svg viewBox="0 0 24 24" class="h-1/4 max-h-16 w-1/4 max-w-16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-      <circle cx="12" cy="12" r="9"></circle>
-      <path d="M3 12h6m6 0h6"></path>
-      <circle cx="12" cy="12" r="3"></circle>
-    </svg>
-    <span class="mt-1 text-[10px]">画像準備中</span>
+    <div class="flex h-full w-full flex-col items-center justify-between rounded-[6%] bg-gradient-to-b from-slate-800 to-slate-950 p-[8%] text-center text-white">
+      <span class={`rounded px-[6%] py-[1.5%] text-[9cqw] font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span>
+      <div class="flex flex-col items-center gap-[4cqw]">
+        <svg viewBox="0 0 24 24" class="h-[18cqw] w-[18cqw] text-white/30" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"></circle>
+          <path d="M3 12h6m6 0h6"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span class="line-clamp-3 text-[11cqw] leading-tight font-bold break-words">{name}</span>
+      </div>
+      <span class="font-mono text-[8cqw] text-white/70">[{cardModel(card)}]</span>
+    </div>
   </div>
-)}
+</div>

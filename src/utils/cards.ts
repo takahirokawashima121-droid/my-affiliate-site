@@ -1,5 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { cardDisplayName, modelCode } from './cardFormat';
+import { STANDARD_REGULATIONS } from '../consts';
 
 export type Card = CollectionEntry<'cards'>;
 
@@ -48,6 +49,34 @@ export function priceGap(card: Card): { valid: boolean; spread: number; rate: nu
  */
 export function showsBuybackPrice(card: Card): boolean {
   return card.data.saleInStock;
+}
+
+/** 現在のスタンダードレギュレーションで使えるカードか（レギュレーションマークが H・I・J 等） */
+export function isStandardLegal(card: Card): boolean {
+  const mark = card.data.regulationMark;
+  return mark !== undefined && (STANDARD_REGULATIONS as readonly string[]).includes(mark);
+}
+
+/** 同じカード名の別バージョン（別レアリティ・別の弾）を、販売価格の安い順に返す（在庫なしは最後） */
+export function sameNameVariants(card: Card, cards: Card[]): Card[] {
+  const price = (c: Card) => (c.data.saleInStock ? c.data.salePrice : Infinity);
+  return cards.filter((c) => c.id !== card.id && c.data.name === card.data.name).sort((a, b) => price(a) - price(b));
+}
+
+/**
+ * 同じカード名が複数登録されている場合に、在庫ありで販売価格が最も安いカードの ID の集合を返す。
+ * 一覧で「最安版」バッジを付けるために使う（同名でも弾によって効果が異なる場合がある点に注意）。
+ */
+export function cheapestVariantIds(cards: Card[]): Set<string> {
+  const groups = new Map<string, Card[]>();
+  for (const c of cards) groups.set(c.data.name, [...(groups.get(c.data.name) ?? []), c]);
+  const ids = new Set<string>();
+  for (const group of groups.values()) {
+    const inStock = group.filter((c) => c.data.saleInStock && c.data.salePrice > 0);
+    if (group.length < 2 || inStock.length === 0) continue;
+    ids.add(inStock.reduce((min, c) => (c.data.salePrice < min.data.salePrice ? c : min)).id);
+  }
+  return ids;
 }
 
 /** 「SV2D 096/071」形式の型番 */

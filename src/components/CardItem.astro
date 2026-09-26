@@ -1,14 +1,17 @@
 ---
 import CardImage from './CardImage.astro';
 import AffiliateButton from './AffiliateButton.astro';
-import { cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, rarityClass, type Card } from '../utils/cards';
+import CardTags from './CardTags.astro';
+import { cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, type Card } from '../utils/cards';
 
 interface Props {
   card: Card;
   eager?: boolean;
+  /** 同名カードの中で最安値のとき true（「最安版」バッジ） */
+  cheapest?: boolean;
 }
 
-const { card, eager = false } = Astro.props;
+const { card, eager = false, cheapest = false } = Astro.props;
 const { name, rarity, cardNumber, expansionCode, salePrice, saleInStock, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
 const gap = priceGap(card);
 // 買取価格の「相場確認中」は、販売価格がある（在庫あり）のに逆ザヤの場合のみ
@@ -21,6 +24,7 @@ const model = cardModel(card);
   class="card-item flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
   data-search={`${name} ${rarity} ${expansionCode} ${cardNumber}`}
   data-rarity={rarity}
+  data-regulation={card.data.regulationMark ?? ''}
   data-sale={saleInStock ? salePrice : ''}
   data-buyback={buybackShown ? buybackPrice : ''}
   data-updated={updatedAt.valueOf()}
@@ -32,7 +36,7 @@ const model = cardModel(card);
     </div>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <span class={`self-start rounded px-2 py-0.5 text-xs font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span>
+      <CardTags card={card} cheapest={cheapest} />
       <h3 class="mt-1.5 text-base font-bold leading-snug text-slate-900 group-hover:text-blue-600 sm:text-lg">
         {name} {rarity} <span class="mt-0.5 block font-mono text-xs font-semibold text-slate-500">[{model}]</span>
       </h3>

@@ -4,32 +4,38 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CardImage from '../../components/CardImage.astro';
 import CardItem from '../../components/CardItem.astro';
+import CardTags from '../../components/CardTags.astro';
 import AffiliateButton from '../../components/AffiliateButton.astro';
 import AffiliatePixels from '../../components/AffiliatePixels.astro';
 import MallSearchButtons from '../../components/MallSearchButtons.astro';
 import { cardSearchKeyword } from '../../utils/cardFormat';
 import { SITE } from '../../consts';
-import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, rarityClass, type Card } from '../../utils/cards';
+import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, isStandardLegal, sameNameVariants, cheapestVariantIds, type Card } from '../../utils/cards';
 
 export const getStaticPaths = (async () => {
   const cards = await getCards();
+  const cheapestIds = cheapestVariantIds(cards);
   return cards.map((card) => {
-    // 関連カード：同じカード名 → 同じレアリティ → その他 の順に最大3件
-    const score = (c: Card) => (c.data.name === card.data.name ? 2 : 0) + (c.data.rarity === card.data.rarity ? 1 : 0);
+    // 同じカード名の別レアリティ・別バージョン（安い順）
+    const variants = sameNameVariants(card, cards);
+    // 関連カード：同名カード（variants で別途表示）を除き、同じレアリティ → その他 の順に最大3件
     const related = cards
-      .filter((c) => c.id !== card.id)
-      .sort((a, b) => score(b) - score(a))
+      .filter((c) => c.id !== card.id && c.data.name !== card.data.name)
+      .sort((a, b) => Number(b.data.rarity === card.data.rarity) - Number(a.data.rarity === card.data.rarity))
       .slice(0, 3);
-    return { params: { id: card.id }, props: { card, related } };
+    return { params: { id: card.id }, props: { card, related, variants, cheapestIds: [...cheapestIds] } };
   });
 }) satisfies GetStaticPaths;
 
 interface Props {
   card: Card;
   related: Card[];
+  variants: Card[];
+  cheapestIds: string[];
 }
 
-const { card, related } = Astro.props;
+const { card, related, variants, cheapestIds } = Astro.props;
+const isCheapest = (c: Card) => cheapestIds.includes(c.id);
 const { name, rarity, cardNumber, expansionCode, imageUrl, salePrice, saleInStock, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
 const label = cardLabel(card); // 例: ナンジャモ SAR [SV2D 096/071]
 const model = cardModel(card); // 例: SV2D 096/071
@@ -99,7 +105,7 @@ const jsonLd = {
     <div class="min-w-0">
       <p class="mb-4 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-600" role="note">{SITE.priceNotice}</p>
 
-      <span class={`inline-block rounded px-2.5 py-0.5 text-sm font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span>
+      <CardTags card={card} cheapest={isCheapest(card)} size="lg" />
       <h1 class="mt-2 text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">
         {name} {rarity} <span class="font-mono text-xl font-bold text-slate-500 sm:text-2xl">[{model}]</span>
         <span class="mt-1 block text-base font-bold text-slate-500 sm:text-lg">販売最安値・買取相場比較</span>
@@ -116,7 +122,12 @@ const jsonLd = {
           <Fragment>
             <dt class="text-slate-500">レギュレーション</dt>
             <dd class="text-slate-900">
-              <span class="inline-flex h-5 w-5 items-center justify-center rounded border border-slate-400 font-mono text-xs font-bold">{card.data.regulationMark}</span>
+              <span class="inline-flex h-5 w-5 items-center justify-center rounded border-2 border-slate-800 font-mono text-xs font-extrabold">{card.data.regulationMark}</span>
+              {isStandardLegal(card) ? (
+                <span class="ml-2 text-xs font-bold text-emerald-700">スタンダードで使用可能</span>
+              ) : (
+                <span class="ml-2 text-xs text-slate-500">スタンダードでは使用不可（エクストラ等）</span>
+              )}
             </dd>
           </Fragment>
         )}
@@ -184,6 +195,32 @@ const jsonLd = {
         </p>
       </section>
 
+      {variants.length > 0 && (
+        <section aria-labelledby="variants" class="mt-8 rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
+          <h2 id="variants" class="text-lg font-bold text-slate-900">別レアリティ・別バージョンの相場を見る</h2>
+          <p class="mt-1 text-xs text-slate-600">
+            「{name}」はほかに{variants.length}種類掲載しています。{isCheapest(card) && <strong class="text-amber-700">このカードが同名カードの中で最安版です。</strong>}
+            同じ名前でも収録弾によってワザや特性が異なる場合があります。
+          </p>
+          <ul class="mt-4 divide-y divide-amber-200/70">
+            {variants.map((v) => (
+              <li>
+                <a href={cardPath(v)} class="group flex flex-wrap items-center gap-x-3 gap-y-1 py-3 hover:bg-amber-100/50 sm:flex-nowrap">
+                  <CardTags card={v} cheapest={isCheapest(v)} />
+                  <span class="min-w-0 flex-1 text-sm font-bold text-slate-900 group-hover:text-blue-600">
+                    {v.data.name} {v.data.rarity} <span class="font-mono text-xs font-semibold text-slate-500">[{cardModel(v)}]</span>
+                  </span>
+                  <span class="text-sm font-extrabold tabular-nums">
+                    {v.data.saleInStock ? <span class="text-rose-600">{formatYen(v.data.salePrice)}</span> : <span class="text-slate-400">在庫なし</span>}
+                  </span>
+                  <span class="text-xs font-medium text-blue-600">相場を見る →</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <a href="/" class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline">← 相場一覧（トップページ）に戻る</a>
     </div>
   </article>
@@ -192,7 +229,7 @@ const jsonLd = {
     <section aria-labelledby="related" class="mt-16">
       <h2 id="related" class="mb-5 text-xl font-bold text-slate-900">ほかのカードの相場</h2>
       <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {related.map((c) => <CardItem card={c} />)}
+        {related.map((c) => <CardItem card={c} cheapest={isCheapest(c)} />)}
       </div>
     </section>
   )}

@@ -3,12 +3,13 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CardItem from '../components/CardItem.astro';
 import AffiliatePixels from '../components/AffiliatePixels.astro';
 import PostCard from '../components/PostCard.astro';
-import { SITE } from '../consts';
-import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cardModel } from '../utils/cards';
+import { SITE, STANDARD_REGULATIONS } from '../consts';
+import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cardModel, cheapestVariantIds } from '../utils/cards';
 import { getPosts } from '../utils/posts';
 
 const cards = await getCards();
 const rarities = getRarities(cards);
+const cheapestIds = cheapestVariantIds(cards); // 同名カードが複数あるときの最安版
 const shops = new Set(cards.flatMap((c) => [c.data.saleShop, c.data.buybackShop]));
 const updated = latestUpdate(cards);
 const posts = (await getPosts()).slice(0, 6);
@@ -54,7 +55,7 @@ const jsonLd = [
 ];
 
 const chip =
-  'rarity-chip rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 aria-pressed:border-amber-400 aria-pressed:bg-amber-400 aria-pressed:font-bold aria-pressed:text-slate-900 aria-pressed:shadow-sm aria-pressed:hover:border-amber-400 aria-pressed:hover:text-slate-900';
+  'filter-chip rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 aria-pressed:border-amber-400 aria-pressed:bg-amber-400 aria-pressed:font-bold aria-pressed:text-slate-900 aria-pressed:shadow-sm aria-pressed:hover:border-amber-400 aria-pressed:hover:text-slate-900';
 ---
 
 <BaseLayout jsonLd={jsonLd}>
@@ -124,9 +125,15 @@ const chip =
         </label>
       </div>
       <div class="flex flex-wrap items-center gap-2" role="group" aria-label="レアリティで絞り込み">
-        <span class="mr-1 text-sm text-slate-500">レアリティ:</span>
-        <button type="button" class={chip} data-rarity="" aria-pressed="true">すべて</button>
-        {rarities.map((r) => <button type="button" class={chip} data-rarity={r} aria-pressed="false">{r}</button>)}
+        <span class="mr-1 w-full text-sm text-slate-500 sm:w-auto">レアリティ:</span>
+        <button type="button" class={chip} data-filter="rarity" data-value="" aria-pressed="true">すべて</button>
+        {rarities.map((r) => <button type="button" class={chip} data-filter="rarity" data-value={r} aria-pressed="false">{r}</button>)}
+      </div>
+      <div class="flex flex-wrap items-center gap-2" role="group" aria-label="レギュレーションで絞り込み">
+        <span class="mr-1 w-full text-sm text-slate-500 sm:w-auto">レギュレーション:</span>
+        <button type="button" class={chip} data-filter="regulation" data-value="" aria-pressed="true">すべて</button>
+        {STANDARD_REGULATIONS.map((m) => <button type="button" class={chip} data-filter="regulation" data-value={m} aria-pressed="false">{m}</button>)}
+        <span class="ml-1 inline-flex items-center gap-1 text-xs text-emerald-700"><span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>H・I・J はスタンダードで使用可能</span>
       </div>
     </div>
 
@@ -135,7 +142,7 @@ const chip =
     </p>
 
     <div id="card-grid" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {cards.map((card, i) => <CardItem card={card} eager={i < 3} />)}
+      {cards.map((card, i) => <CardItem card={card} eager={i < 3} cheapest={cheapestIds.has(card.id)} />)}
     </div>
 
     <div id="card-empty" class="hidden rounded-2xl border border-dashed border-slate-300 py-16 text-center text-slate-500">
@@ -172,7 +179,7 @@ const chip =
   const sortSelect = document.getElementById('card-sort') as HTMLSelectElement;
   const countEl = document.getElementById('card-count')!;
   const emptyEl = document.getElementById('card-empty')!;
-  const chips = [...document.querySelectorAll<HTMLButtonElement>('.rarity-chip')];
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('.filter-chip')];
   const items = [...grid.querySelectorAll<HTMLElement>('.card-item')];
 
   // 全角/半角・大文字/小文字・ひらがな/カタカナの違いを吸収して検索
@@ -185,7 +192,8 @@ const chip =
       .trim();
 
   const index = new Map(items.map((el) => [el, normalize(el.dataset.search ?? '')]));
-  let rarity = '';
+  // 絞り込み条件（レアリティ・レギュレーション・キーワードはすべて AND 条件）
+  const filters: Record<string, string> = { rarity: '', regulation: '' };
 
   const sorters: Record<string, (a: HTMLElement, b: HTMLElement) => number> = {
     new: (a, b) => Number(b.dataset.updated) - Number(a.dataset.updated),
@@ -200,7 +208,10 @@ const chip =
     let visible = 0;
     for (const el of items) {
       const text = index.get(el)!;
-      const show = (!rarity || el.dataset.rarity === rarity) && terms.every((t) => text.includes(t));
+      const show =
+        (!filters.rarity || el.dataset.rarity === filters.rarity) &&
+        (!filters.regulation || el.dataset.regulation === filters.regulation) &&
+        terms.every((t) => text.includes(t));
       el.hidden = !show;
       if (show) visible++;
     }
@@ -213,8 +224,9 @@ const chip =
   sortSelect.addEventListener('change', update);
   for (const chip of chips) {
     chip.addEventListener('click', () => {
-      rarity = chip.dataset.rarity ?? '';
-      for (const c of chips) c.setAttribute('aria-pressed', String(c === chip));
+      const group = chip.dataset.filter ?? '';
+      filters[group] = chip.dataset.value ?? '';
+      for (const c of chips) if (c.dataset.filter === group) c.setAttribute('aria-pressed', String(c === chip));
       update();
     });
   }

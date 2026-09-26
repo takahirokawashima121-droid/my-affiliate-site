@@ -15,6 +15,7 @@
 // - カード名とカード番号（例: 096/071）の両方を商品名に含む商品だけを候補にする
 // - 全キーワードで在庫のある該当商品がないカードは「在庫なし」（salePrice=0, saleInStock=false）にする
 // - APIエラーのカードは一切変更しない
+// - 価格・在庫・購入リンク・商品画像のいずれかに変化があったカードだけを更新する（変化がなければ updatedAt も変えない）
 // - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）と商品画像（imageUrl）以外の項目は変更しない
 // - 商品画像は最安商品の1枚目を 300x300 に変換して保存。画像がない商品の場合は既存の imageUrl を維持する
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
@@ -100,6 +101,14 @@ export function markOutOfStock(card, updatedAt = nowJst()) {
     saleImpressionUrl: moshimoImpressionUrl('rakuten'),
     updatedAt,
   };
+}
+
+/** 変化を判定する項目（価格・在庫・購入リンク・商品画像）。updatedAt は含めない */
+const TRACKED_KEYS = ['salePrice', 'saleInStock', 'saleShop', 'saleUrl', 'saleImpressionUrl', 'imageUrl'];
+
+/** 取得結果に意味のある変化があるか（変化がなければ updatedAt も含めて書き換えない） */
+export function hasMeaningfulChange(before, after) {
+  return TRACKED_KEYS.some((key) => before[key] !== after[key]);
 }
 
 /** cards.json の項目の並び順（書き出し時にそろえる） */
@@ -218,16 +227,24 @@ async function main() {
 
   const updated = new Map();
   let failed = 0;
-  let outOfStock = 0;
+  let unchanged = 0;
+  // 価格・在庫・リンク・画像のいずれかが変わったカードだけを更新する（updatedAt も変化時のみ更新）
+  const record = (card, next, message) => {
+    if (hasMeaningfulChange(card, next)) {
+      updated.set(card.id, next);
+      console.log(message);
+    } else {
+      unchanged++;
+      console.log(`${message}\n  = 変化なし → 変更しません`);
+    }
+  };
   for (const [i, card] of targets.entries()) {
     if (i > 0) await sleep(WAIT_MS);
     const label = `[${i + 1}/${targets.length}] ${cardDisplayName(card)}`;
     try {
       const { best, fallback, tried } = await findCheapest(card, { appId, accessKey });
       if (!best) {
-        updated.set(card.id, markOutOfStock(card));
-        outOfStock++;
-        console.log(`${label}\n  - 在庫のある該当商品なし（${tried.join(' → ')}）→「在庫なし」に設定`);
+        record(card, markOutOfStock(card), `${label}\n  - 在庫のある該当商品なし（${tried.join(' → ')}）→「在庫なし」`);
         continue;
       }
       if (fallback) console.log(`${label}\n  ↻ フォールバック検索で取得（${tried.join(' → ')}）`);
@@ -239,10 +256,11 @@ async function main() {
         imageNote = `（取得できない画像のため保存しません → ${keepExisting ? '既存の画像を維持' : 'プレースホルダー表示'}）`;
         imageUrl = keepExisting ? card.imageUrl : '';
       }
-      const next = applySale(card, best, nowJst(), imageUrl);
-      updated.set(card.id, next);
-      console.log(
-        `${label}\n  ✓ ¥${card.salePrice.toLocaleString()} → ¥${best.itemPrice.toLocaleString()}（${best.shopName}）\n    ${best.itemName}\n    画像: ${imageNote}`,
+      const before = card.saleInStock ? `¥${card.salePrice.toLocaleString()}` : '在庫なし';
+      record(
+        card,
+        applySale(card, best, nowJst(), imageUrl),
+        `${label}\n  ✓ ${before} → ¥${best.itemPrice.toLocaleString()}（${best.shopName}）\n    ${best.itemName}\n    画像: ${imageNote}`,
       );
     } catch (error) {
       failed++;
@@ -250,7 +268,7 @@ async function main() {
     }
   }
 
-  console.log(`\n価格更新: ${updated.size - outOfStock}枚 / 在庫なし: ${outOfStock}枚 / エラー（変更なし）: ${failed}枚`);
+  console.log(`\n更新: ${updated.size}枚 / 変化なし: ${unchanged}枚 / エラー（変更なし）: ${failed}枚`);
   // 全件エラー（キーの失効・API障害など）は異常終了にして、GitHub Actions の失敗通知で気づけるようにする
   if (targets.length > 0 && failed === targets.length) process.exitCode = 1;
   if (dryRun || updated.size === 0) return;

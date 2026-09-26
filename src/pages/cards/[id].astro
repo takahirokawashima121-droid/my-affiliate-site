@@ -35,6 +35,17 @@ const label = cardLabel(card); // 例: ナンジャモ SAR [SV2D 096/071]
 const model = cardModel(card); // 例: SV2D 096/071
 const updatedText = formatDateTime(updatedAt);
 const gap = priceGap(card); // 逆ザヤ（買取 ≧ 販売）の場合は差額・買取率を出さない
+const fromRakuten = saleShop === '楽天市場'; // 販売価格を楽天市場から取得できたカードか
+// 楽天市場の商品画像は、規約に沿って該当商品ページ（もしも経由）へのリンクと出典表記を付ける
+const rakutenImage = fromRakuten && imageUrl.startsWith('https://thumbnail.image.rakuten.co.jp/');
+const affiliateLinkProps = {
+  href: saleUrl,
+  target: '_blank',
+  rel: 'sponsored nofollow noopener noreferrer',
+  'data-aff-network': 'moshimo',
+  'data-aff-shop': '楽天市場',
+  'data-aff-item': label,
+};
 
 const title = `【ポケカ】${label}の販売最安値・買取相場比較`;
 const description = `${label}の販売最安値は${formatYen(salePrice)}（${saleShop}）、買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
@@ -65,15 +76,22 @@ const jsonLd = {
   <article class="grid gap-8 md:grid-cols-[minmax(0,280px)_1fr] lg:gap-12">
     <!-- 画像 -->
     <div class="mx-auto w-full max-w-[240px] md:max-w-none">
-      <CardImage card={card} eager sizes="(min-width: 768px) 280px, 240px" class="rounded-2xl shadow-lg" />
+      {rakutenImage ? (
+        <Fragment>
+          <a {...affiliateLinkProps} data-aff-type="sale_image" class="block rounded-2xl transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600" title="楽天市場の商品ページを開く（新しいタブ）">
+            <CardImage card={card} eager sizes="(min-width: 768px) 280px, 240px" class="rounded-2xl shadow-lg" />
+          </a>
+          <p class="mt-2 text-center text-xs text-slate-500">
+            画像出典: <a {...affiliateLinkProps} data-aff-type="sale_image_credit" class="underline hover:text-indigo-600">楽天市場</a>
+          </p>
+        </Fragment>
+      ) : (
+        <CardImage card={card} eager sizes="(min-width: 768px) 280px, 240px" class="rounded-2xl shadow-lg" />
+      )}
     </div>
 
     <div class="min-w-0">
-      {SITE.sampleData && (
-        <p class="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800" role="note">
-          ※ 現在表示している価格はデモ用のサンプルデータです。
-        </p>
-      )}
+      <p class="mb-4 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-600" role="note">{SITE.priceNotice}</p>
 
       <span class={`inline-block rounded px-2.5 py-0.5 text-sm font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span>
       <h1 class="mt-2 text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">
@@ -102,6 +120,7 @@ const jsonLd = {
             <p class="text-sm font-bold text-rose-600">販売最安値</p>
             <p class="mt-1 text-3xl font-extrabold tabular-nums text-rose-600 sm:text-4xl">{formatYen(salePrice)}</p>
             <p class="mt-1 text-sm text-slate-600">ショップ：<span class="font-semibold text-slate-900">{saleShop}</span></p>
+            {!fromRakuten && <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">参考価格：楽天市場で該当商品を取得できなかったため、最新の価格はショップでご確認ください</p>}
             <div class="mt-4">
               <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} size="lg" item={label} />
             </div>

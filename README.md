@@ -36,7 +36,7 @@
 
 画面上の表記は「ナンジャモ SAR [SV2D 096/071]」、楽天API・モール検索のキーワードは「ナンジャモ SAR 096/071 ポケカ」の形式で自動生成されます（`src/utils/cardFormat.ts`）。
 
-販売価格は `npm run update-prices` で楽天市場の最安値に更新できます（`.env` に `RAKUTEN_APP_ID` と `RAKUTEN_ACCESS_KEY` が必要）。買取価格は現在サンプルデータです。実データに差し替えたら `src/consts.ts` の `sampleData` を `false` にしてください（トップの注意書きが消えます）。
+販売価格は `npm run update-prices` で楽天市場の最安値に更新できます（`.env` に `RAKUTEN_APP_ID` と `RAKUTEN_ACCESS_KEY` が必要）。買取価格は販売相場から算出した目安です。価格の出典に関する注意書きは `src/consts.ts` の `priceNotice` で変更できます（データの取得方法を変えたら実態に合わせて更新してください）。
 
 ## コラム記事の追加
 

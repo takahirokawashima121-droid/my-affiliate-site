@@ -14,8 +14,9 @@ export const SITE = {
   gaMeasurementId: 'G-LVWFTFK7L7', // Google Analytics 4 測定ID（空にすると計測タグを出力しない）
   googleSiteVerification: 'WNP7X16_Qz86ctYfInfGAMD753rBl78ULK5nTMZoH8g', // Google Search Console の所有権確認
   postsPerPage: 12,
-  // true の間はトップに「サンプルデータ」の注意書きを表示。実データに差し替えたら false に
-  sampleData: true,
+  // 価格データの出典に関する注意書き（トップ・カード詳細に表示）。データの取得方法を変えたら実態に合わせて更新すること
+  priceNotice:
+    '※ 販売価格は楽天市場の商品データ（楽天ウェブサービス）をもとに更新しています（一部カードは参考価格）。買取価格は販売相場から算出した目安です。最新の価格・在庫は各ショップでご確認ください。',
 };
 
 export const NAV = [

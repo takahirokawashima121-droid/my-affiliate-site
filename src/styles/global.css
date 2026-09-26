@@ -3,10 +3,10 @@
 
 @theme {
   --font-sans: system-ui, -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo, sans-serif;
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
 }
 
 html {
@@ -16,5 +16,5 @@ html {
 
 /* 記事内のアフィリエイトボタン: <a class="btn-affiliate" href="..." rel="sponsored nofollow noopener" target="_blank"> */
 @utility btn-affiliate {
-  @apply inline-block rounded-lg bg-orange-500 px-6 py-3 font-bold text-white no-underline shadow-sm transition hover:bg-orange-600;
+  @apply inline-block rounded-lg bg-rose-600 px-6 py-3 font-bold text-white no-underline shadow-sm transition hover:bg-rose-700;
 }

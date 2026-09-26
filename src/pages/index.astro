@@ -1,47 +1,208 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import CardItem from '../components/CardItem.astro';
 import PostCard from '../components/PostCard.astro';
 import { SITE } from '../consts';
-import { getPosts, getAllTags } from '../utils/posts';
+import { getCards, getRarities, latestUpdate, formatDateTime } from '../utils/cards';
+import { getPosts } from '../utils/posts';
 
-const posts = await getPosts();
-const latest = posts.slice(0, 6);
-const tags = getAllTags(posts).slice(0, 12);
+const cards = await getCards();
+const rarities = getRarities(cards);
+const shops = new Set(cards.flatMap((c) => [c.data.saleShop, c.data.buybackShop]));
+const updated = latestUpdate(cards);
+const posts = (await getPosts()).slice(0, 3);
 
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  name: SITE.title,
-  description: SITE.description,
-  url: Astro.site?.toString(),
-  inLanguage: SITE.lang,
-};
+// 構造化データ：サイト情報 + 掲載カード一覧（商品と最安値）
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE.title,
+    description: SITE.description,
+    url: Astro.site?.toString(),
+    inLanguage: SITE.lang,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'ポケモンカード 販売・買取価格一覧',
+    numberOfItems: cards.length,
+    itemListElement: cards.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': 'Product',
+        name: `${c.data.name} ${c.data.rarity} ${c.data.modelNumber}`,
+        sku: c.data.modelNumber,
+        brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
+        ...(c.data.imageUrl && { image: new URL(c.data.imageUrl, Astro.site).toString() }),
+        offers: {
+          '@type': 'Offer',
+          price: c.data.salePrice,
+          priceCurrency: 'JPY',
+          seller: { '@type': 'Organization', name: c.data.saleShop },
+          url: c.data.saleUrl,
+        },
+      },
+    })),
+  },
+];
+
+const chip =
+  'rarity-chip rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-300 bg-white text-slate-600 hover:border-indigo-400 hover:text-indigo-600 aria-pressed:border-indigo-600 aria-pressed:bg-indigo-600 aria-pressed:text-white';
 ---
 
 <BaseLayout jsonLd={jsonLd}>
-  <section class="mb-12 rounded-2xl bg-gradient-to-br from-brand-50 to-white px-6 py-10 text-center sm:py-14">
-    <h1 class="text-2xl font-bold text-gray-900 sm:text-4xl">{SITE.title}</h1>
-    <p class="mx-auto mt-4 max-w-xl text-sm text-gray-600 sm:text-base">{SITE.description}</p>
+  <!-- ヒーロー -->
+  <section class="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-indigo-600 to-sky-500 px-6 py-10 text-white shadow-lg sm:px-10 sm:py-14">
+    <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10" aria-hidden="true"></div>
+    <div class="pointer-events-none absolute -bottom-20 right-24 h-48 w-48 rounded-full bg-white/5" aria-hidden="true"></div>
+    <p class="text-xs font-semibold tracking-widest text-indigo-100">POKEMON CARD PRICE COMPARISON</p>
+    <h1 class="mt-2 text-2xl font-extrabold leading-tight sm:text-4xl">
+      中古ポケカの<span class="whitespace-nowrap">販売最安値</span>と<span class="whitespace-nowrap">買取最高値</span>を<br class="hidden sm:inline" />ひと目で比較
+    </h1>
+    <p class="mt-4 max-w-2xl text-sm text-indigo-100 sm:text-base">{SITE.description}</p>
+    <dl class="mt-8 grid max-w-xl grid-cols-3 gap-3 text-center">
+      <div class="rounded-xl bg-white/10 px-2 py-3 backdrop-blur">
+        <dt class="text-[11px] text-indigo-100">掲載カード</dt>
+        <dd class="text-xl font-bold sm:text-2xl">{cards.length}<span class="text-sm font-normal">種</span></dd>
+      </div>
+      <div class="rounded-xl bg-white/10 px-2 py-3 backdrop-blur">
+        <dt class="text-[11px] text-indigo-100">比較ショップ</dt>
+        <dd class="text-xl font-bold sm:text-2xl">{shops.size}<span class="text-sm font-normal">店</span></dd>
+      </div>
+      <div class="rounded-xl bg-white/10 px-2 py-3 backdrop-blur">
+        <dt class="text-[11px] text-indigo-100">最終更新</dt>
+        <dd class="mt-1 text-xs font-bold sm:text-sm">{updated ? formatDateTime(updated) : '-'}</dd>
+      </div>
+    </dl>
   </section>
 
-  <section aria-labelledby="latest">
-    <div class="mb-6 flex items-end justify-between">
-      <h2 id="latest" class="text-xl font-bold text-gray-900">新着記事</h2>
-      <a href="/blog/" class="text-sm text-brand-600 hover:underline">すべて見る →</a>
+  {SITE.sampleData && (
+    <p class="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="note">
+      ※ 現在表示している価格・リンクはデモ用のサンプルデータです。実際の相場とは異なります。
+    </p>
+  )}
+
+  <!-- 検索・絞り込み・並び替え -->
+  <section aria-labelledby="price-list">
+    <h2 id="price-list" class="sr-only">カード価格一覧</h2>
+    <div class="mb-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div class="flex flex-col gap-3 sm:flex-row">
+        <label class="relative flex-1">
+          <span class="sr-only">カード名・型番・レアリティで検索</span>
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path stroke-linecap="round" d="m20 20-3.5-3.5"></path>
+          </svg>
+          <input
+            id="card-search"
+            type="search"
+            placeholder="カード名・型番・レアリティで検索（例：なんじゃも、SAR）"
+            autocomplete="off"
+            class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-base outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200"
+          />
+        </label>
+        <label class="flex items-center gap-2 sm:w-56">
+          <span class="shrink-0 text-sm text-slate-500">並び替え</span>
+          <select
+            id="card-sort"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+          >
+            <option value="new">新着順</option>
+            <option value="sale-asc">販売が安い順</option>
+            <option value="buyback-desc">買取が高い順</option>
+          </select>
+        </label>
+      </div>
+      <div class="flex flex-wrap items-center gap-2" role="group" aria-label="レアリティで絞り込み">
+        <span class="mr-1 text-sm text-slate-500">レアリティ:</span>
+        <button type="button" class={chip} data-rarity="" aria-pressed="true">すべて</button>
+        {rarities.map((r) => <button type="button" class={chip} data-rarity={r} aria-pressed="false">{r}</button>)}
+      </div>
     </div>
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {latest.map((post, i) => <PostCard post={post} eager={i < 3} />)}
+
+    <p class="mb-4 text-sm text-slate-500" aria-live="polite">
+      <span id="card-count">{cards.length}</span>件のカードを表示中
+    </p>
+
+    <div id="card-grid" class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      {cards.map((card, i) => <CardItem card={card} eager={i < 3} />)}
     </div>
+
+    <div id="card-empty" class="hidden rounded-2xl border border-dashed border-slate-300 py-16 text-center text-slate-500">
+      <p class="font-medium">該当するカードが見つかりませんでした</p>
+      <p class="mt-1 text-sm">キーワードやレアリティを変えてお試しください。</p>
+    </div>
+
+    <p class="mt-6 text-xs leading-relaxed text-slate-400">
+      ※ 価格は各ショップの掲載情報をもとにした参考価格です。在庫状況や状態（美品・傷あり等）により実際の価格は変動します。購入・買取の前に必ず各ショップで最新情報をご確認ください。
+    </p>
   </section>
 
-  {tags.length > 0 && (
-    <section aria-labelledby="tags" class="mt-14">
-      <h2 id="tags" class="mb-4 text-xl font-bold text-gray-900">人気のタグ</h2>
-      <ul class="flex flex-wrap gap-2">
-        {tags.map(({ tag, count }) => (
-          <li><a href={`/tags/${tag}/`} class="rounded-full border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:border-brand-600 hover:text-brand-600">#{tag} <span class="text-gray-400">({count})</span></a></li>
-        ))}
-      </ul>
+  {posts.length > 0 && (
+    <section aria-labelledby="columns" class="mt-16">
+      <div class="mb-6 flex items-end justify-between">
+        <h2 id="columns" class="text-xl font-bold text-slate-900">ポケカ売買コラム</h2>
+        <a href="/blog/" class="text-sm text-indigo-600 hover:underline">すべて見る →</a>
+      </div>
+      <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {posts.map((post) => <PostCard post={post} />)}
+      </div>
     </section>
   )}
 </BaseLayout>
+
+<script>
+  const grid = document.getElementById('card-grid')!;
+  const input = document.getElementById('card-search') as HTMLInputElement;
+  const sortSelect = document.getElementById('card-sort') as HTMLSelectElement;
+  const countEl = document.getElementById('card-count')!;
+  const emptyEl = document.getElementById('card-empty')!;
+  const chips = [...document.querySelectorAll<HTMLButtonElement>('.rarity-chip')];
+  const items = [...grid.querySelectorAll<HTMLElement>('.card-item')];
+
+  // 全角/半角・大文字/小文字・ひらがな/カタカナの違いを吸収して検索
+  const normalize = (s: string) =>
+    s
+      .normalize('NFKC')
+      .toLowerCase()
+      .replace(/[ぁ-ゖ]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60))
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const index = new Map(items.map((el) => [el, normalize(el.dataset.search ?? '')]));
+  let rarity = '';
+
+  const sorters: Record<string, (a: HTMLElement, b: HTMLElement) => number> = {
+    new: (a, b) => Number(b.dataset.updated) - Number(a.dataset.updated),
+    'sale-asc': (a, b) => Number(a.dataset.sale) - Number(b.dataset.sale),
+    'buyback-desc': (a, b) => Number(b.dataset.buyback) - Number(a.dataset.buyback),
+  };
+
+  function update() {
+    const terms = normalize(input.value).split(' ').filter(Boolean);
+    let visible = 0;
+    for (const el of items) {
+      const text = index.get(el)!;
+      const show = (!rarity || el.dataset.rarity === rarity) && terms.every((t) => text.includes(t));
+      el.hidden = !show;
+      if (show) visible++;
+    }
+    grid.append(...[...items].sort(sorters[sortSelect.value] ?? sorters.new));
+    countEl.textContent = String(visible);
+    emptyEl.classList.toggle('hidden', visible > 0);
+  }
+
+  input.addEventListener('input', update);
+  sortSelect.addEventListener('change', update);
+  for (const chip of chips) {
+    chip.addEventListener('click', () => {
+      rarity = chip.dataset.rarity ?? '';
+      for (const c of chips) c.setAttribute('aria-pressed', String(c === chip));
+      update();
+    });
+  }
+  // ブラウザの「戻る」で入力値が復元された場合にも反映
+  update();
+</script>

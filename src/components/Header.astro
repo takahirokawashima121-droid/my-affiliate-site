@@ -5,8 +5,11 @@ const isActive = (href: string) => (href === '/' ? path === '/' : path.startsWit
 ---
 
 <header class="sticky top-0 z-20 border-b border-gray-200 bg-white/90 backdrop-blur">
-  <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-    <a href="/" class="text-lg font-bold tracking-tight text-gray-900 sm:text-xl">{SITE.title}</a>
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+    <a href="/" class="flex items-center gap-2 text-lg font-extrabold tracking-tight text-slate-900 sm:text-xl">
+      <img src="/favicon.svg" alt="" width="28" height="28" class="h-7 w-7" />
+      {SITE.title}
+    </a>
 
     <nav aria-label="メインメニュー" class="hidden sm:block">
       <ul class="flex gap-6 text-sm font-medium">

@@ -38,6 +38,14 @@
 
 販売価格は `npm run update-prices` で楽天市場の最安値に更新できます（`.env` に `RAKUTEN_APP_ID` と `RAKUTEN_ACCESS_KEY` が必要）。買取価格は販売相場から算出した目安です。価格の出典に関する注意書きは `src/consts.ts` の `priceNotice` で変更できます（データの取得方法を変えたら実態に合わせて更新してください）。
 
+## 価格の自動更新（GitHub Actions）
+
+`.github/workflows/update-prices.yml` が毎日 日本時間 午前4時に `npm run update-prices` を実行し、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。
+
+事前に、リポジトリの Settings → Secrets and variables → Actions に `RAKUTEN_APP_ID` と `RAKUTEN_ACCESS_KEY` を登録してください。全カードで API エラーになった場合（キーの失効など）はワークフローが失敗し、GitHub から通知されます。
+
+楽天市場に在庫のないカードは「在庫なし」となり、買取価格も根拠がないため「要査定」と表示されます。
+
 ## コラム記事の追加
 
 `src/content/blog/` に `.md` ファイルを追加するだけです。書き方は `src/content/blog/how-to-write-post.md` を参照してください。

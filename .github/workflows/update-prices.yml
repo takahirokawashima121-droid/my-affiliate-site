@@ -1,0 +1,58 @@
+# 楽天市場の販売最安値・商品画像を毎日取得し、src/data/cards.json に差分があればコミットする
+# （main への push で Vercel が自動デプロイし、サイトに反映される）
+#
+# 事前設定: リポジトリの Settings → Secrets and variables → Actions に以下を登録
+#   RAKUTEN_APP_ID      楽天ウェブサービスのアプリID
+#   RAKUTEN_ACCESS_KEY  楽天ウェブサービスのアクセスキー
+name: Update prices
+
+# トリガーは定期実行と手動実行のみ（push トリガーは付けない）。
+# 自動コミットの push で本ワークフローが再実行されることはない（ループ防止）。
+# なお GITHUB_TOKEN による push は他のワークフローも起動しないが、Vercel のデプロイは通常どおり行われる。
+on:
+  schedule:
+    - cron: '0 19 * * *' # 毎日 19:00 UTC = 日本時間 午前4時
+  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
+
+permissions:
+  contents: write # cards.json のコミット・プッシュに必要
+
+concurrency:
+  group: update-prices
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # scripts/update-prices.js は .ts を直接 import するため Node 22.18 以降が必要
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update prices
+        run: npm run update-prices
+        env:
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+
+      - name: Commit and push if cards.json changed
+        run: |
+          if git diff --quiet -- src/data/cards.json; then
+            echo "cards.json に変更はありません"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/cards.json
+          git commit -m "chore: daily price update"
+          git pull --rebase origin main
+          git push origin HEAD:main

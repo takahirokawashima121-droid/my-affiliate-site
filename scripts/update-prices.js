@@ -251,6 +251,8 @@ async function main() {
   }
 
   console.log(`\n価格更新: ${updated.size - outOfStock}枚 / 在庫なし: ${outOfStock}枚 / エラー（変更なし）: ${failed}枚`);
+  // 全件エラー（キーの失効・API障害など）は異常終了にして、GitHub Actions の失敗通知で気づけるようにする
+  if (targets.length > 0 && failed === targets.length) process.exitCode = 1;
   if (dryRun || updated.size === 0) return;
 
   const next = cards.map((c) => orderKeys(updated.get(c.id) ?? c));

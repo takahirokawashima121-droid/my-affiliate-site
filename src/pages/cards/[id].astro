@@ -9,7 +9,7 @@ import AffiliatePixels from '../../components/AffiliatePixels.astro';
 import MallSearchButtons from '../../components/MallSearchButtons.astro';
 import { cardSearchKeyword } from '../../utils/cardFormat';
 import { SITE } from '../../consts';
-import { getCards, cardLabel, cardModel, cardPath, priceGap, formatDateTime, formatYen, rarityClass, type Card } from '../../utils/cards';
+import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, rarityClass, type Card } from '../../utils/cards';
 
 export const getStaticPaths = (async () => {
   const cards = await getCards();
@@ -35,6 +35,7 @@ const label = cardLabel(card); // 例: ナンジャモ SAR [SV2D 096/071]
 const model = cardModel(card); // 例: SV2D 096/071
 const updatedText = formatDateTime(updatedAt);
 const gap = priceGap(card); // 逆ザヤ（買取 ≧ 販売）の場合は差額・買取率を出さない
+const buybackShown = showsBuybackPrice(card); // 在庫なし（販売相場なし）なら買取額は「要査定」
 const buybackUnverified = saleInStock && !gap.valid; // 在庫ありなのに逆ザヤ → 買取価格を「相場確認中」扱い
 // 楽天市場の商品画像は、規約に沿って該当商品ページ（もしも経由）へのリンクと出典表記を付ける
 const rakutenImage = saleInStock && saleShop === '楽天市場' && imageUrl.startsWith('https://thumbnail.image.rakuten.co.jp/');
@@ -49,7 +50,8 @@ const affiliateLinkProps = {
 
 const title = `【ポケカ】${label}の販売最安値・買取相場比較`;
 const saleSummary = saleInStock ? `${label}の販売最安値は${formatYen(salePrice)}（${saleShop}）` : `${label}は楽天市場では現在在庫なし。`;
-const description = `${saleSummary}${saleInStock ? '、' : ''}買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
+const buybackSummary = buybackShown ? `買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。` : `買取価格は${buybackShop}での査定をご確認ください。`;
+const description = `${saleSummary}${saleInStock ? '、' : ''}${buybackSummary}${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
 
 // 構造化データ（Product + 販売価格）
 const jsonLd = {
@@ -139,8 +141,13 @@ const jsonLd = {
           </div>
           <div class="flex flex-col rounded-2xl border-2 border-emerald-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-bold text-emerald-600">買取最高値</p>
-            <p class="mt-1 text-3xl font-extrabold tabular-nums text-emerald-600 sm:text-4xl">{formatYen(buybackPrice)}</p>
+            {buybackShown ? (
+              <p class="mt-1 text-3xl font-extrabold tabular-nums text-emerald-600 sm:text-4xl">{formatYen(buybackPrice)}</p>
+            ) : (
+              <p class="mt-1 text-2xl font-extrabold text-slate-400 sm:text-3xl">要査定</p>
+            )}
             <p class="mt-1 text-sm text-slate-600">ショップ：<span class="font-semibold text-slate-900">{buybackShop}</span></p>
+            {!buybackShown && <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">販売相場がないため買取目安を表示していません。買取価格はショップの査定でご確認ください。</p>}
             {buybackUnverified && <p class="mt-2 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">相場確認中：最新の買取価格はショップでご確認ください</p>}
             <div class="mt-4">
               <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} size="lg" item={label} />

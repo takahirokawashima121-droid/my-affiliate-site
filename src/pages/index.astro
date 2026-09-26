@@ -184,7 +184,8 @@ const chip =
     new: (a, b) => Number(b.dataset.updated) - Number(a.dataset.updated),
     // 在庫なし（data-sale が空）は最後に並べる
     'sale-asc': (a, b) => (a.dataset.sale ? Number(a.dataset.sale) : Infinity) - (b.dataset.sale ? Number(b.dataset.sale) : Infinity),
-    'buyback-desc': (a, b) => Number(b.dataset.buyback) - Number(a.dataset.buyback),
+    // 要査定（data-buyback が空）は最後に並べる
+    'buyback-desc': (a, b) => (b.dataset.buyback ? Number(b.dataset.buyback) : -Infinity) - (a.dataset.buyback ? Number(a.dataset.buyback) : -Infinity),
   };
 
   function update() {

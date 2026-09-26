@@ -1,7 +1,7 @@
 ---
 import CardImage from './CardImage.astro';
 import AffiliateButton from './AffiliateButton.astro';
-import { cardLabel, cardModel, cardPath, priceGap, formatDateTime, formatYen, rarityClass, type Card } from '../utils/cards';
+import { cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, rarityClass, type Card } from '../utils/cards';
 
 interface Props {
   card: Card;
@@ -13,6 +13,7 @@ const { name, rarity, cardNumber, expansionCode, salePrice, saleInStock, saleSho
 const gap = priceGap(card);
 // 買取価格の「相場確認中」は、販売価格がある（在庫あり）のに逆ザヤの場合のみ
 const buybackUnverified = saleInStock && !gap.valid;
+const buybackShown = showsBuybackPrice(card); // 在庫なし（販売相場なし）なら買取額は「要査定」
 const model = cardModel(card);
 ---
 
@@ -21,7 +22,7 @@ const model = cardModel(card);
   data-search={`${name} ${rarity} ${expansionCode} ${cardNumber}`}
   data-rarity={rarity}
   data-sale={saleInStock ? salePrice : ''}
-  data-buyback={buybackPrice}
+  data-buyback={buybackShown ? buybackPrice : ''}
   data-updated={updatedAt.valueOf()}
 >
   <!-- 上部（画像・カード情報）をクリックで詳細ページへ -->
@@ -58,7 +59,11 @@ const model = cardModel(card);
     </div>
     <div class="px-3 py-3">
       <dt class="text-[11px] font-medium text-slate-500">買取最高値</dt>
-      <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-emerald-600 sm:text-2xl">{formatYen(buybackPrice)}</dd>
+      {buybackShown ? (
+        <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-emerald-600 sm:text-2xl">{formatYen(buybackPrice)}</dd>
+      ) : (
+        <dd class="mt-1.5 text-base font-bold text-slate-400 sm:text-lg">要査定</dd>
+      )}
       <dd class="truncate text-[11px] text-slate-500">{buybackShop}{buybackUnverified && <span class="ml-1 rounded bg-amber-100 px-1 text-amber-800">相場確認中</span>}</dd>
     </div>
   </dl>

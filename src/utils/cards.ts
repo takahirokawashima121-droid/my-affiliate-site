@@ -41,6 +41,15 @@ export function priceGap(card: Card): { valid: boolean; spread: number; rate: nu
   };
 }
 
+/**
+ * 買取価格を表示してよいか。
+ * 買取価格は販売相場から算出した目安のため、販売在庫がない（販売相場がない）カードでは
+ * 根拠のない数値になる。その場合は金額を出さず「要査定」と表示する。
+ */
+export function showsBuybackPrice(card: Card): boolean {
+  return card.data.saleInStock;
+}
+
 /** 「SV2D 096/071」形式の型番 */
 export function cardModel(card: Card): string {
   return modelCode(card.data);

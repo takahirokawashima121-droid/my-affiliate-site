@@ -29,9 +29,29 @@ export const SHOPS = {
     name: 'Bee本舗',
     kind: 'sale',
     url: 'https://px.a8.net/svt/ejp?a8mat=4BCL3T+ANF6CY+5NJ8+5YJRM',
-    impressionUrl: 'https://www12.a8.net/0.gif?a8mat=4BCL3T+ANF6CY+5NJ8+5YJRM',
+    impressionUrl: 'https://www13.a8.net/0.gif?a8mat=4BCL3T+ANF6CY+5NJ8+5YJRM',
     network: 'a8',
   },
 } as const satisfies Record<string, AffiliateShop>;
 
 export type ShopKey = keyof typeof SHOPS;
+
+/**
+ * Bee本舗通販店のサイト内検索URL（MakeShop の検索ページ。例: 「ナンジャモ 096/071」）
+ */
+export function beeHonpoSearchUrl(keyword: string): string {
+  return `https://www.bee-honpo.com/view/search?search_keyword=${encodeURIComponent(keyword)}`;
+}
+
+/**
+ * A8.net のディープリンク（a8ejpredirect で任意のページへ遷移）を使うか。
+ * 広告主が「任意のページへのリンク」を許可しているプログラムでのみ有効。許可されていないのに使うと成果が承認されない
+ * おそれがあるため、A8 管理画面の「プログラム詳細」でディープリンク可を確認してから true にすること。
+ */
+export const BEE_HONPO_DEEP_LINK = false;
+
+/** Bee本舗の購入リンク：ディープリンク可ならカード検索結果へ、不可なら通販店トップへ */
+export function beeHonpoLink(keyword: string): { href: string; searchable: boolean } {
+  if (!BEE_HONPO_DEEP_LINK) return { href: SHOPS.beehonpo.url, searchable: false };
+  return { href: `${SHOPS.beehonpo.url}&a8ejpredirect=${encodeURIComponent(beeHonpoSearchUrl(keyword))}`, searchable: true };
+}

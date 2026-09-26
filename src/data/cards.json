@@ -1019,7 +1019,7 @@
     "buybackImpressionUrl": "https://www17.a8.net/0.gif?a8mat=4BCKBZ+9OALO2+49YI+656YQ",
     "substituteIds": [
       "bosss-orders-sv4a-181",
-      "counter-catcher-sv8a-139"
+      "switch-u-sv5a-056"
     ],
     "updatedAt": "2026-09-27T03:00:02+09:00"
   },
@@ -1466,7 +1466,7 @@
     "rarity": "-",
     "cardNumber": "139/187",
     "expansionCode": "SV8a",
-    "regulationMark": "H",
+    "regulationMark": "G",
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/auc-mediaroad/cabinet/trc28/trc151398.jpg?_ex=300x300",
     "salePrice": 39,
     "saleInStock": true,
@@ -1485,7 +1485,7 @@
     "rarity": "-",
     "cardNumber": "143/187",
     "expansionCode": "SV8a",
-    "regulationMark": "H",
+    "regulationMark": "G",
     "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/toretoku/cabinet/items617/297617jat_1.jpg?_ex=300x300",
     "salePrice": 90,
     "saleInStock": true,
@@ -1554,5 +1554,23 @@
     "buybackUrl": "https://px.a8.net/svt/ejp?a8mat=4BCKBZ+9OALO2+49YI+656YQ",
     "buybackImpressionUrl": "https://www17.a8.net/0.gif?a8mat=4BCKBZ+9OALO2+49YI+656YQ",
     "updatedAt": "2026-09-27T04:23:58+09:00"
+  },
+  {
+    "id": "switch-u-sv5a-056",
+    "name": "ポケモンいれかえ",
+    "rarity": "U",
+    "cardNumber": "056/066",
+    "expansionCode": "SV5a",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/bamp/cabinet/trc70/trc129363.jpg?_ex=300x300",
+    "salePrice": 18,
+    "saleInStock": true,
+    "saleShop": "楽天市場",
+    "saleUrl": "https://af.moshimo.com/af/c/click?a_id=5819091&p_id=54&pc_id=54&pl_id=616&url=https%3A%2F%2Fitem.rakuten.co.jp%2Fbamp%2Ft_01j90bbgpgrs8bn8rkp1meb9zv_2%2F%3Frafcid%3Dwsc_i_is_1e6ffc37-0121-49fa-832c-122c61707259",
+    "saleImpressionUrl": "https://i.moshimo.com/af/i/impression?a_id=5819091&p_id=54&pc_id=54&pl_id=616",
+    "buybackPrice": 10,
+    "buybackShop": "カーナベル",
+    "buybackUrl": "https://px.a8.net/svt/ejp?a8mat=4BCKBZ+9OALO2+49YI+656YQ",
+    "buybackImpressionUrl": "https://www17.a8.net/0.gif?a8mat=4BCKBZ+9OALO2+49YI+656YQ",
+    "updatedAt": "2026-09-27T04:33:51+09:00"
   }
 ]

@@ -29,6 +29,8 @@
 | `rarity` | レアリティ（例: `SAR`、`SR`） |
 | `cardNumber` | カード番号（例: `096/071`） |
 | `expansionCode` | 収録弾の略称記号（例: `SV2D`、`SM4+`） |
+| `regulationMark` | レギュレーションマーク（例: `H`）。**弾ではなくカード左下に印刷されたマークを入力**（再録カードは元のマークのままの場合がある。例: SV8a 再録の大地の器は `G`）。不明なら省略 |
+| `substituteIds` | 予算を抑えたい人向けの代用・関連カードの `id`（任意）。現行スタンダードで使えるカードを指定する |
 | `imageUrl` | 画像URL（`public/` 配下のパスも可。空なら仮画像を表示） |
 | `salePrice` / `saleShop` / `saleUrl` | 販売最安値（円）/ ショップ名 / アフィリエイトURL |
 | `buybackPrice` / `buybackShop` / `buybackUrl` | 買取最高値（円）/ ショップ名 / アフィリエイトURL |

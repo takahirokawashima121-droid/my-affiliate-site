@@ -40,7 +40,7 @@
 
 ## 価格の自動更新（GitHub Actions）
 
-`.github/workflows/update-prices.yml` が毎日 日本時間 午前4時に `npm run update-prices` を実行し、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。
+`.github/workflows/update-prices.yml` が毎日 日本時間 午前4時7分に `npm run update-prices` を実行し、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。
 
 事前に、リポジトリの Settings → Secrets and variables → Actions に `RAKUTEN_APP_ID` と `RAKUTEN_ACCESS_KEY` を登録してください。全カードで API エラーになった場合（キーの失効など）はワークフローが失敗し、GitHub から通知されます。
 

@@ -11,7 +11,7 @@ name: Update prices
 # なお GITHUB_TOKEN による push は他のワークフローも起動しないが、Vercel のデプロイは通常どおり行われる。
 on:
   schedule:
-    - cron: '0 19 * * *' # 毎日 19:00 UTC = 日本時間 午前4時
+    - cron: '7 19 * * *' # 毎日 19:07 UTC = 日本時間 午前4時7分（毎時0分の混雑を避けて負荷分散）
   workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
 
 permissions:

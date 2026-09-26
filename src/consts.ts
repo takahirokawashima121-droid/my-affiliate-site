@@ -17,6 +17,6 @@ export const SITE = {
 
 export const NAV = [
   { href: '/', label: '相場比較' },
-  { href: '/blog/', label: 'コラム' },
+  { href: '/blog/', label: 'コラム一覧' },
   { href: '/about/', label: '運営者情報' },
 ];

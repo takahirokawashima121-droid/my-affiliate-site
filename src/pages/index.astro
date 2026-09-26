@@ -11,7 +11,7 @@ const cards = await getCards();
 const rarities = getRarities(cards);
 const shops = new Set(cards.flatMap((c) => [c.data.saleShop, c.data.buybackShop]));
 const updated = latestUpdate(cards);
-const posts = (await getPosts()).slice(0, 3);
+const posts = (await getPosts()).slice(0, 6);
 
 // 構造化データ：サイト情報 + 掲載カード一覧（商品と最安値）
 const jsonLd = [
@@ -147,11 +147,14 @@ const chip =
   {posts.length > 0 && (
     <section aria-labelledby="columns" class="mt-16">
       <div class="mb-6 flex items-end justify-between">
-        <h2 id="columns" class="text-xl font-bold text-slate-900">ポケカ売買コラム</h2>
-        <a href="/blog/" class="text-sm text-indigo-600 hover:underline">すべて見る →</a>
+        <h2 id="columns" class="text-xl font-bold text-slate-900">ポケカお役立ちコラム</h2>
+        <a href="/blog/" class="text-sm text-indigo-600 hover:underline">コラム一覧を見る →</a>
       </div>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => <PostCard post={post} />)}
+      </div>
+      <div class="mt-8 text-center">
+        <a href="/blog/" class="inline-block rounded-xl border border-indigo-600 px-6 py-3 text-sm font-bold text-indigo-600 transition hover:bg-indigo-600 hover:text-white">コラム一覧をすべて見る</a>
       </div>
     </section>
   )}

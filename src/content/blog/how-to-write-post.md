@@ -4,6 +4,7 @@ description: src/content/blog にMarkdownファイルを置くだけで記事を
 pubDate: 2026-09-26
 tags: [使い方]
 affiliate: false
+draft: true
 ---
 
 ## 記事ファイルを作る

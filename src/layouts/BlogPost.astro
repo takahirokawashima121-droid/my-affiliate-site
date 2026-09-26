@@ -27,7 +27,7 @@ const jsonLd = {
   dateModified: (updatedDate ?? pubDate).toISOString(),
   mainEntityOfPage: { '@type': 'WebPage', '@id': url },
   image: new URL(heroImage ?? SITE.ogImage, Astro.site).toString(),
-  author: { '@type': 'Person', name: SITE.author, url: new URL('/about/', Astro.site).toString() },
+  author: { '@type': 'Organization', name: SITE.author, url: new URL('/about/', Astro.site).toString() },
   publisher: { '@type': 'Organization', name: SITE.title },
   keywords: tags.join(', '),
 };

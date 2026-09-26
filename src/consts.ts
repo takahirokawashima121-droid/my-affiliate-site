@@ -4,7 +4,9 @@ export const SITE = {
   tagline: '中古ポケモンカードの販売最安値・買取相場比較', // トップページの <title> に付くキャッチコピー
   description:
     '人気の中古ポケモンカードの販売最安値と買取最高値を、主要ショップ横断で比較。一番安く買えるお店・一番高く売れるお店がすぐに分かります。',
-  author: '運営者名',
+  author: 'ポケカ価格ナビ運営事務局',
+  // 連絡先メール。スパム対策のため @ の前後に分けて持ち、完全なアドレスは HTML に出力しない
+  contactEmail: { user: 'pokeca.price.contact', domain: 'gmail.com' },
   lang: 'ja',
   locale: 'ja_JP',
   ogImage: '/og-default.png',

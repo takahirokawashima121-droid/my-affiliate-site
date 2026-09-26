@@ -1,0 +1,59 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+import ContactEmail from '../components/ContactEmail.astro';
+import { SITE } from '../consts';
+
+const frontmatter = {
+  title: '運営者情報',
+  description: `${SITE.title}の運営者情報・サイトの目的・お問い合わせ先です。`,
+};
+---
+
+<PageLayout frontmatter={frontmatter}>
+  <h2>運営者</h2>
+  <table>
+    <tbody>
+      <tr>
+        <th scope="row">サイト名</th>
+        <td>{SITE.title}</td>
+      </tr>
+      <tr>
+        <th scope="row">運営者</th>
+        <td>{SITE.author}</td>
+      </tr>
+      <tr>
+        <th scope="row">URL</th>
+        <td>{Astro.site?.toString()}</td>
+      </tr>
+      <tr>
+        <th scope="row">お問い合わせ</th>
+        <td>下記「お問い合わせ」をご覧ください</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>サイトの目的</h2>
+  <p>
+    {SITE.title}は、ポケモンカードの中古販売価格・買取相場の比較、およびお得な売買・保管に関する情報発信を目的としたサイトです。
+  </p>
+  <p>
+    主要カードの販売最安値と買取最高値をひと目で比較できる相場ページに加え、買取店の選び方や宅配買取の使い方、カードの保管・発送方法、レアリティの見分け方など、ポケモンカードを売る人・買う人の双方に役立つコラムを掲載しています。
+  </p>
+
+  <h2>当サイトの方針</h2>
+  <ul>
+    <li>各ショップの価格を定期的に確認・更新します</li>
+    <li>特定のショップに偏らず、公平に比較します</li>
+    <li>コラムの内容は定期的に見直し、最新の状態に保ちます</li>
+  </ul>
+
+  <h2>広告について</h2>
+  <p>
+    当サイトはアフィリエイトプログラムに参加しており、掲載ショップへのリンクから商品の購入や買取申込が行われた場合に紹介料を受け取ることがあります。紹介料の有無によって掲載価格や順位を操作することはありません。詳しくは<a href="/privacy/">プライバシーポリシー・免責事項</a>をご覧ください。
+  </p>
+
+  <h2>お問い合わせ</h2>
+  <p>当サイトに関するお問い合わせは、以下のメールアドレスまでお願いいたします。</p>
+  <ContactEmail />
+  <p class="text-sm">※ 内容によってはご返信までにお時間をいただく場合や、ご返信できない場合がございます。あらかじめご了承ください。</p>
+</PageLayout>

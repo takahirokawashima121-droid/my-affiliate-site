@@ -1,0 +1,41 @@
+---
+// スパム対策済みのメールアドレス表示
+// - 画面表示は「user [at] domain」形式
+// - HTML に mailto: や完全なアドレスを出力しない
+// - 「メールを作成する」ボタンは、クリック時に JS で逆順文字列を復元して mailto を開く
+import { SITE } from '../consts';
+
+const { user, domain } = SITE.contactEmail;
+const reverse = (s: string) => [...s].reverse().join('');
+---
+
+<div class="not-prose rounded-xl border border-slate-200 bg-white p-5">
+  <p class="text-sm text-slate-500">メールアドレス</p>
+  <p class="mt-1 break-words font-mono text-base font-bold text-slate-900 sm:text-lg">{user} [at] {domain}</p>
+  <p class="mt-2 text-xs leading-relaxed text-slate-500">
+    ※スパム防止のため表記を変えております。[at] を @ に置き換えて送信してください
+  </p>
+  <button
+    type="button"
+    class="contact-mail mt-4 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-indigo-700"
+    data-u={reverse(user)}
+    data-d={reverse(domain)}
+  >
+    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+      <path d="m3 7 9 6 9-6"></path>
+    </svg>
+    メールを作成する
+  </button>
+</div>
+
+<script>
+  const reverse = (s: string) => [...s].reverse().join('');
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('.contact-mail')) {
+    btn.addEventListener('click', () => {
+      // スキーム名もビルド後の JS に平文で残らないよう、実行時に逆順から復元する
+      const address = `${reverse(btn.dataset.u ?? '')}@${reverse(btn.dataset.d ?? '')}`;
+      window.location.href = reverse(':otliam') + address;
+    });
+  }
+</script>

@@ -14,9 +14,9 @@
 ## 最初にやること
 
 1. `astro.config.mjs` の `site` が本番URLになっているか確認（現在: https://my-affiliate-site-phi.vercel.app/）
-2. `src/consts.ts` でサイト名・説明文・運営者名を変更
+2. `src/consts.ts` でサイト名・説明文・運営者名・連絡先（`contactEmail`）を確認
 3. `public/og-default.png`（1200×630）を置く（SNSシェア時の画像）
-4. `src/pages/about.md` と `src/pages/privacy.md` を自分用に書き換え
+4. `src/pages/about.astro`（運営者情報）と `src/pages/privacy.md` の内容を確認
 
 ## カードデータの更新
 

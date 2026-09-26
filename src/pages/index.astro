@@ -54,30 +54,37 @@ const jsonLd = [
 ];
 
 const chip =
-  'rarity-chip rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-300 bg-white text-slate-600 hover:border-indigo-400 hover:text-indigo-600 aria-pressed:border-indigo-600 aria-pressed:bg-indigo-600 aria-pressed:text-white';
+  'rarity-chip rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 aria-pressed:border-amber-400 aria-pressed:bg-amber-400 aria-pressed:font-bold aria-pressed:text-slate-900 aria-pressed:shadow-sm aria-pressed:hover:border-amber-400 aria-pressed:hover:text-slate-900';
 ---
 
 <BaseLayout jsonLd={jsonLd}>
   <!-- ヒーロー -->
-  <section class="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-indigo-600 to-sky-500 px-6 py-10 text-white shadow-lg sm:px-10 sm:py-14">
-    <div class="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10" aria-hidden="true"></div>
-    <div class="pointer-events-none absolute -bottom-20 right-24 h-48 w-48 rounded-full bg-white/5" aria-hidden="true"></div>
-    <p class="text-xs font-semibold tracking-widest text-indigo-100">POKEMON CARD PRICE COMPARISON</p>
-    <h1 class="mt-2 text-2xl font-extrabold leading-tight sm:text-4xl">
-      中古ポケカの<span class="whitespace-nowrap">販売最安値</span>と<span class="whitespace-nowrap">買取最高値</span>を<br class="hidden sm:inline" />ひと目で比較
+  <section class="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-blue-500 to-sky-400 px-6 py-10 text-white shadow-lg shadow-blue-500/20 sm:px-10 sm:py-14">
+    <!-- 装飾：モンスターボール風のアクセント -->
+    <svg class="pointer-events-none absolute -right-10 -top-10 h-56 w-56 opacity-30 sm:-right-6 sm:h-72 sm:w-72 sm:opacity-40" viewBox="0 0 100 100" aria-hidden="true">
+      <circle cx="50" cy="50" r="46" fill="#fff"></circle>
+      <path d="M4 50a46 46 0 0 1 92 0z" fill="#ef4444"></path>
+      <rect x="4" y="46" width="92" height="8" fill="#0f172a"></rect>
+      <circle cx="50" cy="50" r="14" fill="#0f172a"></circle>
+      <circle cx="50" cy="50" r="8" fill="#fff"></circle>
+    </svg>
+    <div class="pointer-events-none absolute -bottom-16 right-40 h-40 w-40 rounded-full bg-white/15" aria-hidden="true"></div>
+    <p class="relative text-xs font-bold tracking-widest text-amber-300">POKEMON CARD PRICE COMPARISON</p>
+    <h1 class="relative mt-2 text-2xl font-extrabold leading-tight [text-shadow:0_2px_8px_rgb(30_58_138/0.35)] sm:text-4xl">
+      中古ポケカの<span class="whitespace-nowrap text-amber-300">販売最安値</span>と<span class="whitespace-nowrap text-amber-300">買取最高値</span>を<br class="hidden sm:inline" />ひと目で比較
     </h1>
-    <p class="mt-4 max-w-2xl text-sm text-indigo-100 sm:text-base">{SITE.description}</p>
-    <dl class="mt-8 grid max-w-xl grid-cols-3 gap-3 text-center">
-      <div class="rounded-xl bg-white/10 px-2 py-3 backdrop-blur">
-        <dt class="text-[11px] text-indigo-100">掲載カード</dt>
+    <p class="relative mt-4 max-w-2xl text-sm text-blue-50 sm:text-base">{SITE.description}</p>
+    <dl class="relative mt-8 grid max-w-xl grid-cols-3 gap-3 text-center">
+      <div class="rounded-xl bg-white/20 px-2 py-3 ring-1 ring-white/40 backdrop-blur">
+        <dt class="text-[11px] font-medium text-blue-50">掲載カード</dt>
         <dd class="text-xl font-bold sm:text-2xl">{cards.length}<span class="text-sm font-normal">種</span></dd>
       </div>
-      <div class="rounded-xl bg-white/10 px-2 py-3 backdrop-blur">
-        <dt class="text-[11px] text-indigo-100">比較ショップ</dt>
+      <div class="rounded-xl bg-white/20 px-2 py-3 ring-1 ring-white/40 backdrop-blur">
+        <dt class="text-[11px] font-medium text-blue-50">比較ショップ</dt>
         <dd class="text-xl font-bold sm:text-2xl">{shops.size}<span class="text-sm font-normal">店</span></dd>
       </div>
-      <div class="rounded-xl bg-white/10 px-2 py-3 backdrop-blur">
-        <dt class="text-[11px] text-indigo-100">最終更新</dt>
+      <div class="rounded-xl bg-white/20 px-2 py-3 ring-1 ring-white/40 backdrop-blur">
+        <dt class="text-[11px] font-medium text-blue-50">最終更新</dt>
         <dd class="mt-1 text-xs font-bold sm:text-sm">{updated ? formatDateTime(updated) : '-'}</dd>
       </div>
     </dl>
@@ -101,14 +108,14 @@ const chip =
             type="search"
             placeholder="カード名・型番・レアリティで検索（例：なんじゃも、SAR）"
             autocomplete="off"
-            class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-base outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-2 focus:ring-indigo-200"
+            class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-base outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </label>
         <label class="flex items-center gap-2 sm:w-56">
           <span class="shrink-0 text-sm text-slate-500">並び替え</span>
           <select
             id="card-sort"
-            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           >
             <option value="new">新着順</option>
             <option value="sale-asc">販売が安い順</option>
@@ -147,13 +154,13 @@ const chip =
     <section aria-labelledby="columns" class="mt-16">
       <div class="mb-6 flex items-end justify-between">
         <h2 id="columns" class="text-xl font-bold text-slate-900">ポケカお役立ちコラム</h2>
-        <a href="/blog/" class="text-sm text-indigo-600 hover:underline">コラム一覧を見る →</a>
+        <a href="/blog/" class="text-sm text-blue-600 hover:underline">コラム一覧を見る →</a>
       </div>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => <PostCard post={post} />)}
       </div>
       <div class="mt-8 text-center">
-        <a href="/blog/" class="inline-block rounded-xl border border-indigo-600 px-6 py-3 text-sm font-bold text-indigo-600 transition hover:bg-indigo-600 hover:text-white">コラム一覧をすべて見る</a>
+        <a href="/blog/" class="inline-block rounded-xl border border-blue-600 px-6 py-3 text-sm font-bold text-blue-600 transition hover:bg-blue-600 hover:text-white">コラム一覧をすべて見る</a>
       </div>
     </section>
   )}

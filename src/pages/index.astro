@@ -38,13 +38,16 @@ const jsonLd = [
         url: new URL(cardPath(c), Astro.site).toString(),
         brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
         ...(c.data.imageUrl && { image: new URL(c.data.imageUrl, Astro.site).toString() }),
-        offers: {
-          '@type': 'Offer',
-          price: c.data.salePrice,
-          priceCurrency: 'JPY',
-          seller: { '@type': 'Organization', name: c.data.saleShop },
-          url: c.data.saleUrl,
-        },
+        // 在庫なしのカードは価格情報（Offer）を出さない
+        ...(c.data.saleInStock && {
+          offers: {
+            '@type': 'Offer',
+            price: c.data.salePrice,
+            priceCurrency: 'JPY',
+            seller: { '@type': 'Organization', name: c.data.saleShop },
+            url: c.data.saleUrl,
+          },
+        }),
       },
     })),
   },
@@ -179,7 +182,8 @@ const chip =
 
   const sorters: Record<string, (a: HTMLElement, b: HTMLElement) => number> = {
     new: (a, b) => Number(b.dataset.updated) - Number(a.dataset.updated),
-    'sale-asc': (a, b) => Number(a.dataset.sale) - Number(b.dataset.sale),
+    // 在庫なし（data-sale が空）は最後に並べる
+    'sale-asc': (a, b) => (a.dataset.sale ? Number(a.dataset.sale) : Infinity) - (b.dataset.sale ? Number(b.dataset.sale) : Infinity),
     'buyback-desc': (a, b) => Number(b.dataset.buyback) - Number(a.dataset.buyback),
   };
 

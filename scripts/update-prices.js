@@ -11,9 +11,10 @@
 //   RAKUTEN_ACCESS_KEY  楽天ウェブサービスのアクセスキー
 //
 // 安全のための仕様:
-// - 検索キーワードは「${name} ${rarity} ${cardNumber} ポケカ」（src/utils/cardFormat.ts の cardSearchKeyword）
+// - 検索キーワードは「${name} ${rarity} ${cardNumber} ポケカ」→ 該当なしなら「${name} ${rarity} ${cardNumber}」→「${name} ${cardNumber}」の順に再検索（src/utils/cardFormat.ts の cardSearchKeywords）
 // - カード名とカード番号（例: 096/071）の両方を商品名に含む商品だけを候補にする
-// - 候補が見つからない・APIエラーのカードは一切変更しない
+// - 全キーワードで在庫のある該当商品がないカードは「在庫なし」（salePrice=0, saleInStock=false）にする
+// - APIエラーのカードは一切変更しない
 // - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）と商品画像（imageUrl）以外の項目は変更しない
 // - 商品画像は最安商品の1枚目を 300x300 に変換して保存。画像がない商品の場合は既存の imageUrl を維持する
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
@@ -22,8 +23,8 @@
 import { existsSync } from 'node:fs';
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { cardDisplayName, cardSearchKeyword } from '../src/utils/cardFormat.ts';
-import { moshimoImpressionUrl, moshimoLinkUrl } from '../src/utils/moshimo.ts';
+import { cardDisplayName, cardSearchKeyword, cardSearchKeywords } from '../src/utils/cardFormat.ts';
+import { moshimoClickUrl, moshimoImpressionUrl, moshimoLinkUrl } from '../src/utils/moshimo.ts';
 
 const CARDS_PATH = fileURLToPath(new URL('../src/data/cards.json', import.meta.url));
 const ENV_PATH = fileURLToPath(new URL('../.env', import.meta.url));
@@ -77,12 +78,33 @@ export function applySale(card, item, updatedAt = nowJst(), imageUrl = pickImage
     // 商品画像が取れなかった場合は既存の画像URLを維持する
     imageUrl: imageUrl ?? card.imageUrl,
     salePrice: item.itemPrice,
+    saleInStock: true,
     saleShop: SHOP_NAME,
     saleUrl: moshimoLinkUrl('rakuten', item.itemUrl),
     saleImpressionUrl: moshimoImpressionUrl('rakuten'),
     updatedAt,
   };
 }
+
+/**
+ * 楽天市場に在庫のある該当商品がないカードを「在庫なし」にする。
+ * 古い・架空の販売価格を残さないよう salePrice は 0 にし、購入ボタンは楽天市場の検索結果（もしも経由）へ向ける。
+ */
+export function markOutOfStock(card, updatedAt = nowJst()) {
+  return {
+    ...card,
+    salePrice: 0,
+    saleInStock: false,
+    saleShop: SHOP_NAME,
+    saleUrl: moshimoClickUrl('rakuten', cardSearchKeyword(card)),
+    saleImpressionUrl: moshimoImpressionUrl('rakuten'),
+    updatedAt,
+  };
+}
+
+/** cards.json の項目の並び順（書き出し時にそろえる） */
+const KEY_ORDER = ['id', 'name', 'rarity', 'cardNumber', 'expansionCode', 'imageUrl', 'salePrice', 'saleInStock', 'saleShop', 'saleUrl', 'saleImpressionUrl', 'buybackPrice', 'buybackShop', 'buybackUrl', 'buybackImpressionUrl', 'updatedAt'];
+const orderKeys = (card) => Object.fromEntries([...KEY_ORDER.filter((k) => k in card), ...Object.keys(card).filter((k) => !KEY_ORDER.includes(k))].map((k) => [k, card[k]]));
 
 /** 保存する画像サイズ（楽天のサムネイルサーバーは ?_ex=幅x高さ で縮小画像を返す） */
 export const IMAGE_SIZE = '300x300';
@@ -117,11 +139,11 @@ async function isImageAvailable(url) {
   }
 }
 
-async function searchRakuten(card, { appId, accessKey }) {
+async function searchRakuten(keyword, { appId, accessKey }) {
   const params = new URLSearchParams({
     applicationId: appId,
     accessKey,
-    keyword: cardSearchKeyword(card),
+    keyword,
     NGKeyword: NG_KEYWORDS.join(' '),
     sort: '+itemPrice',
     hits: '30',
@@ -146,6 +168,22 @@ async function searchRakuten(card, { appId, accessKey }) {
     return list.map((entry) => entry.Item ?? entry.item ?? entry);
   }
   throw new Error('HTTP 429: リクエスト数の上限を超えました');
+}
+
+/**
+ * キーワード候補（cardSearchKeywords）を順に試し、カード名・番号が一致する最安商品が見つかった時点で返す。
+ * 再検索の前にも1秒待機する（API負荷軽減）。
+ */
+async function findCheapest(card, credentials) {
+  const tried = [];
+  for (const [i, keyword] of cardSearchKeywords(card).entries()) {
+    if (i > 0) await sleep(WAIT_MS);
+    const items = await searchRakuten(keyword, credentials);
+    tried.push(`「${keyword}」${items.length}件`);
+    const best = pickCheapest(card, items);
+    if (best) return { best, keyword, fallback: i > 0, tried };
+  }
+  return { best: undefined, tried };
 }
 
 function parseArgs(argv) {
@@ -180,16 +218,19 @@ async function main() {
 
   const updated = new Map();
   let failed = 0;
+  let outOfStock = 0;
   for (const [i, card] of targets.entries()) {
     if (i > 0) await sleep(WAIT_MS);
     const label = `[${i + 1}/${targets.length}] ${cardDisplayName(card)}`;
     try {
-      const items = await searchRakuten(card, { appId, accessKey });
-      const best = pickCheapest(card, items);
+      const { best, fallback, tried } = await findCheapest(card, { appId, accessKey });
       if (!best) {
-        console.log(`${label}\n  - 該当商品なし（検索結果 ${items.length}件）→ 変更しません`);
+        updated.set(card.id, markOutOfStock(card));
+        outOfStock++;
+        console.log(`${label}\n  - 在庫のある該当商品なし（${tried.join(' → ')}）→「在庫なし」に設定`);
         continue;
       }
+      if (fallback) console.log(`${label}\n  ↻ フォールバック検索で取得（${tried.join(' → ')}）`);
       let imageUrl = pickImageUrl(best);
       let imageNote = imageUrl ?? '（商品画像なし → 既存の値を維持）';
       if (imageUrl && !(await isImageAvailable(imageUrl))) {
@@ -209,10 +250,10 @@ async function main() {
     }
   }
 
-  console.log(`\n更新: ${updated.size}枚 / 該当なし: ${targets.length - updated.size - failed}枚 / エラー: ${failed}枚`);
+  console.log(`\n価格更新: ${updated.size - outOfStock}枚 / 在庫なし: ${outOfStock}枚 / エラー（変更なし）: ${failed}枚`);
   if (dryRun || updated.size === 0) return;
 
-  const next = cards.map((c) => updated.get(c.id) ?? c);
+  const next = cards.map((c) => orderKeys(updated.get(c.id) ?? c));
   const tmp = `${CARDS_PATH}.tmp`;
   await writeFile(tmp, `${JSON.stringify(next, null, 2)}\n`, 'utf8');
   JSON.parse(await readFile(tmp, 'utf8')); // 書き出した内容が正しい JSON か確認

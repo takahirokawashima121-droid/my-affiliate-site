@@ -7,9 +7,11 @@ interface Props {
   size?: 'sm' | 'lg';
   /** 計測用のカード名（GA4 の affiliate_click イベントで送信） */
   item?: string;
+  /** ボタン文言の上書き（例: 在庫なし時の「楽天市場で探す」） */
+  label?: string;
 }
 
-const { kind, href, shop, size = 'sm', item } = Astro.props;
+const { kind, href, shop, size = 'sm', item, label } = Astro.props;
 const network = href.includes('a8.net') ? 'a8' : href.includes('moshimo.com') ? 'moshimo' : undefined;
 
 const styles = {
@@ -32,6 +34,6 @@ const styles = {
     size === 'lg' ? 'px-4 py-4 text-base' : 'px-2 py-2.5 text-sm',
   ]}
 >
-  {styles.label}
+  {label ?? styles.label}
   <span class:list={['font-normal opacity-90', size === 'lg' ? 'text-xs' : 'text-[10px]']}>{shop}へ</span>
 </a>

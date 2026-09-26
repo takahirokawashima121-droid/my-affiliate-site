@@ -22,3 +22,14 @@ export function cardDisplayName(card: CardIdentity): string {
 export function cardSearchKeyword({ name, rarity, cardNumber }: Pick<CardIdentity, 'name' | 'rarity' | 'cardNumber'>): string {
   return `${name} ${rarity} ${cardNumber} ポケカ`;
 }
+
+/**
+ * 楽天APIの検索キーワード候補（該当商品が見つからなければ次の候補で再検索する）
+ * 1. "ナンジャモ SAR 096/071 ポケカ"
+ * 2. "ナンジャモ SAR 096/071"（「ポケカ」を含まない出品タイトル向け）
+ * 3. "ナンジャモ 096/071"（レアリティ表記が異なる・省略された出品タイトル向け）
+ */
+export function cardSearchKeywords(card: Pick<CardIdentity, 'name' | 'rarity' | 'cardNumber'>): string[] {
+  const { name, rarity, cardNumber } = card;
+  return [cardSearchKeyword(card), `${name} ${rarity} ${cardNumber}`, `${name} ${cardNumber}`];
+}

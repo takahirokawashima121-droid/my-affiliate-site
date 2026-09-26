@@ -32,8 +32,8 @@ export function cardLabel(card: Card): string {
  * valid=false とし、画面では差額・買取率の代わりに「相場確認中」と表示する。
  */
 export function priceGap(card: Card): { valid: boolean; spread: number; rate: number } {
-  const { salePrice, buybackPrice } = card.data;
-  const valid = salePrice > 0 && buybackPrice < salePrice;
+  const { salePrice, saleInStock, buybackPrice } = card.data;
+  const valid = saleInStock && salePrice > 0 && buybackPrice < salePrice;
   return {
     valid,
     spread: salePrice - buybackPrice,

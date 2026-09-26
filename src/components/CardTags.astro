@@ -1,6 +1,7 @@
 ---
 // カードのバッジ類：レアリティ / レギュレーションマーク / スタンダード対応 / 最安版
-import { isStandardLegal, rarityClass, type Card } from '../utils/cards';
+import { isStandardLegal, isStandardExempt, hasRarityMark, rarityClass, type Card } from '../utils/cards';
+import { STANDARD_REGULATIONS } from '../consts';
 
 interface Props {
   card: Card;
@@ -12,11 +13,13 @@ interface Props {
 const { card, cheapest = false, size = 'sm' } = Astro.props;
 const { rarity, regulationMark } = card.data;
 const standard = isStandardLegal(card);
+// 例外リストによってのみスタンダードで使えるカード（マーク自体は旧レギュレーション）
+const exempt = isStandardExempt(card) && !(regulationMark && (STANDARD_REGULATIONS as readonly string[]).includes(regulationMark));
 const text = size === 'lg' ? 'text-sm' : 'text-xs';
 ---
 
 <div class="flex flex-wrap items-center gap-1.5">
-  <span class:list={['rounded px-2 py-0.5 font-bold tracking-wide', text, rarityClass(rarity)]}>{rarity}</span>
+  {hasRarityMark(rarity) && <span class:list={['rounded px-2 py-0.5 font-bold tracking-wide', text, rarityClass(rarity)]}>{rarity}</span>}
   {regulationMark && (
     <span
       class:list={[
@@ -31,7 +34,7 @@ const text = size === 'lg' ? 'text-sm' : 'text-xs';
     </span>
   )}
   {standard && (
-    <span class:list={['inline-flex items-center gap-0.5 rounded-full bg-emerald-500 px-2 py-0.5 font-bold text-white', text]} title="現在のスタンダードレギュレーションで使用できます">
+    <span class:list={['inline-flex items-center gap-0.5 rounded-full bg-emerald-500 px-2 py-0.5 font-bold text-white', text]} title={exempt ? '公式の例外リストにより、レギュレーションマークに関わらずスタンダードで使用できます' : '現在のスタンダードレギュレーションで使用できます'}>
       <svg class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.7 5.3a1 1 0 0 1 0 1.4l-8 8a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.4L8 12.6l7.3-7.3a1 1 0 0 1 1.4 0Z" clip-rule="evenodd"></path></svg>
       スタンダード
     </span>

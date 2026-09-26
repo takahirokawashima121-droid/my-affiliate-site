@@ -1,6 +1,6 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { cardDisplayName, modelCode } from './cardFormat';
-import { STANDARD_REGULATIONS } from '../consts';
+import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../consts';
 
 export type Card = CollectionEntry<'cards'>;
 
@@ -51,10 +51,20 @@ export function showsBuybackPrice(card: Card): boolean {
   return card.data.saleInStock;
 }
 
-/** 現在のスタンダードレギュレーションで使えるカードか（レギュレーションマークが H・I・J 等） */
+/** 公式の例外リストにより、レギュレーションマークに関わらずスタンダードで使えるカードか */
+export function isStandardExempt(card: Card): boolean {
+  return STANDARD_EXEMPT_NAMES.includes(card.data.name);
+}
+
+/** 現在のスタンダードレギュレーションで使えるカードか（マークが H・I・J 等、または公式の例外リストのカード） */
 export function isStandardLegal(card: Card): boolean {
   const mark = card.data.regulationMark;
-  return mark !== undefined && (STANDARD_REGULATIONS as readonly string[]).includes(mark);
+  return (mark !== undefined && (STANDARD_REGULATIONS as readonly string[]).includes(mark)) || isStandardExempt(card);
+}
+
+/** カード名の後ろに付けるレアリティ（レアリティ記号のない再録カード「-」は付けない） */
+export function hasRarityMark(rarity: string): boolean {
+  return rarity !== '-';
 }
 
 /** 同じカード名の別バージョン（別レアリティ・別の弾）を、販売価格の安い順に返す（在庫なしは最後） */

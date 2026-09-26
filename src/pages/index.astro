@@ -127,7 +127,7 @@ const chip =
       <div class="flex flex-wrap items-center gap-2" role="group" aria-label="レアリティで絞り込み">
         <span class="mr-1 w-full text-sm text-slate-500 sm:w-auto">レアリティ:</span>
         <button type="button" class={chip} data-filter="rarity" data-value="" aria-pressed="true">すべて</button>
-        {rarities.map((r) => <button type="button" class={chip} data-filter="rarity" data-value={r} aria-pressed="false">{r}</button>)}
+        {rarities.map((r) => <button type="button" class={chip} data-filter="rarity" data-value={r} aria-pressed="false">{r === '-' ? '記号なし' : r}</button>)}
       </div>
       <div class="flex flex-wrap items-center gap-2" role="group" aria-label="レギュレーションで絞り込み">
         <span class="mr-1 w-full text-sm text-slate-500 sm:w-auto">レギュレーション:</span>

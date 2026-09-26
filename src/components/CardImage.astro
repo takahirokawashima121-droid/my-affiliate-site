@@ -3,6 +3,7 @@
 // - imageUrl があれば画像を表示（楽天のサムネイルは 300px / 600px を srcset で出し分け）
 // - imageUrl が空、または画像の読み込みに失敗した場合は、カード名・レアリティ・型番を配置したプレースホルダーに切り替える
 import { cardModel, rarityClass, type Card } from '../utils/cards';
+import { nameWithRarity } from '../utils/cardFormat';
 
 interface Props {
   card: Card;
@@ -15,7 +16,7 @@ interface Props {
 
 const { card, eager = false, sizes = '(min-width: 640px) 112px, 96px', class: className } = Astro.props;
 const { name, rarity, cardNumber, imageUrl } = card.data;
-const alt = `${name} ${rarity} [${cardNumber}]`;
+const alt = `${nameWithRarity({ name, rarity })} [${cardNumber}]`;
 // 読み込みエラー時に画像を隠し、直後のプレースホルダーを表示する（JS バンドル不要のインラインハンドラ）
 const onImageError = 'this.hidden=true;this.nextElementSibling.hidden=false';
 
@@ -62,7 +63,7 @@ if (imageUrl) {
     hidden={Boolean(imageUrl)}
   >
     <div class="flex h-full w-full flex-col items-center justify-between rounded-[6%] bg-gradient-to-b from-slate-800 to-slate-950 p-[8%] text-center text-white">
-      <span class={`rounded px-[6%] py-[1.5%] text-[9cqw] font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span>
+      {rarity !== '-' ? <span class={`rounded px-[6%] py-[1.5%] text-[9cqw] font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span> : <span></span>}
       <div class="flex flex-col items-center gap-[4cqw]">
         <svg viewBox="0 0 24 24" class="h-[18cqw] w-[18cqw] text-white/30" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <circle cx="12" cy="12" r="9"></circle>

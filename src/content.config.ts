@@ -22,7 +22,7 @@ const cards = defineCollection({
   loader: file('src/data/cards.json'),
   schema: z.object({
     name: z.string().min(1), // カードの正式名称（例: "ナンジャモ", "リーリエの全力"）。（SA）等の表記は含めない
-    rarity: z.string().min(1), // レアリティ（例: "SAR", "SR"）
+    rarity: z.string().min(1), // レアリティ（例: "SAR", "SR"）。レアリティ記号のない再録カードは "-"
     cardNumber: z.string().regex(/^\d+\/\d+$/, 'カード番号は「096/071」の形式で入力してください'), // カード番号
     expansionCode: z.string().regex(/^[A-Za-z0-9+-]+$/, '収録弾の記号は「SV2D」「SM4+」の形式で入力してください'), // 収録弾の略称記号
     regulationMark: z.string().regex(/^[A-Z]$/, 'レギュレーションマークは「H」「I」「J」などの英大文字1字で入力してください').optional(), // カード左下のレギュレーションマーク（不明な旧弾は省略）
@@ -36,6 +36,8 @@ const cards = defineCollection({
     buybackShop: z.string(), // 買取ショップ名
     buybackUrl: z.url(), // 買取アフィリエイトリンク
     buybackImpressionUrl: z.url().optional(), // 買取側のインプレッション計測用画像
+    // 予算を抑えたい人向けの代用・関連カード（cards.json 内の id。存在しない id はビルド時にエラー）
+    substituteIds: z.array(z.string()).optional(),
     updatedAt: z.coerce.date(), // 更新日時
   }),
 });

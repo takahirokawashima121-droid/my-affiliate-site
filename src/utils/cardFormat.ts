@@ -13,9 +13,14 @@ export function modelCode({ expansionCode, cardNumber }: Pick<CardIdentity, 'exp
   return `${expansionCode} ${cardNumber}`;
 }
 
-/** 表示名（例: "ナンジャモ SAR [SV2D 096/071]"）。見出し・<title>・パンくず等で使う */
+/** カード名＋レアリティ（例: "ナンジャモ SAR"）。レアリティ記号のない再録カード（rarity "-"）はカード名のみ */
+export function nameWithRarity({ name, rarity }: Pick<CardIdentity, 'name' | 'rarity'>): string {
+  return rarity === '-' ? name : `${name} ${rarity}`;
+}
+
+/** 表示名（例: "ナンジャモ SAR [SV2D 096/071]"、"ハイパーボール [SV4a 161/190]"）。見出し・<title>・パンくず等で使う */
 export function cardDisplayName(card: CardIdentity): string {
-  return `${card.name} ${card.rarity} [${modelCode(card)}]`;
+  return `${nameWithRarity(card)} [${modelCode(card)}]`;
 }
 
 /**

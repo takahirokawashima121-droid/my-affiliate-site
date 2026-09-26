@@ -112,7 +112,7 @@ export function hasMeaningfulChange(before, after) {
 }
 
 /** cards.json の項目の並び順（書き出し時にそろえる） */
-const KEY_ORDER = ['id', 'name', 'rarity', 'cardNumber', 'expansionCode', 'imageUrl', 'salePrice', 'saleInStock', 'saleShop', 'saleUrl', 'saleImpressionUrl', 'buybackPrice', 'buybackShop', 'buybackUrl', 'buybackImpressionUrl', 'updatedAt'];
+const KEY_ORDER = ['id', 'name', 'rarity', 'cardNumber', 'expansionCode', 'regulationMark', 'imageUrl', 'salePrice', 'saleInStock', 'saleShop', 'saleUrl', 'saleImpressionUrl', 'buybackPrice', 'buybackShop', 'buybackUrl', 'buybackImpressionUrl', 'updatedAt'];
 const orderKeys = (card) => Object.fromEntries([...KEY_ORDER.filter((k) => k in card), ...Object.keys(card).filter((k) => !KEY_ORDER.includes(k))].map((k) => [k, card[k]]));
 
 /** 保存する画像サイズ（楽天のサムネイルサーバーは ?_ex=幅x高さ で縮小画像を返す） */

@@ -18,9 +18,15 @@ export function cardDisplayName(card: CardIdentity): string {
   return `${card.name} ${card.rarity} [${modelCode(card)}]`;
 }
 
-/** 楽天API・モール検索用のキーワード（例: "ナンジャモ SAR 096/071 ポケカ"） */
+/**
+ * キーワードに入れるレアリティ。楽天APIは1文字の半角語を含むキーワードを「keyword is not valid」で拒否するため、
+ * 「U」「C」「R」など1文字のレアリティは含めない（カード名＋番号で十分に特定できる）
+ */
+const rarityWord = (rarity: string) => (rarity.length >= 2 ? ` ${rarity}` : '');
+
+/** 楽天API・モール検索用のキーワード（例: "ナンジャモ SAR 096/071 ポケカ"、"なかよしポフィン 063/071 ポケカ"） */
 export function cardSearchKeyword({ name, rarity, cardNumber }: Pick<CardIdentity, 'name' | 'rarity' | 'cardNumber'>): string {
-  return `${name} ${rarity} ${cardNumber} ポケカ`;
+  return `${name}${rarityWord(rarity)} ${cardNumber} ポケカ`;
 }
 
 /**
@@ -31,5 +37,6 @@ export function cardSearchKeyword({ name, rarity, cardNumber }: Pick<CardIdentit
  */
 export function cardSearchKeywords(card: Pick<CardIdentity, 'name' | 'rarity' | 'cardNumber'>): string[] {
   const { name, rarity, cardNumber } = card;
-  return [cardSearchKeyword(card), `${name} ${rarity} ${cardNumber}`, `${name} ${cardNumber}`];
+  // 1文字レアリティのカードは 2 と 3 が同じになるため重複を除く
+  return [...new Set([cardSearchKeyword(card), `${name}${rarityWord(rarity)} ${cardNumber}`, `${name} ${cardNumber}`])];
 }

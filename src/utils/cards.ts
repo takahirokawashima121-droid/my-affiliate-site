@@ -4,7 +4,7 @@ import { cardDisplayName, modelCode } from './cardFormat';
 export type Card = CollectionEntry<'cards'>;
 
 /** 表示で使うレアリティの並び順（ここにないものは末尾） */
-const RARITY_ORDER = ['FUR', 'UR', 'SSR', 'SAR', 'HR', 'SR', 'SA', 'AR', 'CHR', 'RRR', 'RR', 'R', 'U', 'C', 'PROMO'];
+const RARITY_ORDER = ['MUR', 'FUR', 'UR', 'SSR', 'SAR', 'HR', 'SR', 'SA', 'ACE', 'AR', 'CHR', 'RRR', 'RR', 'R', 'U', 'C', 'PROMO'];
 
 export async function getCards(): Promise<Card[]> {
   const cards = await getCollection('cards');
@@ -56,6 +56,7 @@ export function cardModel(card: Card): string {
 }
 
 const RARITY_STYLES: Record<string, string> = {
+  MUR: 'bg-gradient-to-r from-rose-500 via-amber-400 to-emerald-400 text-white',
   FUR: 'bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 text-white',
   UR: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-950',
   SAR: 'bg-gradient-to-r from-amber-400 via-pink-400 to-violet-400 text-white',
@@ -64,6 +65,8 @@ const RARITY_STYLES: Record<string, string> = {
   SA: 'bg-violet-600 text-white',
   AR: 'bg-teal-600 text-white',
   HR: 'bg-amber-500 text-white',
+  ACE: 'bg-gradient-to-r from-sky-500 to-indigo-600 text-white',
+  U: 'bg-slate-500 text-white',
 };
 
 /** レアリティバッジの配色クラス */

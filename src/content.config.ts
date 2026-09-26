@@ -25,6 +25,7 @@ const cards = defineCollection({
     rarity: z.string().min(1), // レアリティ（例: "SAR", "SR"）
     cardNumber: z.string().regex(/^\d+\/\d+$/, 'カード番号は「096/071」の形式で入力してください'), // カード番号
     expansionCode: z.string().regex(/^[A-Za-z0-9+-]+$/, '収録弾の記号は「SV2D」「SM4+」の形式で入力してください'), // 収録弾の略称記号
+    regulationMark: z.string().regex(/^[A-Z]$/, 'レギュレーションマークは「H」「I」「J」などの英大文字1字で入力してください').optional(), // カード左下のレギュレーションマーク（不明な旧弾は省略）
     imageUrl: z.string().default(''), // 画像URL（空なら仮画像を表示）
     salePrice: z.number().int().nonnegative(), // 販売最安値（円）。在庫なしの場合は 0
     saleInStock: z.boolean().default(true), // 楽天市場に在庫のある出品があるか（false なら「在庫なし」表示）

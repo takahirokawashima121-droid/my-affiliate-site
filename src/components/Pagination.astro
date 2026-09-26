@@ -1,0 +1,18 @@
+---
+interface Props {
+  prevUrl?: string;
+  nextUrl?: string;
+  current: number;
+  last: number;
+}
+const { prevUrl, nextUrl, current, last } = Astro.props;
+const cls = 'rounded-lg border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50';
+---
+
+{last > 1 && (
+  <nav aria-label="ページ送り" class="mt-10 flex items-center justify-center gap-4">
+    {prevUrl ? <a href={prevUrl} rel="prev" class={cls}>← 前へ</a> : <span class={`${cls} invisible`}>← 前へ</span>}
+    <span class="text-sm text-gray-600">{current} / {last}</span>
+    {nextUrl ? <a href={nextUrl} rel="next" class={cls}>次へ →</a> : <span class={`${cls} invisible`}>次へ →</span>}
+  </nav>
+)}

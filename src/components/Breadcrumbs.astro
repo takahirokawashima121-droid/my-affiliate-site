@@ -1,0 +1,36 @@
+---
+interface Props {
+  items: { name: string; href: string }[];
+}
+const { items } = Astro.props;
+
+// 構造化データ（BreadcrumbList）で検索結果にパンくずを表示
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((item, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: item.name,
+    item: new URL(item.href, Astro.site).toString(),
+  })),
+};
+---
+
+<nav aria-label="パンくずリスト" class="mb-6 text-xs text-gray-500">
+  <ol class="flex flex-wrap items-center gap-1">
+    {items.map((item, i) => (
+      <li class="flex items-center gap-1">
+        {i < items.length - 1 ? (
+          <Fragment>
+            <a href={item.href} class="hover:text-brand-600">{item.name}</a>
+            <span aria-hidden="true">›</span>
+          </Fragment>
+        ) : (
+          <span aria-current="page" class="line-clamp-1">{item.name}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

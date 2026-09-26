@@ -1,0 +1,20 @@
+---
+import { SITE } from '../consts';
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-16 border-t border-gray-200 bg-gray-50">
+  <div class="mx-auto max-w-5xl px-4 py-8 text-sm text-gray-600">
+    <p class="mb-4 text-xs leading-relaxed text-gray-500">
+      当サイトはアフィリエイトプログラム（Amazonアソシエイト等）に参加しており、記事内の商品リンクから購入された場合に報酬を得ることがあります。
+    </p>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <p>&copy; {year} {SITE.title}</p>
+      <ul class="flex flex-wrap gap-4">
+        <li><a href="/about/" class="hover:text-brand-600">運営者情報</a></li>
+        <li><a href="/privacy/" class="hover:text-brand-600">プライバシーポリシー・免責事項</a></li>
+        <li><a href="/rss.xml" class="hover:text-brand-600">RSS</a></li>
+      </ul>
+    </div>
+  </div>
+</footer>

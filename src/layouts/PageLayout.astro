@@ -1,0 +1,21 @@
+---
+// src/pages/*.md の固定ページ用レイアウト
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+
+interface Props {
+  frontmatter: { title: string; description?: string };
+}
+
+const { title, description } = Astro.props.frontmatter;
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="mx-auto max-w-3xl">
+    <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: title, href: Astro.url.pathname }]} />
+    <h1 class="mb-8 text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
+    <div class="prose prose-gray max-w-none prose-a:text-brand-600">
+      <slot />
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,20 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@theme {
+  --font-sans: system-ui, -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo, sans-serif;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 記事内のアフィリエイトボタン: <a class="btn-affiliate" href="..." rel="sponsored nofollow noopener" target="_blank"> */
+@utility btn-affiliate {
+  @apply inline-block rounded-lg bg-orange-500 px-6 py-3 font-bold text-white no-underline shadow-sm transition hover:bg-orange-600;
+}

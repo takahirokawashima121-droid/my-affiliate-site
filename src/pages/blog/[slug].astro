@@ -1,0 +1,33 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { render } from 'astro:content';
+import BlogPost from '../../layouts/BlogPost.astro';
+import { getPosts, type Post } from '../../utils/posts';
+
+export const getStaticPaths = (async () => {
+  const posts = await getPosts();
+  return posts.map((post) => {
+    // タグの一致数が多い順に関連記事を最大4件
+    const related = posts
+      .filter((p) => p.id !== post.id)
+      .map((p) => ({ p, score: p.data.tags.filter((t) => post.data.tags.includes(t)).length }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+      .map(({ p }) => p);
+    return { params: { slug: post.id }, props: { post, related } };
+  });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  post: Post;
+  related: Post[];
+}
+
+const { post, related } = Astro.props;
+const { Content, headings } = await render(post);
+---
+
+<BlogPost post={post} headings={headings} related={related}>
+  <Content />
+</BlogPost>

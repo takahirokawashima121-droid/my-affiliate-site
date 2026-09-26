@@ -1,0 +1,47 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import { SITE } from '../consts';
+import { getPosts, getAllTags } from '../utils/posts';
+
+const posts = await getPosts();
+const latest = posts.slice(0, 6);
+const tags = getAllTags(posts).slice(0, 12);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE.title,
+  description: SITE.description,
+  url: Astro.site?.toString(),
+  inLanguage: SITE.lang,
+};
+---
+
+<BaseLayout jsonLd={jsonLd}>
+  <section class="mb-12 rounded-2xl bg-gradient-to-br from-brand-50 to-white px-6 py-10 text-center sm:py-14">
+    <h1 class="text-2xl font-bold text-gray-900 sm:text-4xl">{SITE.title}</h1>
+    <p class="mx-auto mt-4 max-w-xl text-sm text-gray-600 sm:text-base">{SITE.description}</p>
+  </section>
+
+  <section aria-labelledby="latest">
+    <div class="mb-6 flex items-end justify-between">
+      <h2 id="latest" class="text-xl font-bold text-gray-900">新着記事</h2>
+      <a href="/blog/" class="text-sm text-brand-600 hover:underline">すべて見る →</a>
+    </div>
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {latest.map((post, i) => <PostCard post={post} eager={i < 3} />)}
+    </div>
+  </section>
+
+  {tags.length > 0 && (
+    <section aria-labelledby="tags" class="mt-14">
+      <h2 id="tags" class="mb-4 text-xl font-bold text-gray-900">人気のタグ</h2>
+      <ul class="flex flex-wrap gap-2">
+        {tags.map(({ tag, count }) => (
+          <li><a href={`/tags/${tag}/`} class="rounded-full border border-gray-200 px-3 py-1 text-sm text-gray-700 hover:border-brand-600 hover:text-brand-600">#{tag} <span class="text-gray-400">({count})</span></a></li>
+        ))}
+      </ul>
+    </section>
+  )}
+</BaseLayout>

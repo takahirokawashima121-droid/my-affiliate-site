@@ -6,6 +6,8 @@ import CardImage from '../../components/CardImage.astro';
 import CardItem from '../../components/CardItem.astro';
 import AffiliateButton from '../../components/AffiliateButton.astro';
 import AffiliatePixels from '../../components/AffiliatePixels.astro';
+import MallSearchButtons from '../../components/MallSearchButtons.astro';
+import { mallKeyword } from '../../utils/moshimo';
 import { SITE } from '../../consts';
 import { getCards, cardLabel, cardPath, formatDateTime, formatYen, rarityClass, type Card } from '../../utils/cards';
 
@@ -111,6 +113,8 @@ const jsonLd = {
             </div>
           </div>
         </div>
+
+        <MallSearchButtons keyword={mallKeyword(name, rarity)} />
 
         <p class="mt-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
           販売価格と買取価格の差額は <strong class="tabular-nums">{formatYen(spread)}</strong>（買取率 約<strong class="tabular-nums">{buybackRate}%</strong>）です。

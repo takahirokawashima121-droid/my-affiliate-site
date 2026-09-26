@@ -1,0 +1,43 @@
+---
+// 楽天市場・Yahoo!ショッピングの検索結果へ、もしもアフィリエイト経由で遷移するボタン
+import { MALLS, moshimoClickUrl, moshimoImpressionUrl, type MallKey } from '../utils/moshimo';
+
+interface Props {
+  /** 検索キーワード（例: 「ナンジャモ SAR」） */
+  keyword: string;
+}
+
+const { keyword } = Astro.props;
+
+const buttons: { mall: MallKey; color: string }[] = [
+  { mall: 'rakuten', color: 'bg-[#bf0000] hover:bg-[#990000] focus-visible:outline-[#bf0000]' },
+  { mall: 'yahoo', color: 'bg-[#ff0033] hover:bg-[#d6002b] focus-visible:outline-[#ff0033]' },
+];
+---
+
+<section aria-labelledby="mall-search" class="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+  <h3 id="mall-search" class="text-base font-bold text-slate-900">大手モールで在庫・価格を探す</h3>
+  <p class="mt-1 text-xs text-slate-500">「{keyword} ポケカ」の検索結果を開きます。</p>
+  <div class="mt-4 grid gap-3 sm:grid-cols-2">
+    {buttons.map(({ mall, color }) => (
+      <a
+        href={moshimoClickUrl(mall, keyword)}
+        target="_blank"
+        rel="sponsored nofollow noopener noreferrer"
+        class:list={[
+          'flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-center text-base font-bold text-white shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2',
+          color,
+        ]}
+      >
+        {MALLS[mall].label}で探す
+        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-8 8M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"></path>
+        </svg>
+      </a>
+    ))}
+  </div>
+  <!-- もしもアフィリエイトのインプレッション計測 -->
+  {buttons.map(({ mall }) => (
+    <img src={moshimoImpressionUrl(mall)} width="1" height="1" alt="" loading="eager" style="border:none;position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" />
+  ))}
+</section>

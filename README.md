@@ -1,4 +1,4 @@
-# ポケカ相場比較ナビ
+# ポケカ価格ナビ
 
 中古ポケモンカードの販売最安値・買取最高値を比較できる、Astro + Tailwind CSS 製の静的サイトです。
 
@@ -13,7 +13,7 @@
 
 ## 最初にやること
 
-1. `astro.config.mjs` の `site` を本番URLに変更
+1. `astro.config.mjs` の `site` が本番URLになっているか確認（現在: https://my-affiliate-site-phi.vercel.app/）
 2. `src/consts.ts` でサイト名・説明文・運営者名を変更
 3. `public/og-default.png`（1200×630）を置く（SNSシェア時の画像）
 4. `src/pages/about.md` と `src/pages/privacy.md` を自分用に書き換え

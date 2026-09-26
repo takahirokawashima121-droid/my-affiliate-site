@@ -1,9 +1,10 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import CardItem from '../components/CardItem.astro';
+import AffiliatePixels from '../components/AffiliatePixels.astro';
 import PostCard from '../components/PostCard.astro';
 import { SITE } from '../consts';
-import { getCards, getRarities, latestUpdate, formatDateTime } from '../utils/cards';
+import { getCards, getRarities, latestUpdate, formatDateTime, cardPath } from '../utils/cards';
 import { getPosts } from '../utils/posts';
 
 const cards = await getCards();
@@ -11,8 +12,6 @@ const rarities = getRarities(cards);
 const shops = new Set(cards.flatMap((c) => [c.data.saleShop, c.data.buybackShop]));
 const updated = latestUpdate(cards);
 const posts = (await getPosts()).slice(0, 3);
-// アフィリエイトのインプレッション計測画像（同じURLはページ内で1回だけ読み込む）
-const impressionUrls = [...new Set(cards.flatMap((c) => [c.data.saleImpressionUrl, c.data.buybackImpressionUrl]).filter((u) => u !== undefined))];
 
 // 構造化データ：サイト情報 + 掲載カード一覧（商品と最安値）
 const jsonLd = [
@@ -36,6 +35,7 @@ const jsonLd = [
         '@type': 'Product',
         name: `${c.data.name} ${c.data.rarity} ${c.data.modelNumber}`,
         sku: c.data.modelNumber,
+        url: new URL(cardPath(c), Astro.site).toString(),
         brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
         ...(c.data.imageUrl && { image: new URL(c.data.imageUrl, Astro.site).toString() }),
         offers: {
@@ -137,7 +137,7 @@ const chip =
       <p class="mt-1 text-sm">キーワードやレアリティを変えてお試しください。</p>
     </div>
 
-    {impressionUrls.map((src) => <img src={src} width="1" height="1" alt="" class="absolute h-px w-px opacity-0" />)}
+    <AffiliatePixels cards={cards} />
 
     <p class="mt-6 text-xs leading-relaxed text-slate-400">
       ※ 価格は各ショップの掲載情報をもとにした参考価格です。在庫状況や状態（美品・傷あり等）により実際の価格は変動します。購入・買取の前に必ず各ショップで最新情報をご確認ください。

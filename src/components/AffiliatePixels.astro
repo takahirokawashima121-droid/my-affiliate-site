@@ -1,0 +1,12 @@
+---
+// アフィリエイトのインプレッション計測画像（同じURLはページ内で1回だけ読み込む）
+import type { Card } from '../utils/cards';
+
+interface Props {
+  cards: Card[];
+}
+
+const urls = [...new Set(Astro.props.cards.flatMap((c) => [c.data.saleImpressionUrl, c.data.buybackImpressionUrl]).filter((u) => u !== undefined))];
+---
+
+{urls.map((src) => <img src={src} width="1" height="1" alt="" class="absolute h-px w-px opacity-0" />)}

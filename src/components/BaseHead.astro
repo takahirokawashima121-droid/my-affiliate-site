@@ -4,6 +4,8 @@ import { SITE } from '../consts';
 
 export interface Props {
   title?: string;
+  /** false にすると <title> にサイト名を付けない */
+  titleSuffix?: boolean;
   description?: string;
   image?: string;
   type?: 'website' | 'article';
@@ -15,6 +17,7 @@ export interface Props {
 
 const {
   title,
+  titleSuffix = true,
   description = SITE.description,
   image = SITE.ogImage,
   type = 'website',
@@ -24,7 +27,7 @@ const {
   jsonLd,
 } = Astro.props;
 
-const fullTitle = title ? `${title} | ${SITE.title}` : SITE.title;
+const fullTitle = title ? (titleSuffix ? `${title} | ${SITE.title}` : title) : `${SITE.title}｜${SITE.tagline}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
 ---

@@ -1,0 +1,142 @@
+---
+import type { GetStaticPaths } from 'astro';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import CardImage from '../../components/CardImage.astro';
+import CardItem from '../../components/CardItem.astro';
+import AffiliateButton from '../../components/AffiliateButton.astro';
+import AffiliatePixels from '../../components/AffiliatePixels.astro';
+import { SITE } from '../../consts';
+import { getCards, cardLabel, cardPath, formatDateTime, formatYen, rarityClass, type Card } from '../../utils/cards';
+
+export const getStaticPaths = (async () => {
+  const cards = await getCards();
+  return cards.map((card) => {
+    // 関連カード：同じカード名 → 同じレアリティ → その他 の順に最大3件
+    const score = (c: Card) => (c.data.name === card.data.name ? 2 : 0) + (c.data.rarity === card.data.rarity ? 1 : 0);
+    const related = cards
+      .filter((c) => c.id !== card.id)
+      .sort((a, b) => score(b) - score(a))
+      .slice(0, 3);
+    return { params: { id: card.id }, props: { card, related } };
+  });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  card: Card;
+  related: Card[];
+}
+
+const { card, related } = Astro.props;
+const { name, modelNumber, rarity, imageUrl, salePrice, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
+const label = cardLabel(card);
+const updatedText = formatDateTime(updatedAt);
+const spread = salePrice - buybackPrice;
+const buybackRate = salePrice > 0 ? Math.round((buybackPrice / salePrice) * 100) : 0;
+
+const title = `【ポケカ】${label}の販売最安値・買取相場比較`;
+const description = `${label}の販売最安値は${formatYen(salePrice)}（${saleShop}）、買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
+
+// 構造化データ（Product + 販売価格）
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: `${name} ${rarity} ${modelNumber}`,
+  sku: modelNumber,
+  description,
+  brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
+  ...(imageUrl && { image: new URL(imageUrl, Astro.site).toString() }),
+  offers: {
+    '@type': 'Offer',
+    price: salePrice,
+    priceCurrency: 'JPY',
+    itemCondition: 'https://schema.org/UsedCondition',
+    seller: { '@type': 'Organization', name: saleShop },
+    url: saleUrl,
+  },
+};
+---
+
+<BaseLayout title={title} titleSuffix={false} description={description} image={imageUrl || undefined} jsonLd={jsonLd}>
+  <Breadcrumbs items={[{ name: 'ホーム（相場一覧）', href: '/' }, { name: label, href: cardPath(card) }]} />
+
+  <article class="grid gap-8 md:grid-cols-[minmax(0,280px)_1fr] lg:gap-12">
+    <!-- 画像 -->
+    <div class="mx-auto w-full max-w-[240px] md:max-w-none">
+      <CardImage card={card} eager class="rounded-2xl shadow-lg" />
+    </div>
+
+    <div class="min-w-0">
+      {SITE.sampleData && (
+        <p class="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800" role="note">
+          ※ 現在表示している価格はデモ用のサンプルデータです。
+        </p>
+      )}
+
+      <span class={`inline-block rounded px-2.5 py-0.5 text-sm font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span>
+      <h1 class="mt-2 text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">
+        {name}
+        <span class="mt-1 block text-base font-bold text-slate-500 sm:text-lg">販売最安値・買取相場比較</span>
+      </h1>
+
+      <dl class="mt-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-xl border border-slate-200 bg-white p-4 text-sm">
+        <dt class="text-slate-500">カード名</dt>
+        <dd class="font-medium text-slate-900">{name}</dd>
+        <dt class="text-slate-500">型番</dt>
+        <dd class="font-mono text-slate-900">{modelNumber}</dd>
+        <dt class="text-slate-500">レアリティ</dt>
+        <dd class="font-medium text-slate-900">{rarity}</dd>
+        <dt class="text-slate-500">価格更新日時</dt>
+        <dd class="text-slate-900"><time datetime={updatedAt.toISOString()}>{updatedText}</time></dd>
+      </dl>
+
+      <!-- 価格比較ボックス -->
+      <section aria-labelledby="price-compare" class="mt-8">
+        <h2 id="price-compare" class="mb-3 text-lg font-bold text-slate-900">販売・買取価格の比較</h2>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="flex flex-col rounded-2xl border-2 border-rose-200 bg-white p-5 shadow-sm">
+            <p class="text-sm font-bold text-rose-600">販売最安値</p>
+            <p class="mt-1 text-3xl font-extrabold tabular-nums text-rose-600 sm:text-4xl">{formatYen(salePrice)}</p>
+            <p class="mt-1 text-sm text-slate-600">ショップ：<span class="font-semibold text-slate-900">{saleShop}</span></p>
+            <div class="mt-4">
+              <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} size="lg" />
+            </div>
+          </div>
+          <div class="flex flex-col rounded-2xl border-2 border-emerald-200 bg-white p-5 shadow-sm">
+            <p class="text-sm font-bold text-emerald-600">買取最高値</p>
+            <p class="mt-1 text-3xl font-extrabold tabular-nums text-emerald-600 sm:text-4xl">{formatYen(buybackPrice)}</p>
+            <p class="mt-1 text-sm text-slate-600">ショップ：<span class="font-semibold text-slate-900">{buybackShop}</span></p>
+            <div class="mt-4">
+              <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} size="lg" />
+            </div>
+          </div>
+        </div>
+
+        <p class="mt-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
+          販売価格と買取価格の差額は <strong class="tabular-nums">{formatYen(spread)}</strong>（買取率 約<strong class="tabular-nums">{buybackRate}%</strong>）です。
+        </p>
+
+        <p class="mt-4 flex gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs leading-relaxed text-slate-500" role="note">
+          <svg class="mt-0.5 h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path stroke-linecap="round" d="M12 8h.01M11 12h1v4h1"></path>
+          </svg>
+          <span>価格は変動するため、最新の在庫状況・価格は各公式サイトにてご確認ください。</span>
+        </p>
+      </section>
+
+      <a href="/" class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-indigo-600 hover:underline">← 相場一覧（トップページ）に戻る</a>
+    </div>
+  </article>
+
+  {related.length > 0 && (
+    <section aria-labelledby="related" class="mt-16">
+      <h2 id="related" class="mb-5 text-xl font-bold text-slate-900">ほかのカードの相場</h2>
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {related.map((c) => <CardItem card={c} />)}
+      </div>
+    </section>
+  )}
+
+  <AffiliatePixels cards={[card, ...related]} />
+</BaseLayout>

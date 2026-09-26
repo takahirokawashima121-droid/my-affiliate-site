@@ -1,0 +1,30 @@
+---
+// 「最安値で購入する」「最高値で買い取ってもらう」ボタン（別タブで開く）
+interface Props {
+  kind: 'sale' | 'buyback';
+  href: string;
+  shop: string;
+  size?: 'sm' | 'lg';
+}
+
+const { kind, href, shop, size = 'sm' } = Astro.props;
+
+const styles = {
+  sale: { label: '最安値で購入する', color: 'bg-rose-600 hover:bg-rose-700 focus-visible:outline-rose-600' },
+  buyback: { label: '最高値で買い取ってもらう', color: 'bg-emerald-600 hover:bg-emerald-700 focus-visible:outline-emerald-600' },
+}[kind];
+---
+
+<a
+  href={href}
+  target="_blank"
+  rel="sponsored nofollow noopener noreferrer"
+  class:list={[
+    'flex flex-col items-center justify-center rounded-xl text-center font-bold text-white shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2',
+    styles.color,
+    size === 'lg' ? 'px-4 py-4 text-base' : 'px-2 py-2.5 text-sm',
+  ]}
+>
+  {styles.label}
+  <span class:list={['font-normal opacity-90', size === 'lg' ? 'text-xs' : 'text-[10px]']}>{shop}へ</span>
+</a>

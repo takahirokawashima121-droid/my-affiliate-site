@@ -3,7 +3,7 @@
 import { MALLS, moshimoClickUrl, moshimoImpressionUrl, type MallKey } from '../utils/moshimo';
 
 interface Props {
-  /** 検索キーワード（例: 「ナンジャモ SAR」） */
+  /** 検索キーワード（cardSearchKeyword() の結果。例: 「ナンジャモ SAR 096/071 ポケカ」） */
   keyword: string;
 }
 
@@ -17,7 +17,7 @@ const buttons: { mall: MallKey; color: string }[] = [
 
 <section aria-labelledby="mall-search" class="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
   <h3 id="mall-search" class="text-base font-bold text-slate-900">大手モールで在庫・価格を探す</h3>
-  <p class="mt-1 text-xs text-slate-500">「{keyword} ポケカ」の検索結果を開きます。</p>
+  <p class="mt-1 text-xs text-slate-500">「{keyword}」の検索結果を開きます。</p>
   <div class="mt-4 grid gap-3 sm:grid-cols-2">
     {buttons.map(({ mall, color }) => (
       <a

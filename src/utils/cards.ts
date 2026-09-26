@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { cardDisplayName, modelCode } from './cardFormat';
 
 export type Card = CollectionEntry<'cards'>;
 
@@ -20,10 +21,29 @@ export function cardPath(card: Card): string {
   return `/cards/${card.id}/`;
 }
 
-/** 「ナンジャモ SAR（SV2D 096/071）」形式の表示名（同名カードの区別用） */
+/** 「ナンジャモ SAR [SV2D 096/071]」形式の表示名（同名カードの区別用） */
 export function cardLabel(card: Card): string {
-  const { name, rarity, modelNumber } = card.data;
-  return `${name} ${rarity}（${modelNumber}）`;
+  return cardDisplayName(card.data);
+}
+
+/**
+ * 販売価格と買取価格の差。
+ * 買取価格が販売価格以上（逆ザヤ）の場合は、データが古い・誤っている可能性が高いため
+ * valid=false とし、画面では差額・買取率の代わりに「相場確認中」と表示する。
+ */
+export function priceGap(card: Card): { valid: boolean; spread: number; rate: number } {
+  const { salePrice, buybackPrice } = card.data;
+  const valid = salePrice > 0 && buybackPrice < salePrice;
+  return {
+    valid,
+    spread: salePrice - buybackPrice,
+    rate: salePrice > 0 ? Math.round((buybackPrice / salePrice) * 100) : 0,
+  };
+}
+
+/** 「SV2D 096/071」形式の型番 */
+export function cardModel(card: Card): string {
+  return modelCode(card.data);
 }
 
 const RARITY_STYLES: Record<string, string> = {

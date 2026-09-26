@@ -11,7 +11,8 @@
 //   RAKUTEN_ACCESS_KEY  楽天ウェブサービスのアクセスキー
 //
 // 安全のための仕様:
-// - 型番（例: 096/071）とカード名の両方を商品名に含む商品だけを候補にする
+// - 検索キーワードは「${name} ${rarity} ${cardNumber} ポケカ」（src/utils/cardFormat.ts の cardSearchKeyword）
+// - カード名とカード番号（例: 096/071）の両方を商品名に含む商品だけを候補にする
 // - 候補が見つからない・APIエラーのカードは一切変更しない
 // - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）以外の項目は変更しない
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
@@ -20,6 +21,7 @@
 import { existsSync } from 'node:fs';
 import { readFile, rename, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { cardDisplayName, cardSearchKeyword } from '../src/utils/cardFormat.ts';
 import { moshimoImpressionUrl, moshimoLinkUrl } from '../src/utils/moshimo.ts';
 
 const CARDS_PATH = fileURLToPath(new URL('../src/data/cards.json', import.meta.url));
@@ -41,25 +43,10 @@ export function normalize(text) {
   return text.normalize('NFKC').toLowerCase().replace(/\s+/g, '');
 }
 
-/** 型番からカード番号部分を取り出す（「SV2D 096/071」→「096/071」） */
-export function collectorNumber(modelNumber) {
-  return modelNumber.normalize('NFKC').match(/\d+\/\d+/)?.[0] ?? '';
-}
-
-/** 商品名との照合に使うカード名（「ルギアV（SA）」→「ルギアV」） */
-export function baseName(name) {
-  return name.replace(/[（(].*?[）)]/g, '').trim();
-}
-
-/** 検索キーワード（カード名 + レアリティ + カード番号。同名カードを区別するため番号も含める） */
-export function searchKeyword(card) {
-  return [baseName(card.name), card.rarity, collectorNumber(card.modelNumber)].filter(Boolean).join(' ');
-}
-
-/** 検索結果から、カード名と番号の両方を商品名に含む最安の商品を選ぶ */
+/** 検索結果から、カード名とカード番号の両方を商品名に含む最安の商品を選ぶ */
 export function pickCheapest(card, items) {
-  const name = normalize(baseName(card.name));
-  const number = normalize(collectorNumber(card.modelNumber));
+  const name = normalize(card.name);
+  const number = normalize(card.cardNumber);
   const matches = items.filter((item) => {
     const rawTitle = item.itemName ?? '';
     const title = normalize(rawTitle);
@@ -98,7 +85,7 @@ async function searchRakuten(card, { appId, accessKey }) {
   const params = new URLSearchParams({
     applicationId: appId,
     accessKey,
-    keyword: searchKeyword(card),
+    keyword: cardSearchKeyword(card),
     NGKeyword: NG_KEYWORDS.join(' '),
     sort: '+itemPrice',
     hits: '30',
@@ -159,7 +146,7 @@ async function main() {
   let failed = 0;
   for (const [i, card] of targets.entries()) {
     if (i > 0) await sleep(WAIT_MS);
-    const label = `[${i + 1}/${targets.length}] ${card.name} ${card.rarity}（${card.modelNumber}）`;
+    const label = `[${i + 1}/${targets.length}] ${cardDisplayName(card)}`;
     try {
       const items = await searchRakuten(card, { appId, accessKey });
       const best = pickCheapest(card, items);

@@ -7,9 +7,9 @@ import CardItem from '../../components/CardItem.astro';
 import AffiliateButton from '../../components/AffiliateButton.astro';
 import AffiliatePixels from '../../components/AffiliatePixels.astro';
 import MallSearchButtons from '../../components/MallSearchButtons.astro';
-import { mallKeyword } from '../../utils/moshimo';
+import { cardSearchKeyword } from '../../utils/cardFormat';
 import { SITE } from '../../consts';
-import { getCards, cardLabel, cardPath, formatDateTime, formatYen, rarityClass, type Card } from '../../utils/cards';
+import { getCards, cardLabel, cardModel, cardPath, priceGap, formatDateTime, formatYen, rarityClass, type Card } from '../../utils/cards';
 
 export const getStaticPaths = (async () => {
   const cards = await getCards();
@@ -30,11 +30,11 @@ interface Props {
 }
 
 const { card, related } = Astro.props;
-const { name, modelNumber, rarity, imageUrl, salePrice, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
-const label = cardLabel(card);
+const { name, rarity, cardNumber, expansionCode, imageUrl, salePrice, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
+const label = cardLabel(card); // 例: ナンジャモ SAR [SV2D 096/071]
+const model = cardModel(card); // 例: SV2D 096/071
 const updatedText = formatDateTime(updatedAt);
-const spread = salePrice - buybackPrice;
-const buybackRate = salePrice > 0 ? Math.round((buybackPrice / salePrice) * 100) : 0;
+const gap = priceGap(card); // 逆ザヤ（買取 ≧ 販売）の場合は差額・買取率を出さない
 
 const title = `【ポケカ】${label}の販売最安値・買取相場比較`;
 const description = `${label}の販売最安値は${formatYen(salePrice)}（${saleShop}）、買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
@@ -43,8 +43,8 @@ const description = `${label}の販売最安値は${formatYen(salePrice)}（${sa
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Product',
-  name: `${name} ${rarity} ${modelNumber}`,
-  sku: modelNumber,
+  name: label,
+  sku: model,
   description,
   brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
   ...(imageUrl && { image: new URL(imageUrl, Astro.site).toString() }),
@@ -77,15 +77,17 @@ const jsonLd = {
 
       <span class={`inline-block rounded px-2.5 py-0.5 text-sm font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span>
       <h1 class="mt-2 text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">
-        {name}
+        {name} {rarity} <span class="font-mono text-xl font-bold text-slate-500 sm:text-2xl">[{model}]</span>
         <span class="mt-1 block text-base font-bold text-slate-500 sm:text-lg">販売最安値・買取相場比較</span>
       </h1>
 
       <dl class="mt-5 grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-xl border border-slate-200 bg-white p-4 text-sm">
         <dt class="text-slate-500">カード名</dt>
         <dd class="font-medium text-slate-900">{name}</dd>
-        <dt class="text-slate-500">型番</dt>
-        <dd class="font-mono text-slate-900">{modelNumber}</dd>
+        <dt class="text-slate-500">収録弾</dt>
+        <dd class="font-mono text-slate-900">{expansionCode}</dd>
+        <dt class="text-slate-500">カード番号</dt>
+        <dd class="font-mono text-slate-900">{cardNumber}</dd>
         <dt class="text-slate-500">レアリティ</dt>
         <dd class="font-medium text-slate-900">{rarity}</dd>
         <dt class="text-slate-500">価格更新日時</dt>
@@ -108,16 +110,21 @@ const jsonLd = {
             <p class="text-sm font-bold text-emerald-600">買取最高値</p>
             <p class="mt-1 text-3xl font-extrabold tabular-nums text-emerald-600 sm:text-4xl">{formatYen(buybackPrice)}</p>
             <p class="mt-1 text-sm text-slate-600">ショップ：<span class="font-semibold text-slate-900">{buybackShop}</span></p>
+            {!gap.valid && <p class="mt-2 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">相場確認中：最新の買取価格はショップでご確認ください</p>}
             <div class="mt-4">
               <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} size="lg" item={label} />
             </div>
           </div>
         </div>
 
-        <MallSearchButtons keyword={mallKeyword(name, rarity)} />
+        <MallSearchButtons keyword={cardSearchKeyword(card.data)} />
 
         <p class="mt-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
-          販売価格と買取価格の差額は <strong class="tabular-nums">{formatYen(spread)}</strong>（買取率 約<strong class="tabular-nums">{buybackRate}%</strong>）です。
+          {gap.valid ? (
+            <Fragment>販売価格と買取価格の差額は <strong class="tabular-nums">{formatYen(gap.spread)}</strong>（買取率 約<strong class="tabular-nums">{gap.rate}%</strong>）です。</Fragment>
+          ) : (
+            <Fragment>販売価格と買取価格の差額・買取率は<strong>相場確認中</strong>です。</Fragment>
+          )}
         </p>
 
         <p class="mt-4 flex gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs leading-relaxed text-slate-500" role="note">

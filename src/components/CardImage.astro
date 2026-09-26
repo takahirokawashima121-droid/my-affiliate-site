@@ -1,6 +1,6 @@
 ---
 // カード画像（imageUrl 未設定時はプレースホルダーを表示）
-import type { Card } from '../utils/cards';
+import { cardLabel, type Card } from '../utils/cards';
 
 interface Props {
   card: Card;
@@ -9,13 +9,14 @@ interface Props {
 }
 
 const { card, eager = false, class: className } = Astro.props;
-const { name, rarity, modelNumber, imageUrl } = card.data;
+const { imageUrl } = card.data;
+const label = cardLabel(card);
 ---
 
 {imageUrl ? (
   <img
     src={imageUrl}
-    alt={`${name} ${rarity} ${modelNumber}`}
+    alt={label}
     width="245"
     height="342"
     loading={eager ? 'eager' : 'lazy'}
@@ -27,7 +28,7 @@ const { name, rarity, modelNumber, imageUrl } = card.data;
   <div
     class:list={['flex aspect-[63/88] w-full flex-col items-center justify-center rounded-lg bg-gradient-to-br from-slate-100 to-slate-200 text-slate-400 ring-1 ring-slate-200', className]}
     role="img"
-    aria-label={`${name}（画像準備中）`}
+    aria-label={`${label}（画像準備中）`}
   >
     <svg viewBox="0 0 24 24" class="h-1/4 max-h-16 w-1/4 max-w-16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
       <circle cx="12" cy="12" r="9"></circle>

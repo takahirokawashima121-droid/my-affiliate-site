@@ -21,9 +21,10 @@ const blog = defineCollection({
 const cards = defineCollection({
   loader: file('src/data/cards.json'),
   schema: z.object({
-    name: z.string(), // カード名
-    modelNumber: z.string(), // 型番
-    rarity: z.string(), // レアリティ
+    name: z.string().min(1), // カードの正式名称（例: "ナンジャモ", "リーリエの全力"）。（SA）等の表記は含めない
+    rarity: z.string().min(1), // レアリティ（例: "SAR", "SR"）
+    cardNumber: z.string().regex(/^\d+\/\d+$/, 'カード番号は「096/071」の形式で入力してください'), // カード番号
+    expansionCode: z.string().regex(/^[A-Za-z0-9+-]+$/, '収録弾の記号は「SV2D」「SM4+」の形式で入力してください'), // 収録弾の略称記号
     imageUrl: z.string().default(''), // 画像URL（空なら仮画像を表示）
     salePrice: z.number().int().nonnegative(), // 販売最安値（円）
     saleShop: z.string(), // 販売ショップ名

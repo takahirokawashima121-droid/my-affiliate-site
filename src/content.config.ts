@@ -32,6 +32,10 @@ const cards = defineCollection({
     saleShop: z.string(), // 販売ショップ名
     saleUrl: z.url(), // 販売アフィリエイトリンク
     saleImpressionUrl: z.url().optional(), // 販売側のインプレッション計測用画像（A8.net の 0.gif 等）
+    // ↑ sale* は楽天市場の最安値。↓ yahoo* は Yahoo!ショッピングの最安値（scripts/update-prices.js が更新）
+    yahooPrice: z.number().int().nonnegative().nullable().optional(), // 在庫のある該当商品なしは null、未取得は省略
+    yahooUrl: z.string().optional(), // 商品ページURL（もしもアフィリエイト経由）。該当なしは ''
+    yahooUpdatedAt: z.coerce.date().optional(), // Yahoo! の価格・リンクが変化した日時
     buybackPrice: z.number().int().nonnegative(), // 買取最高値（円）
     buybackShop: z.string(), // 買取ショップ名
     buybackUrl: z.url(), // 買取アフィリエイトリンク

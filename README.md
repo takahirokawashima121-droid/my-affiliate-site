@@ -38,13 +38,13 @@
 
 画面上の表記は「ナンジャモ SAR [SV2D 096/071]」、楽天API・モール検索のキーワードは「ナンジャモ SAR 096/071 ポケカ」の形式で自動生成されます（`src/utils/cardFormat.ts`）。
 
-販売価格は `npm run update-prices` で楽天市場の最安値に更新できます（`.env` に `RAKUTEN_APP_ID` と `RAKUTEN_ACCESS_KEY` が必要）。買取価格は販売相場から算出した目安です。価格の出典に関する注意書きは `src/consts.ts` の `priceNotice` で変更できます（データの取得方法を変えたら実態に合わせて更新してください）。
+販売価格は `npm run update-prices` で楽天市場・Yahoo!ショッピングの最安値に更新でき、安い方を販売最安値として表示します（`.env` に `RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`・`YAHOO_APP_ID` が必要。`YAHOO_APP_ID` がなければ楽天のみ）。買取価格は販売相場から算出した目安です。価格の出典に関する注意書きは `src/consts.ts` の `priceNotice` で変更できます（データの取得方法を変えたら実態に合わせて更新してください）。
 
 ## 価格の自動更新（GitHub Actions）
 
 `.github/workflows/update-prices.yml` が毎日 日本時間 午前4時7分に `npm run update-prices` を実行し、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。
 
-事前に、リポジトリの Settings → Secrets and variables → Actions に `RAKUTEN_APP_ID` と `RAKUTEN_ACCESS_KEY` を登録してください。全カードで API エラーになった場合（キーの失効など）はワークフローが失敗し、GitHub から通知されます。
+事前に、リポジトリの Settings → Secrets and variables → Actions に `RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`・`YAHOO_APP_ID` を登録してください。全カードで API エラーになった場合（キーの失効など）はワークフローが失敗し、GitHub から通知されます。
 
 楽天市場に在庫のないカードは「在庫なし」となり、買取価格も根拠がないため「要査定」と表示されます。
 

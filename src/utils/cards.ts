@@ -27,14 +27,39 @@ export function cardLabel(card: Card): string {
   return cardDisplayName(card.data);
 }
 
+/** モール別の販売オファー（在庫のある最安商品） */
+export type MallOffer = { mall: 'rakuten' | 'yahoo'; shop: string; price: number; url: string };
+
+/** 楽天市場・Yahoo!ショッピングそれぞれの在庫ありオファー（在庫なし・未取得は null） */
+export function mallOffers(card: Card): { rakuten: MallOffer | null; yahoo: MallOffer | null } {
+  const { saleInStock, salePrice, saleUrl, yahooPrice, yahooUrl } = card.data;
+  return {
+    rakuten: saleInStock && salePrice > 0 ? { mall: 'rakuten', shop: '楽天市場', price: salePrice, url: saleUrl } : null,
+    yahoo: typeof yahooPrice === 'number' && yahooPrice > 0 && yahooUrl ? { mall: 'yahoo', shop: 'Yahoo!ショッピング', price: yahooPrice, url: yahooUrl } : null,
+  };
+}
+
+/** 2大モールのうち最も安いオファー（同額なら楽天）。どちらにも在庫がなければ null */
+export function bestOffer(card: Card): MallOffer | null {
+  const { rakuten, yahoo } = mallOffers(card);
+  if (rakuten && yahoo) return yahoo.price < rakuten.price ? yahoo : rakuten;
+  return rakuten ?? yahoo;
+}
+
+/** 販売在庫があるか（楽天・Yahoo! のどちらかに在庫のある出品がある） */
+export function hasSaleStock(card: Card): boolean {
+  return bestOffer(card) !== null;
+}
+
 /**
  * 販売価格と買取価格の差。
  * 買取価格が販売価格以上（逆ザヤ）の場合は、データが古い・誤っている可能性が高いため
  * valid=false とし、画面では差額・買取率の代わりに「相場確認中」と表示する。
  */
 export function priceGap(card: Card): { valid: boolean; spread: number; rate: number } {
-  const { salePrice, saleInStock, buybackPrice } = card.data;
-  const valid = saleInStock && salePrice > 0 && buybackPrice < salePrice;
+  const salePrice = bestOffer(card)?.price ?? 0; // 2大モールの最安値
+  const { buybackPrice } = card.data;
+  const valid = salePrice > 0 && buybackPrice < salePrice;
   return {
     valid,
     spread: salePrice - buybackPrice,
@@ -48,7 +73,7 @@ export function priceGap(card: Card): { valid: boolean; spread: number; rate: nu
  * 根拠のない数値になる。その場合は金額を出さず「要査定」と表示する。
  */
 export function showsBuybackPrice(card: Card): boolean {
-  return card.data.saleInStock;
+  return hasSaleStock(card);
 }
 
 /** 公式の例外リストにより、レギュレーションマークに関わらずスタンダードで使えるカードか */
@@ -69,7 +94,7 @@ export function hasRarityMark(rarity: string): boolean {
 
 /** 同じカード名の別バージョン（別レアリティ・別の弾）を、販売価格の安い順に返す（在庫なしは最後） */
 export function sameNameVariants(card: Card, cards: Card[]): Card[] {
-  const price = (c: Card) => (c.data.saleInStock ? c.data.salePrice : Infinity);
+  const price = (c: Card) => bestOffer(c)?.price ?? Infinity;
   return cards.filter((c) => c.id !== card.id && c.data.name === card.data.name).sort((a, b) => price(a) - price(b));
 }
 
@@ -82,9 +107,9 @@ export function cheapestVariantIds(cards: Card[]): Set<string> {
   for (const c of cards) groups.set(c.data.name, [...(groups.get(c.data.name) ?? []), c]);
   const ids = new Set<string>();
   for (const group of groups.values()) {
-    const inStock = group.filter((c) => c.data.saleInStock && c.data.salePrice > 0);
-    if (group.length < 2 || inStock.length === 0) continue;
-    ids.add(inStock.reduce((min, c) => (c.data.salePrice < min.data.salePrice ? c : min)).id);
+    const priced = group.map((c) => ({ c, price: bestOffer(c)?.price })).filter((x): x is { c: Card; price: number } => x.price !== undefined);
+    if (group.length < 2 || priced.length === 0) continue;
+    ids.add(priced.reduce((min, x) => (x.price < min.price ? x : min)).c.id);
   }
   return ids;
 }

@@ -4,7 +4,7 @@ import CardItem from '../components/CardItem.astro';
 import AffiliatePixels from '../components/AffiliatePixels.astro';
 import PostCard from '../components/PostCard.astro';
 import { SITE, STANDARD_REGULATIONS } from '../consts';
-import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cardModel, cheapestVariantIds } from '../utils/cards';
+import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cardModel, cheapestVariantIds, bestOffer, hasSaleStock } from '../utils/cards';
 import { getPosts } from '../utils/posts';
 
 const cards = await getCards();
@@ -39,14 +39,14 @@ const jsonLd = [
         url: new URL(cardPath(c), Astro.site).toString(),
         brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
         ...(c.data.imageUrl && { image: new URL(c.data.imageUrl, Astro.site).toString() }),
-        // 在庫なしのカードは価格情報（Offer）を出さない
-        ...(c.data.saleInStock && {
+        // 2大モールの最安値。どちらも在庫なしのカードは価格情報（Offer）を出さない
+        ...(bestOffer(c) && {
           offers: {
             '@type': 'Offer',
-            price: c.data.salePrice,
+            price: bestOffer(c)!.price,
             priceCurrency: 'JPY',
-            seller: { '@type': 'Organization', name: c.data.saleShop },
-            url: c.data.saleUrl,
+            seller: { '@type': 'Organization', name: bestOffer(c)!.shop },
+            url: bestOffer(c)!.url,
           },
         }),
       },
@@ -150,7 +150,7 @@ const chip =
       <p class="mt-1 text-sm">キーワードやレアリティを変えてお試しください。</p>
     </div>
 
-    <AffiliatePixels cards={cards} shops={cards.some((c) => !c.data.saleInStock) ? ['furuichi'] : []} />
+    <AffiliatePixels cards={cards} shops={cards.some((c) => !hasSaleStock(c)) ? ['furuichi'] : []} />
 
     <p class="mt-6 text-xs leading-relaxed text-slate-400">
       ※ 価格は各ショップの掲載情報をもとにした参考価格です。在庫状況や状態（美品・傷あり等）により実際の価格は変動します。購入・買取の前に必ず各ショップで最新情報をご確認ください。

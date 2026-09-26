@@ -12,8 +12,9 @@ import CompareShopLinks from '../../components/CompareShopLinks.astro';
 import { compareKeyword } from '../../config/compareShops';
 import BuybackOptions from '../../components/BuybackOptions.astro';
 import { cardSearchKeyword, nameWithRarity } from '../../utils/cardFormat';
+import { moshimoClickUrl } from '../../utils/moshimo';
 import { SITE, STANDARD_REGULATIONS } from '../../consts';
-import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, type Card } from '../../utils/cards';
+import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, type Card } from '../../utils/cards';
 
 export const getStaticPaths = (async () => {
   const cards = await getCards();
@@ -47,13 +48,22 @@ interface Props {
 
 const { card, related, variants, substitutes, cheapestIds } = Astro.props;
 const isCheapest = (c: Card) => cheapestIds.includes(c.id);
-const { name, rarity, cardNumber, expansionCode, imageUrl, salePrice, saleInStock, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
+const { name, rarity, cardNumber, expansionCode, imageUrl, saleInStock, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
 const label = cardLabel(card); // 例: ナンジャモ SAR [SV2D 096/071]
 const model = cardModel(card); // 例: SV2D 096/071
 const updatedText = formatDateTime(updatedAt);
 const gap = priceGap(card); // 逆ザヤ（買取 ≧ 販売）の場合は差額・買取率を出さない
+// 楽天市場・Yahoo!ショッピングの2大モール比較（best = 安い方。どちらも在庫なしなら null）
+const offers = mallOffers(card);
+const best = bestOffer(card);
+const inStock = best !== null;
+const mallPanels = [
+  { key: 'rakuten', name: '楽天市場', offer: offers.rakuten, searchHref: saleUrl },
+  { key: 'yahoo', name: 'Yahoo!ショッピング', offer: offers.yahoo, searchHref: moshimoClickUrl('yahoo', cardSearchKeyword(card.data)) },
+] as const;
+const isBest = (price: number) => best !== null && price === best.price; // 同額なら両方に「最安値」
 const buybackShown = showsBuybackPrice(card); // 在庫なし（販売相場なし）なら買取額は「要査定」
-const buybackUnverified = saleInStock && !gap.valid; // 在庫ありなのに逆ザヤ → 買取価格を「相場確認中」扱い
+const buybackUnverified = inStock && !gap.valid; // 在庫ありなのに逆ザヤ → 買取価格を「相場確認中」扱い
 // 楽天市場の商品画像は、規約に沿って該当商品ページ（もしも経由）へのリンクと出典表記を付ける
 const rakutenImage = saleInStock && saleShop === '楽天市場' && imageUrl.startsWith('https://thumbnail.image.rakuten.co.jp/');
 const affiliateLinkProps = {
@@ -66,9 +76,9 @@ const affiliateLinkProps = {
 };
 
 const title = `【ポケカ】${label}の販売最安値・買取相場比較`;
-const saleSummary = saleInStock ? `${label}の販売最安値は${formatYen(salePrice)}（${saleShop}）` : `${label}は楽天市場では現在在庫なし。`;
+const saleSummary = best ? `${label}の販売最安値は${formatYen(best.price)}（${best.shop}）` : `${label}は楽天市場・Yahoo!ショッピングでは現在在庫なし。`;
 const buybackSummary = buybackShown ? `買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。` : `買取価格は${buybackShop}での査定をご確認ください。`;
-const description = `${saleSummary}${saleInStock ? '、' : ''}${buybackSummary}${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
+const description = `${saleSummary}${best ? '、' : ''}${buybackSummary}${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
 
 // 構造化データ（Product + 販売価格）
 const jsonLd = {
@@ -80,14 +90,14 @@ const jsonLd = {
   brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
   ...(imageUrl && { image: new URL(imageUrl, Astro.site).toString() }),
   // 在庫なしのカードは価格情報（Offer）を出さない
-  ...(saleInStock && {
+  ...(best && {
     offers: {
       '@type': 'Offer',
-      price: salePrice,
+      price: best.price,
       priceCurrency: 'JPY',
       itemCondition: 'https://schema.org/UsedCondition',
-      seller: { '@type': 'Organization', name: saleShop },
-      url: saleUrl,
+      seller: { '@type': 'Organization', name: best.shop },
+      url: best.url,
     },
   }),
 };
@@ -151,34 +161,61 @@ const jsonLd = {
       <!-- 価格比較ボックス -->
       <section aria-labelledby="price-compare" class="mt-8">
         <h2 id="price-compare" class="mb-3 text-lg font-bold text-slate-900">販売・買取価格の比較</h2>
-        {!saleInStock && (
+        {!inStock && (
           <div class="mb-4">
             <BuybackOptions card={card} heading="このカードを買取査定に出す" />
           </div>
         )}
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="flex flex-col rounded-2xl border-2 border-rose-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-bold text-rose-600">販売最安値</p>
-            {saleInStock ? (
+            <p class="text-sm font-bold text-rose-600">販売最安値 <span class="text-xs font-medium text-slate-500">（楽天市場・Yahoo!ショッピング比較）</span></p>
+            {best ? (
               <Fragment>
-                <p class="mt-1 text-3xl font-extrabold tabular-nums text-rose-600 sm:text-4xl">{formatYen(salePrice)}</p>
-                <p class="mt-1 text-sm text-slate-600">ショップ：<span class="font-semibold text-slate-900">{saleShop}</span></p>
+                <p class="mt-1 text-3xl font-extrabold tabular-nums text-rose-600 sm:text-4xl">{formatYen(best.price)}</p>
+                <p class="mt-1 text-sm text-slate-600">最安ショップ：<span class="font-semibold text-slate-900">{best.shop}</span></p>
               </Fragment>
             ) : (
               <Fragment>
                 <p class="mt-1 text-2xl font-extrabold text-slate-400 sm:text-3xl">在庫なし</p>
-                <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">{updatedText}時点で、楽天市場に在庫のある出品が見つかりませんでした。</p>
+                <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">{updatedText}時点で、楽天市場・Yahoo!ショッピングに在庫のある出品が見つかりませんでした。</p>
               </Fragment>
             )}
-            {saleInStock ? (
-              <div class="mt-4">
-                <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} size="lg" item={label} />
-              </div>
-            ) : (
-              <p class="mt-4 text-sm">
-                <a href={saleUrl} target="_blank" rel="sponsored nofollow noopener noreferrer" data-aff-network="moshimo" data-aff-shop={saleShop} data-aff-type="sale_search" data-aff-item={label} class="font-bold text-blue-600 hover:underline">楽天市場で出品を探す →</a>
-              </p>
-            )}
+            <!-- モール別の価格（安い方に「最安値」ラベル。在庫のある側の購入ボタンを目立たせる） -->
+            <ul class="mt-4 grid grid-cols-2 gap-2">
+              {mallPanels.map((m) => (
+                <li class:list={['flex flex-col rounded-xl border p-3', m.offer && isBest(m.offer.price) ? 'border-rose-300 bg-rose-50' : 'border-slate-200 bg-slate-50']}>
+                  <p class="flex items-center justify-between gap-1 text-xs font-bold text-slate-700">
+                    {m.name}
+                    {m.offer && isBest(m.offer.price) && <span class="rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] text-white">最安値</span>}
+                  </p>
+                  {m.offer ? (
+                    <Fragment>
+                      <p class="mt-1 text-lg font-extrabold tabular-nums text-slate-900">{formatYen(m.offer.price)}</p>
+                      <a
+                        href={m.offer.url}
+                        target="_blank"
+                        rel="sponsored nofollow noopener noreferrer"
+                        data-aff-network="moshimo"
+                        data-aff-shop={m.name}
+                        data-aff-type="sale"
+                        data-aff-item={label}
+                        class:list={[
+                          'mt-2 rounded-lg px-2 py-2 text-center text-sm font-bold transition',
+                          isBest(m.offer.price) ? 'bg-rose-600 text-white shadow-sm hover:bg-rose-700' : 'border border-rose-300 bg-white text-rose-600 hover:bg-rose-50',
+                        ]}
+                      >
+                        {isBest(m.offer.price) ? '最安値で購入する' : 'このショップで購入'}
+                      </a>
+                    </Fragment>
+                  ) : (
+                    <Fragment>
+                      <p class="mt-1 text-base font-bold text-slate-400">在庫なし</p>
+                      <a href={m.searchHref} target="_blank" rel="sponsored nofollow noopener noreferrer" data-aff-network="moshimo" data-aff-shop={m.name} data-aff-type="sale_search" data-aff-item={label} class="mt-2 text-center text-xs font-bold text-blue-600 hover:underline">出品を探す →</a>
+                    </Fragment>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
           <div class="flex flex-col rounded-2xl border-2 border-emerald-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-bold text-emerald-600">買取最高値</p>
@@ -196,7 +233,7 @@ const jsonLd = {
           </div>
         </div>
 
-        {saleInStock && (
+        {inStock && (
           <div class="mt-6">
             <BuybackOptions card={card} />
           </div>
@@ -208,10 +245,10 @@ const jsonLd = {
         <p class="mt-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
           {gap.valid ? (
             <Fragment>販売価格と買取価格の差額は <strong class="tabular-nums">{formatYen(gap.spread)}</strong>（買取率 約<strong class="tabular-nums">{gap.rate}%</strong>）です。</Fragment>
-          ) : saleInStock ? (
+          ) : inStock ? (
             <Fragment>販売価格と買取価格の差額・買取率は<strong>相場確認中</strong>です。</Fragment>
           ) : (
-            <Fragment>楽天市場に在庫がないため、差額・買取率は表示していません。</Fragment>
+            <Fragment>楽天市場・Yahoo!ショッピングに在庫がないため、差額・買取率は表示していません。</Fragment>
           )}
         </p>
 
@@ -244,8 +281,8 @@ const jsonLd = {
                   </div>
                   <div class="shrink-0 text-right">
                     <p class="text-[11px] text-slate-500">販売最安値</p>
-                    {sub.data.saleInStock ? (
-                      <p class="text-base font-extrabold tabular-nums text-rose-600">{formatYen(sub.data.salePrice)}</p>
+                    {bestOffer(sub) ? (
+                      <p class="text-base font-extrabold tabular-nums text-rose-600">{formatYen(bestOffer(sub)!.price)}</p>
                     ) : (
                       <p class="text-sm font-bold text-slate-400">在庫なし</p>
                     )}
@@ -274,7 +311,7 @@ const jsonLd = {
                     {nameWithRarity(v.data)} <span class="font-mono text-xs font-semibold text-slate-500">[{cardModel(v)}]</span>
                   </span>
                   <span class="text-sm font-extrabold tabular-nums">
-                    {v.data.saleInStock ? <span class="text-rose-600">{formatYen(v.data.salePrice)}</span> : <span class="text-slate-400">在庫なし</span>}
+                    {bestOffer(v) ? <span class="text-rose-600">{formatYen(bestOffer(v)!.price)}</span> : <span class="text-slate-400">在庫なし</span>}
                   </span>
                   <span class="text-xs font-medium text-blue-600">相場を見る →</span>
                 </a>

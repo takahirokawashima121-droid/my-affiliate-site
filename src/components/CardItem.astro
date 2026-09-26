@@ -4,7 +4,7 @@ import AffiliateButton from './AffiliateButton.astro';
 import CardTags from './CardTags.astro';
 import { SHOPS } from '../config/affiliate';
 import { nameWithRarity } from '../utils/cardFormat';
-import { cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, type Card } from '../utils/cards';
+import { cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, type Card } from '../utils/cards';
 
 interface Props {
   card: Card;
@@ -14,10 +14,14 @@ interface Props {
 }
 
 const { card, eager = false, cheapest = false } = Astro.props;
-const { name, rarity, cardNumber, expansionCode, salePrice, saleInStock, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
+const { name, rarity, cardNumber, expansionCode, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
 const gap = priceGap(card);
+// 楽天・Yahoo! の2大モールのうち安い方を「販売最安値」として表示する
+const offers = mallOffers(card);
+const best = bestOffer(card);
+const inStock = best !== null;
 // 買取価格の「相場確認中」は、販売価格がある（在庫あり）のに逆ザヤの場合のみ
-const buybackUnverified = saleInStock && !gap.valid;
+const buybackUnverified = inStock && !gap.valid;
 const buybackShown = showsBuybackPrice(card); // 在庫なし（販売相場なし）なら買取額は「要査定」
 const model = cardModel(card);
 ---
@@ -27,7 +31,7 @@ const model = cardModel(card);
   data-search={`${name} ${rarity} ${expansionCode} ${cardNumber}`}
   data-rarity={rarity}
   data-regulation={card.data.regulationMark ?? ''}
-  data-sale={saleInStock ? salePrice : ''}
+  data-sale={best ? best.price : ''}
   data-buyback={buybackShown ? buybackPrice : ''}
   data-updated={updatedAt.valueOf()}
 >
@@ -43,7 +47,7 @@ const model = cardModel(card);
         {nameWithRarity(card.data)} <span class="mt-0.5 block font-mono text-xs font-semibold text-slate-500">[{model}]</span>
       </h3>
       <p class="mt-3 text-xs text-slate-500">
-        差額 {gap.valid ? <span class="font-semibold text-slate-700">{formatYen(gap.spread)}</span> : saleInStock ? <span class="font-semibold text-amber-700">相場確認中</span> : <span class="font-semibold text-slate-400">—</span>}
+        差額 {gap.valid ? <span class="font-semibold text-slate-700">{formatYen(gap.spread)}</span> : inStock ? <span class="font-semibold text-amber-700">相場確認中</span> : <span class="font-semibold text-slate-400">—</span>}
       </p>
       <p class="mt-1 text-[11px] text-slate-400">
         更新: <time datetime={updatedAt.toISOString()}>{formatDateTime(updatedAt)}</time>
@@ -56,12 +60,18 @@ const model = cardModel(card);
   <dl class="grid grid-cols-2 divide-x divide-slate-200 border-y border-slate-200 bg-slate-50 text-center">
     <div class="px-3 py-3">
       <dt class="text-[11px] font-medium text-slate-500">販売最安値</dt>
-      {saleInStock ? (
-        <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-rose-600 sm:text-2xl">{formatYen(salePrice)}</dd>
+      {best ? (
+        <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-rose-600 sm:text-2xl">{formatYen(best.price)}</dd>
       ) : (
         <dd class="mt-1.5 text-base font-bold text-slate-400 sm:text-lg">在庫なし</dd>
       )}
-      <dd class="truncate text-[11px] text-slate-500">{saleShop}</dd>
+      <dd class="truncate text-[11px] text-slate-500">{best ? best.shop : '楽天・Yahoo!'}</dd>
+      {/* 2大モールの価格をコンパクトに併記（安い方を強調） */}
+      <dd class="mt-1 flex justify-center gap-2 text-[10px] tabular-nums text-slate-500">
+        {([['楽天', offers.rakuten], ['Yahoo!', offers.yahoo]] as const).map(([label, o]) => (
+          <span class:list={[o && best && o.price === best.price && 'font-bold text-rose-600']}>{label} {o ? formatYen(o.price) : '—'}</span>
+        ))}
+      </dd>
     </div>
     <div class="px-3 py-3">
       <dt class="text-[11px] font-medium text-slate-500">買取最高値</dt>
@@ -76,9 +86,9 @@ const model = cardModel(card);
 
   <!-- アフィリエイト導線 -->
   <div class="mt-auto grid grid-cols-2 gap-2 p-3">
-    {saleInStock ? (
+    {best ? (
       <Fragment>
-        <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} item={cardLabel(card)} />
+        <AffiliateButton kind="sale" href={best.url} shop={best.shop} item={cardLabel(card)} />
         <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} />
       </Fragment>
     ) : (

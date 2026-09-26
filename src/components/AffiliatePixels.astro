@@ -2,6 +2,7 @@
 // アフィリエイトのインプレッション計測画像（同じURLはページ内で1回だけ読み込む）
 import type { Card } from '../utils/cards';
 import { SHOPS, type ShopKey } from '../config/affiliate';
+import { moshimoImpressionUrl } from '../utils/moshimo';
 
 interface Props {
   cards: Card[];
@@ -12,7 +13,9 @@ interface Props {
 const { cards, shops = [] } = Astro.props;
 const urls = [
   ...new Set(
-    [...cards.flatMap((c) => [c.data.saleImpressionUrl, c.data.buybackImpressionUrl]), ...shops.map((key) => SHOPS[key].impressionUrl)].filter(
+    [...cards.flatMap((c) => [c.data.saleImpressionUrl, c.data.buybackImpressionUrl]), ...shops.map((key) => SHOPS[key].impressionUrl),
+      // Yahoo!ショッピングの商品リンク（もしも経由）を表示しているカードがあれば計測画像も読み込む
+      ...(cards.some((c) => c.data.yahooUrl) ? [moshimoImpressionUrl('yahoo')] : [])].filter(
       (u) => u !== undefined,
     ),
   ),

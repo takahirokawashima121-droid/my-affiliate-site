@@ -1,4 +1,4 @@
-// 楽天市場商品検索APIで各カードの販売最安値を取得し、src/data/cards.json を更新する
+// 楽天市場商品検索API・Yahoo!ショッピング商品検索API（v3）で各カードの販売最安値を取得し、src/data/cards.json を更新する
 //
 // 使い方:
 //   npm run update-prices                         全カードを更新
@@ -9,17 +9,19 @@
 // 必要な環境変数（.env に記載。.env は Git 管理外）:
 //   RAKUTEN_APP_ID      楽天ウェブサービスのアプリID
 //   RAKUTEN_ACCESS_KEY  楽天ウェブサービスのアクセスキー
+//   YAHOO_APP_ID        Yahoo!デベロッパーネットワークのClient ID（未設定なら Yahoo! の取得はスキップ）
 //
 // 安全のための仕様:
 // - 検索キーワードは「${name} ${rarity} ${cardNumber} ポケカ」→ 該当なしなら「${name} ${rarity} ${cardNumber}」→「${name} ${cardNumber}」の順に再検索（src/utils/cardFormat.ts の cardSearchKeywords）
-// - カード名とカード番号（例: 096/071）の両方を商品名に含む商品だけを候補にする
+// - カード名とカード番号（例: 096/071）の両方を商品名に含む商品だけを候補にする（オリパ・鑑定品・傷有り等の状態難は除外）
 // - 全キーワードで在庫のある該当商品がないカードは「在庫なし」（salePrice=0, saleInStock=false）にする
 // - APIエラーのカードは一切変更しない
 // - 価格・在庫・購入リンク・商品画像のいずれかに変化があったカードだけを更新する（変化がなければ updatedAt も変えない）
 // - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）と商品画像（imageUrl）以外の項目は変更しない
 // - 商品画像は最安商品の1枚目を 300x300 に変換して保存。画像がない商品の場合は既存の imageUrl を維持する
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
-// - 1カードごとに1秒待機する
+// - API ごとに呼び出し間隔を空ける（楽天 1秒、Yahoo! 1.5秒。Yahoo! の 429 は 5→15→30秒待って再試行）
+// - Yahoo! は yahooPrice（該当なしは null）/ yahooUrl（もしも経由）/ yahooUpdatedAt を更新する
 
 import { existsSync } from 'node:fs';
 import { readFile, rename, writeFile } from 'node:fs/promises';
@@ -38,6 +40,10 @@ const SHOP_NAME = '楽天市場';
 const NG_KEYWORDS = ['PSA', 'BGS', 'ARS', '鑑定', 'オリパ', 'スリーブ', 'プレイマット', 'ローダー', 'ジャンク', '英語版', '韓国版', '中国版'];
 // 検索の除外語をすり抜けた商品も、商品名で再度除外する（オリパ・くじ等は「当たり」としてカード名と番号を含むため）
 const EXCLUDE_TITLE = /オリパ|くじ|クジ|ガチャ|福袋|PSA|BGS|ARS|CGC|鑑定|スリーブ|プレイマット|ローダー|ジャンク|英語版|韓国版|中国版|簡体字|繁体字/i;
+// 状態の悪さがタイトルに明記された出品（最安値として表示すると美品相場とかけ離れて誤解を招くため除外）。
+// 「プレイ用」「Bランク」など一般的な中古表記は対象外。除外をやめる場合は EXCLUDE_DAMAGED を false にする
+const EXCLUDE_DAMAGED = true;
+const DAMAGED_TITLE = /傷有り|傷あり|キズ有|キズあり|状態難|難あり|訳あり|折れ|汚れあり|汚れ有|白欠け|Cランク|Dランク|ランクC|ランクD/;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -55,6 +61,7 @@ export function pickCheapest(card, items) {
     const title = normalize(rawTitle);
     return (
       !EXCLUDE_TITLE.test(rawTitle.normalize('NFKC')) &&
+      !(EXCLUDE_DAMAGED && DAMAGED_TITLE.test(rawTitle.normalize('NFKC'))) &&
       title.includes(name) &&
       number !== '' &&
       title.includes(number) &&
@@ -112,7 +119,7 @@ export function hasMeaningfulChange(before, after) {
 }
 
 /** cards.json の項目の並び順（書き出し時にそろえる） */
-const KEY_ORDER = ['id', 'name', 'rarity', 'cardNumber', 'expansionCode', 'regulationMark', 'imageUrl', 'salePrice', 'saleInStock', 'saleShop', 'saleUrl', 'saleImpressionUrl', 'buybackPrice', 'buybackShop', 'buybackUrl', 'buybackImpressionUrl', 'substituteIds', 'updatedAt'];
+const KEY_ORDER = ['id', 'name', 'rarity', 'cardNumber', 'expansionCode', 'regulationMark', 'imageUrl', 'salePrice', 'saleInStock', 'saleShop', 'saleUrl', 'saleImpressionUrl', 'yahooPrice', 'yahooUrl', 'yahooUpdatedAt', 'buybackPrice', 'buybackShop', 'buybackUrl', 'buybackImpressionUrl', 'substituteIds', 'updatedAt'];
 const orderKeys = (card) => Object.fromEntries([...KEY_ORDER.filter((k) => k in card), ...Object.keys(card).filter((k) => !KEY_ORDER.includes(k))].map((k) => [k, card[k]]));
 
 /** 保存する画像サイズ（楽天のサムネイルサーバーは ?_ex=幅x高さ で縮小画像を返す） */
@@ -148,6 +155,22 @@ async function isImageAvailable(url) {
   }
 }
 
+/** API ごとに「前回の呼び出しから ms 以上」空けるスロットル（楽天・Yahoo! とも 1秒1回の制限を守る） */
+function makeThrottle(ms) {
+  let last = 0;
+  return async () => {
+    const wait = last + ms - Date.now();
+    if (wait > 0) await sleep(wait);
+    last = Date.now();
+  };
+}
+const rakutenThrottle = makeThrottle(WAIT_MS);
+// Yahoo! は1秒1回に加えて短時間の合計回数でも 429 になる（実測で数十回連続すると拒否が続く）ため、間隔を広めに取る
+const YAHOO_WAIT_MS = 1500;
+const yahooThrottle = makeThrottle(YAHOO_WAIT_MS);
+/** Yahoo! が 429 を返したときの待ち時間（再試行ごとに延ばす） */
+const YAHOO_BACKOFF_MS = [5000, 15000, 30000];
+
 async function searchRakuten(keyword, { appId, accessKey }) {
   const params = new URLSearchParams({
     applicationId: appId,
@@ -160,6 +183,7 @@ async function searchRakuten(keyword, { appId, accessKey }) {
     formatVersion: '2',
   });
   for (let attempt = 1; attempt <= 2; attempt++) {
+    await rakutenThrottle();
     // 新APIはアプリ登録時の「許可されたWebサイト」と一致する Origin ヘッダーが必須（ないと 403）
     const res = await fetch(`${API_URL}?${params}`, { headers: { Origin: new URL(SITE_URL).origin, Referer: SITE_URL } });
     if (res.status === 429 && attempt === 1) {
@@ -186,13 +210,58 @@ async function searchRakuten(keyword, { appId, accessKey }) {
 async function findCheapest(card, credentials) {
   const tried = [];
   for (const [i, keyword] of cardSearchKeywords(card).entries()) {
-    if (i > 0) await sleep(WAIT_MS);
     const items = await searchRakuten(keyword, credentials);
     tried.push(`「${keyword}」${items.length}件`);
     const best = pickCheapest(card, items);
     if (best) return { best, keyword, fallback: i > 0, tried };
   }
   return { best: undefined, tried };
+}
+
+const YAHOO_API_URL = 'https://shopping.yahooapis.jp/ShoppingWebService/V3/itemSearch';
+
+/**
+ * Yahoo!ショッピング商品検索API（v3）。在庫ありの商品を価格の安い順に取得する。
+ * results=1 だと最安の無関係商品（スリーブ・オリパ・別カード等）がそのまま入るため、複数件取得して pickCheapest で絞り込む。
+ */
+async function searchYahoo(keyword, appid) {
+  const params = new URLSearchParams({ appid, query: keyword, sort: '+price', results: '30', in_stock: 'true' });
+  for (let attempt = 0; attempt <= YAHOO_BACKOFF_MS.length; attempt++) {
+    await yahooThrottle();
+    const res = await fetch(`${YAHOO_API_URL}?${params}`);
+    if (res.status === 429 && attempt < YAHOO_BACKOFF_MS.length) {
+      // リクエスト過多：待ち時間を延ばしながら再試行
+      await sleep(YAHOO_BACKOFF_MS[attempt]);
+      continue;
+    }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const message = body.Error?.Message ?? body.error?.message ?? res.statusText;
+      throw new Error(`Yahoo HTTP ${res.status}: ${message}`);
+    }
+    // 楽天と同じ判定関数（pickCheapest）を使えるよう項目名をそろえる
+    return (body.hits ?? [])
+      .filter((h) => h.inStock !== false)
+      .map((h) => ({ itemName: h.name ?? '', itemPrice: h.price, itemUrl: h.url, shopName: h.seller?.name ?? '' }));
+  }
+  throw new Error('Yahoo HTTP 429: リクエスト数の上限を超えました');
+}
+
+/** Yahoo!ショッピングで、楽天と同じキーワード候補・同じ判定条件の最安商品を探す */
+async function findYahooCheapest(card, appid) {
+  const tried = [];
+  for (const keyword of cardSearchKeywords(card)) {
+    const items = await searchYahoo(keyword, appid);
+    tried.push(`「${keyword}」${items.length}件`);
+    const best = pickCheapest(card, items);
+    if (best) return { best, tried };
+  }
+  return { best: undefined, tried };
+}
+
+/** Yahoo!の取得結果を cards.json の項目に変換（該当なしは yahooPrice: null） */
+export function yahooFields(best) {
+  return best ? { yahooPrice: best.itemPrice, yahooUrl: moshimoLinkUrl('yahoo', best.itemUrl) } : { yahooPrice: null, yahooUrl: '' };
 }
 
 function parseArgs(argv) {
@@ -213,6 +282,10 @@ async function main() {
     process.exit(1);
   }
 
+  // Yahoo!ショッピングはキーがあるときだけ取得（未設定なら楽天のみ更新して続行）
+  const yahooAppId = process.env.YAHOO_APP_ID;
+  if (!yahooAppId) console.warn('⚠ YAHOO_APP_ID が未設定のため、Yahoo!ショッピングの価格取得をスキップします。');
+
   const { ids, limit, dryRun } = parseArgs(process.argv.slice(2));
   const raw = await readFile(CARDS_PATH, 'utf8');
   const cards = JSON.parse(raw);
@@ -227,50 +300,78 @@ async function main() {
 
   const updated = new Map();
   let failed = 0;
+  let yahooFailed = 0;
   let unchanged = 0;
-  // 価格・在庫・リンク・画像のいずれかが変わったカードだけを更新する（updatedAt も変化時のみ更新）
-  const record = (card, next, message) => {
-    if (hasMeaningfulChange(card, next)) {
-      updated.set(card.id, next);
-      console.log(message);
-    } else {
-      unchanged++;
-      console.log(`${message}\n  = 変化なし → 変更しません`);
-    }
-  };
+  const yen = (n) => `¥${n.toLocaleString()}`;
+  // 楽天・Yahoo! それぞれで価格・在庫・リンク等に変化があった項目だけを更新する（更新日時も変化した側のみ）
   for (const [i, card] of targets.entries()) {
-    if (i > 0) await sleep(WAIT_MS);
     const label = `[${i + 1}/${targets.length}] ${cardDisplayName(card)}`;
+    const lines = [label];
+    let next = card;
+
+    // ── 楽天市場 ──
     try {
       const { best, fallback, tried } = await findCheapest(card, { appId, accessKey });
+      let rakuten;
       if (!best) {
-        record(card, markOutOfStock(card), `${label}\n  - 在庫のある該当商品なし（${tried.join(' → ')}）→「在庫なし」`);
-        continue;
+        rakuten = markOutOfStock(card);
+        lines.push(`  楽天  : 在庫のある該当商品なし（${tried.join(' → ')}）→「在庫なし」`);
+      } else {
+        if (fallback) lines.push(`  楽天  : ↻ フォールバック検索（${tried.join(' → ')}）`);
+        let imageUrl = pickImageUrl(best);
+        let imageNote = imageUrl ?? '（商品画像なし → 既存の値を維持）';
+        if (imageUrl && !(await isImageAvailable(imageUrl))) {
+          // 新しい画像が取得できない場合、既存の画像が有効ならそれを維持し、無効なら空にしてプレースホルダー表示にする
+          const keepExisting = card.imageUrl !== '' && card.imageUrl !== imageUrl && (await isImageAvailable(card.imageUrl));
+          imageNote = `（取得できない画像のため保存しません → ${keepExisting ? '既存の画像を維持' : 'プレースホルダー表示'}）`;
+          imageUrl = keepExisting ? card.imageUrl : '';
+        }
+        rakuten = applySale(card, best, nowJst(), imageUrl);
+        const before = card.saleInStock ? yen(card.salePrice) : '在庫なし';
+        lines.push(`  楽天  : ${before} → ${yen(best.itemPrice)}（${best.shopName}）${best.itemName.slice(0, 50)}`, `          画像: ${imageNote}`);
       }
-      if (fallback) console.log(`${label}\n  ↻ フォールバック検索で取得（${tried.join(' → ')}）`);
-      let imageUrl = pickImageUrl(best);
-      let imageNote = imageUrl ?? '（商品画像なし → 既存の値を維持）';
-      if (imageUrl && !(await isImageAvailable(imageUrl))) {
-        // 新しい画像が取得できない場合、既存の画像が有効ならそれを維持し、無効なら空にしてプレースホルダー表示にする
-        const keepExisting = card.imageUrl !== '' && card.imageUrl !== imageUrl && (await isImageAvailable(card.imageUrl));
-        imageNote = `（取得できない画像のため保存しません → ${keepExisting ? '既存の画像を維持' : 'プレースホルダー表示'}）`;
-        imageUrl = keepExisting ? card.imageUrl : '';
+      if (hasMeaningfulChange(card, rakuten)) {
+        next = { ...next, ...Object.fromEntries([...TRACKED_KEYS, 'updatedAt'].map((k) => [k, rakuten[k]])) };
+      } else {
+        lines.push('          = 楽天は変化なし');
       }
-      const before = card.saleInStock ? `¥${card.salePrice.toLocaleString()}` : '在庫なし';
-      record(
-        card,
-        applySale(card, best, nowJst(), imageUrl),
-        `${label}\n  ✓ ${before} → ¥${best.itemPrice.toLocaleString()}（${best.shopName}）\n    ${best.itemName}\n    画像: ${imageNote}`,
-      );
     } catch (error) {
       failed++;
-      console.log(`${label}\n  ✗ エラー: ${error.message} → 変更しません`);
+      lines.push(`  楽天  : ✗ エラー: ${error.message} → 変更しません`);
     }
+
+    // ── Yahoo!ショッピング ──
+    if (yahooAppId) {
+      try {
+        const { best, tried } = await findYahooCheapest(card, yahooAppId);
+        const fields = yahooFields(best);
+        const before = typeof card.yahooPrice === 'number' ? yen(card.yahooPrice) : card.yahooPrice === null ? 'なし' : '未取得';
+        lines.push(
+          best
+            ? `  Yahoo!: ${before} → ${yen(best.itemPrice)}（${best.shopName}）${best.itemName.slice(0, 50)}`
+            : `  Yahoo!: ${before} → 在庫のある該当商品なし（${tried.join(' → ')}）`,
+        );
+        if (card.yahooPrice !== fields.yahooPrice || (card.yahooUrl ?? '') !== fields.yahooUrl) {
+          next = { ...next, ...fields, yahooUpdatedAt: nowJst() };
+        } else {
+          lines.push('          = Yahoo!は変化なし');
+        }
+      } catch (error) {
+        yahooFailed++;
+        lines.push(`  Yahoo!: ✗ エラー: ${error.message} → 変更しません`);
+      }
+    }
+
+    console.log(lines.join('\n'));
+    if (next !== card) updated.set(card.id, next);
+    else unchanged++;
   }
 
-  console.log(`\n更新: ${updated.size}枚 / 変化なし: ${unchanged}枚 / エラー（変更なし）: ${failed}枚`);
+  console.log(
+    `\n更新: ${updated.size}枚 / 変化なし: ${unchanged}枚 / 楽天エラー: ${failed}枚${yahooAppId ? ` / Yahoo!エラー: ${yahooFailed}枚` : '（Yahoo!はスキップ）'}`,
+  );
   // 全件エラー（キーの失効・API障害など）は異常終了にして、GitHub Actions の失敗通知で気づけるようにする
-  if (targets.length > 0 && failed === targets.length) process.exitCode = 1;
+  if (targets.length > 0 && (failed === targets.length || (yahooAppId && yahooFailed === targets.length))) process.exitCode = 1;
   if (dryRun || updated.size === 0) return;
 
   const next = cards.map((c) => orderKeys(updated.get(c.id) ?? c));

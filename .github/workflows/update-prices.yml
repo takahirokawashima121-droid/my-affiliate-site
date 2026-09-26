@@ -4,6 +4,7 @@
 # 事前設定: リポジトリの Settings → Secrets and variables → Actions に以下を登録
 #   RAKUTEN_APP_ID      楽天ウェブサービスのアプリID
 #   RAKUTEN_ACCESS_KEY  楽天ウェブサービスのアクセスキー
+#   YAHOO_APP_ID        Yahoo!デベロッパーネットワークの Client ID（未登録なら Yahoo! の取得はスキップ）
 name: Update prices
 
 # トリガーは定期実行と手動実行のみ（push トリガーは付けない）。
@@ -43,6 +44,7 @@ jobs:
         env:
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+          YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
 
       - name: Commit and push if cards.json changed
         run: |

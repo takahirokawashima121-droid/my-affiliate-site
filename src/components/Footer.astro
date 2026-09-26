@@ -1,6 +1,12 @@
 ---
 import { SITE } from '../consts';
 const year = new Date().getFullYear();
+
+// 楽天ウェブサービスのクレジット表記（規約により公式の HTML を改変せずにそのまま掲載する）
+// https://webservice.rakuten.co.jp/guide/credit
+const rakutenCredit = `<!-- Rakuten Web Services Attribution Snippet FROM HERE -->
+<a href="https://developers.rakuten.com/" target="_blank">Supported by Rakuten Developers</a>
+<!-- Rakuten Web Services Attribution Snippet TO HERE -->`;
 ---
 
 <footer class="mt-16 border-t border-slate-200 bg-white">
@@ -10,6 +16,9 @@ const year = new Date().getFullYear();
     </p>
     <p class="mb-4 text-xs leading-relaxed text-slate-500">
       掲載価格は更新日時点の参考価格です。「ポケモンカードゲーム」は株式会社ポケモンの登録商標であり、当サイトは公式とは関係ありません。
+    </p>
+    <p class="mb-4 text-xs text-slate-500 [&_a]:underline [&_a:hover]:text-brand-600">
+      販売価格の一部は楽天ウェブサービスのデータを利用しています。<Fragment set:html={rakutenCredit} />
     </p>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <p>&copy; {year} {SITE.title}</p>

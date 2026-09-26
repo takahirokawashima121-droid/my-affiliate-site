@@ -31,9 +31,14 @@ export function mallSearchUrl(mall: MallKey, keyword: string): string {
   return MALLS[mall].searchUrl(encodeURIComponent(keyword));
 }
 
-/** もしもアフィリエイトのクリックURL（遷移先として検索URLをエンコードして埋め込む） */
+/** もしもアフィリエイトのクリックURL（任意の遷移先URLをエンコードして埋め込む） */
+export function moshimoLinkUrl(mall: MallKey, destinationUrl: string): string {
+  return `https://af.moshimo.com/af/c/click?${idQuery(MALLS[mall].ids)}&url=${encodeURIComponent(destinationUrl)}`;
+}
+
+/** もしもアフィリエイトのクリックURL（遷移先はモールの検索結果） */
 export function moshimoClickUrl(mall: MallKey, keyword: string): string {
-  return `https://af.moshimo.com/af/c/click?${idQuery(MALLS[mall].ids)}&url=${encodeURIComponent(mallSearchUrl(mall, keyword))}`;
+  return moshimoLinkUrl(mall, mallSearchUrl(mall, keyword));
 }
 
 /** もしもアフィリエイトのインプレッション計測URL */

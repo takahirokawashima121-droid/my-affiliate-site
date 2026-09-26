@@ -2,6 +2,7 @@
 import CardImage from './CardImage.astro';
 import AffiliateButton from './AffiliateButton.astro';
 import CardTags from './CardTags.astro';
+import { SHOPS } from '../config/affiliate';
 import { nameWithRarity } from '../utils/cardFormat';
 import { cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, type Card } from '../utils/cards';
 
@@ -75,7 +76,17 @@ const model = cardModel(card);
 
   <!-- アフィリエイト導線 -->
   <div class="mt-auto grid grid-cols-2 gap-2 p-3">
-    <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} item={cardLabel(card)} label={saleInStock ? undefined : '楽天市場で探す'} />
-    <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} />
+    {saleInStock ? (
+      <Fragment>
+        <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} item={cardLabel(card)} />
+        <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} />
+      </Fragment>
+    ) : (
+      <Fragment>
+        {/* 在庫なし：購入の代わりに買取査定を前面に出す */}
+        <AffiliateButton kind="bulk" href={SHOPS.furuichi.url} shop={SHOPS.furuichi.name} item={cardLabel(card)} />
+        <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} label="シングル買取査定" />
+      </Fragment>
+    )}
   </div>
 </article>

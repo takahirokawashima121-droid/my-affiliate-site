@@ -8,6 +8,8 @@ import CardTags from '../../components/CardTags.astro';
 import AffiliateButton from '../../components/AffiliateButton.astro';
 import AffiliatePixels from '../../components/AffiliatePixels.astro';
 import MallSearchButtons from '../../components/MallSearchButtons.astro';
+import BuybackOptions from '../../components/BuybackOptions.astro';
+import { SHOPS } from '../../config/affiliate';
 import { cardSearchKeyword, nameWithRarity } from '../../utils/cardFormat';
 import { SITE, STANDARD_REGULATIONS } from '../../consts';
 import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, type Card } from '../../utils/cards';
@@ -148,6 +150,11 @@ const jsonLd = {
       <!-- 価格比較ボックス -->
       <section aria-labelledby="price-compare" class="mt-8">
         <h2 id="price-compare" class="mb-3 text-lg font-bold text-slate-900">販売・買取価格の比較</h2>
+        {!saleInStock && (
+          <div class="mb-4">
+            <BuybackOptions card={card} heading="このカードを買取査定に出す" />
+          </div>
+        )}
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="flex flex-col rounded-2xl border-2 border-rose-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-bold text-rose-600">販売最安値</p>
@@ -162,9 +169,19 @@ const jsonLd = {
                 <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">{updatedText}時点で、楽天市場に在庫のある出品が見つかりませんでした。</p>
               </Fragment>
             )}
-            <div class="mt-4">
-              <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} size="lg" item={label} label={saleInStock ? undefined : '楽天市場で探す'} />
-            </div>
+            {saleInStock ? (
+              <div class="mt-4">
+                <AffiliateButton kind="sale" href={saleUrl} shop={saleShop} size="lg" item={label} />
+              </div>
+            ) : (
+              <p class="mt-4 text-sm">
+                <a href={saleUrl} target="_blank" rel="sponsored nofollow noopener noreferrer" data-aff-network="moshimo" data-aff-shop={saleShop} data-aff-type="sale_search" data-aff-item={label} class="font-bold text-blue-600 hover:underline">楽天市場で出品を探す →</a>
+              </p>
+            )}
+            <p class="mt-2 text-xs text-slate-500">
+              トレカ専門店の通販でも探す：
+              <a href={SHOPS.beehonpo.url} target="_blank" rel="sponsored nofollow noopener noreferrer" data-aff-network={SHOPS.beehonpo.network} data-aff-shop={SHOPS.beehonpo.name} data-aff-type="sale_specialty" data-aff-item={label} class="font-bold text-blue-600 hover:underline">{SHOPS.beehonpo.name}通販店 →</a>
+            </p>
           </div>
           <div class="flex flex-col rounded-2xl border-2 border-emerald-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-bold text-emerald-600">買取最高値</p>
@@ -177,10 +194,16 @@ const jsonLd = {
             {!buybackShown && <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">販売相場がないため買取目安を表示していません。買取価格はショップの査定でご確認ください。</p>}
             {buybackUnverified && <p class="mt-2 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">相場確認中：最新の買取価格はショップでご確認ください</p>}
             <div class="mt-4">
-              <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} size="lg" item={label} />
+              <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} size="lg" item={label} label={buybackShown ? undefined : 'シングル買取査定'} />
             </div>
           </div>
         </div>
+
+        {saleInStock && (
+          <div class="mt-6">
+            <BuybackOptions card={card} />
+          </div>
+        )}
 
         <MallSearchButtons keyword={cardSearchKeyword(card.data)} />
 
@@ -276,5 +299,5 @@ const jsonLd = {
     </section>
   )}
 
-  <AffiliatePixels cards={[card, ...related]} />
+  <AffiliatePixels cards={[card, ...related]} shops={['furuichi', 'beehonpo']} />
 </BaseLayout>

@@ -1,12 +1,22 @@
 ---
 // アフィリエイトのインプレッション計測画像（同じURLはページ内で1回だけ読み込む）
 import type { Card } from '../utils/cards';
+import { SHOPS, type ShopKey } from '../config/affiliate';
 
 interface Props {
   cards: Card[];
+  /** ページ内に表示しているサイト共通の提携先（src/config/affiliate.ts） */
+  shops?: ShopKey[];
 }
 
-const urls = [...new Set(Astro.props.cards.flatMap((c) => [c.data.saleImpressionUrl, c.data.buybackImpressionUrl]).filter((u) => u !== undefined))];
+const { cards, shops = [] } = Astro.props;
+const urls = [
+  ...new Set(
+    [...cards.flatMap((c) => [c.data.saleImpressionUrl, c.data.buybackImpressionUrl]), ...shops.map((key) => SHOPS[key].impressionUrl)].filter(
+      (u) => u !== undefined,
+    ),
+  ),
+];
 ---
 
 {urls.map((src) => <img src={src} width="1" height="1" alt="" class="absolute h-px w-px opacity-0" />)}

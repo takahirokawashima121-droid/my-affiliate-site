@@ -150,7 +150,7 @@ const chip =
       <p class="mt-1 text-sm">キーワードやレアリティを変えてお試しください。</p>
     </div>
 
-    <AffiliatePixels cards={cards} />
+    <AffiliatePixels cards={cards} shops={cards.some((c) => !c.data.saleInStock) ? ['furuichi'] : []} />
 
     <p class="mt-6 text-xs leading-relaxed text-slate-400">
       ※ 価格は各ショップの掲載情報をもとにした参考価格です。在庫状況や状態（美品・傷あり等）により実際の価格は変動します。購入・買取の前に必ず各ショップで最新情報をご確認ください。

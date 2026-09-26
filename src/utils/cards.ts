@@ -4,7 +4,7 @@ import { cardDisplayName, modelCode } from './cardFormat';
 export type Card = CollectionEntry<'cards'>;
 
 /** 表示で使うレアリティの並び順（ここにないものは末尾） */
-const RARITY_ORDER = ['UR', 'SSR', 'SAR', 'HR', 'SR', 'SA', 'AR', 'CHR', 'RRR', 'RR', 'R', 'U', 'C', 'PROMO'];
+const RARITY_ORDER = ['FUR', 'UR', 'SSR', 'SAR', 'HR', 'SR', 'SA', 'AR', 'CHR', 'RRR', 'RR', 'R', 'U', 'C', 'PROMO'];
 
 export async function getCards(): Promise<Card[]> {
   const cards = await getCollection('cards');
@@ -56,6 +56,7 @@ export function cardModel(card: Card): string {
 }
 
 const RARITY_STYLES: Record<string, string> = {
+  FUR: 'bg-gradient-to-r from-cyan-400 via-violet-500 to-fuchsia-500 text-white',
   UR: 'bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-950',
   SAR: 'bg-gradient-to-r from-amber-400 via-pink-400 to-violet-400 text-white',
   SSR: 'bg-gradient-to-r from-slate-700 to-slate-500 text-amber-200',

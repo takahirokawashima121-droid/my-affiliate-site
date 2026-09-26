@@ -11,6 +11,8 @@ const rarities = getRarities(cards);
 const shops = new Set(cards.flatMap((c) => [c.data.saleShop, c.data.buybackShop]));
 const updated = latestUpdate(cards);
 const posts = (await getPosts()).slice(0, 3);
+// アフィリエイトのインプレッション計測画像（同じURLはページ内で1回だけ読み込む）
+const impressionUrls = [...new Set(cards.flatMap((c) => [c.data.saleImpressionUrl, c.data.buybackImpressionUrl]).filter((u) => u !== undefined))];
 
 // 構造化データ：サイト情報 + 掲載カード一覧（商品と最安値）
 const jsonLd = [
@@ -80,7 +82,7 @@ const chip =
 
   {SITE.sampleData && (
     <p class="mb-6 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800" role="note">
-      ※ 現在表示している価格・リンクはデモ用のサンプルデータです。実際の相場とは異なります。
+      ※ 現在表示している価格はデモ用のサンプルデータです。実際の相場とは異なります。
     </p>
   )}
 
@@ -134,6 +136,8 @@ const chip =
       <p class="font-medium">該当するカードが見つかりませんでした</p>
       <p class="mt-1 text-sm">キーワードやレアリティを変えてお試しください。</p>
     </div>
+
+    {impressionUrls.map((src) => <img src={src} width="1" height="1" alt="" class="absolute h-px w-px opacity-0" />)}
 
     <p class="mt-6 text-xs leading-relaxed text-slate-400">
       ※ 価格は各ショップの掲載情報をもとにした参考価格です。在庫状況や状態（美品・傷あり等）により実際の価格は変動します。購入・買取の前に必ず各ショップで最新情報をご確認ください。

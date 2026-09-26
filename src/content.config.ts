@@ -28,9 +28,11 @@ const cards = defineCollection({
     salePrice: z.number().int().nonnegative(), // 販売最安値（円）
     saleShop: z.string(), // 販売ショップ名
     saleUrl: z.url(), // 販売アフィリエイトリンク
+    saleImpressionUrl: z.url().optional(), // 販売側のインプレッション計測用画像（A8.net の 0.gif 等）
     buybackPrice: z.number().int().nonnegative(), // 買取最高値（円）
     buybackShop: z.string(), // 買取ショップ名
     buybackUrl: z.url(), // 買取アフィリエイトリンク
+    buybackImpressionUrl: z.url().optional(), // 買取側のインプレッション計測用画像
     updatedAt: z.coerce.date(), // 更新日時
   }),
 });

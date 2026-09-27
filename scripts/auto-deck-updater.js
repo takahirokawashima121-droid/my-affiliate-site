@@ -29,6 +29,7 @@ import * as cheerio from 'cheerio';
 import { cardEffects, deckCards, fetchText, norm, romaji } from './lib/official.js';
 import { importDecks } from './import-official-decks.js';
 import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
+import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
@@ -40,6 +41,7 @@ const COLUMNS_PATH = path('src/data/deck-columns.json');
 const DECKS_PATH = path('src/data/official-decks.json');
 const CARDS_PATH = path('src/data/cards.json');
 const PR_BODY_PATH = path('.cache/auto-deck-pr.md');
+const SITE_URL = 'https://my-affiliate-site-phi.vercel.app/';
 
 function parseArgs(argv) {
   return {
@@ -278,6 +280,17 @@ async function main() {
 
   // Pull Request の本文
   const addedCards = result.added.map((id) => cards.find((c) => c.id === id)).filter(Boolean);
+  // X 告知用のコピペ文（記事末尾の「Xシェア用テキスト」と同じ文面。スマホの GitHub アプリからそのままコピーできるようコードブロックにする）
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  const estimateOf = (slug) =>
+    recipes[slug].cards.reduce((sum, e) => {
+      const price = e.cardId && byId.has(e.cardId) ? rawBestPrice(byId.get(e.cardId)) : null;
+      return sum + (price ?? 0) * e.qty;
+    }, 0);
+  const xSection = generated.flatMap((c) => {
+    const { parent, reply } = buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, estimate: estimateOf(c.slug), url: `${SITE_URL}columns/${c.slug}/` });
+    return [`#### ${c.deckName}`, '1ポスト目（親）', '```', parent, '```', '2ポスト目（リプライ）', '```', reply, '```', ''];
+  });
   const body = [
     '## 新着優勝デッキ記事の自動生成',
     '',
@@ -293,6 +306,7 @@ async function main() {
     ...(addedCards.length ? addedCards.map((c) => `- ${c.name} ${c.rarity} [${c.expansionCode} ${c.cardNumber}] ${c.regulationMark ?? ''}`) : ['- なし']),
     '',
     ...(result.skipped?.length ? ['### 価格を掲載できなかったカード（レシピには載るがリンクなし）', ...result.skipped.map((x) => `- ${x.name}: ${x.reason}`), ''] : []),
+    ...(xSection.length ? ['### 📱 X（Twitter）投稿用コピペ文', 'マージして公開されたあとに投稿してください（見どころを書き直した場合は、公開後の記事末尾「Xシェア用テキスト」の文面を使うと最新になります）。', '', ...xSection] : []),
     '### マージ前に確認すること',
     '- [ ] 各記事の TODO（回し方・代替カード / カスタマイズ案）を追記した',
     '- [ ] 追加したカードの型番・レギュレーションマークに誤りがない',

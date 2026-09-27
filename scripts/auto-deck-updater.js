@@ -183,19 +183,27 @@ async function main() {
   }
   if (fresh.length === 0) return console.log('新着はありません。');
 
-  // 記事ごとのデッキを集め、既存の記事がないデッキ名を優先して選ぶ
+  // 記事ごとのデッキを集める（記事化済みのデッキコードは除く）
   const columns = await readJson(COLUMNS_PATH, []);
-  const existingNames = new Set(columns.map((c) => norm(c.deckName)));
+  const imported = new Set(Object.values(await readJson(DECKS_PATH, {})).map((d) => d.deckId));
+  const existingNames = new Set(columns.map((c) => norm(c.deckName.replace(/（構築\d+）$/, ''))));
   const candidates = [];
   for (const it of fresh) {
-    const decks = (await articleDecks(it.link)).filter((d) => !doneDecks.has(d.deckId));
-    console.log(`\n■ ${it.title}: 新しいデッキ ${decks.length}件`);
+    const decks = (await articleDecks(it.link)).filter((d) => !doneDecks.has(d.deckId) && !imported.has(d.deckId));
+    console.log(`
+■ ${it.title}: 新しいデッキ ${decks.length}件`);
     for (const d of decks) candidates.push({ ...d, article: it });
   }
-  const seenNames = new Set();
+  // 優先順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）
+  const occurrence = new Map();
+  const rank = (d) => d.nth * 2 + Number(existingNames.has(norm(d.archetype)));
   const ordered = candidates
-    .filter((d) => (seenNames.has(norm(d.archetype)) ? false : seenNames.add(norm(d.archetype))))
-    .sort((a, b) => Number(existingNames.has(norm(a.archetype))) - Number(existingNames.has(norm(b.archetype))));
+    .map((d) => {
+      const nth = occurrence.get(norm(d.archetype)) ?? 0;
+      occurrence.set(norm(d.archetype), nth + 1);
+      return { ...d, nth };
+    })
+    .sort((a, b) => rank(a) - rank(b));
   // 取り込めないデッキ（60枚でない・現行スタンダード外のカードを含む）は飛ばして次の候補で埋める
   const selected = [];
   for (const d of ordered) {
@@ -222,11 +230,15 @@ async function main() {
     const recipe = recipes[d.slug].cards;
     const keyCards = pickKeyCards(recipe, d.archetype);
     const label = `${d.date ?? ''} ジムバトル優勝`.trim();
+    // 同じ大会・同じデッキ名の記事がすでにあれば「（構築2）」のように区別する（タイトルの重複を避ける）
+    const sameCount = columns.filter((c) => c.result === label && norm(c.deckName.replace(/（構築\d+）$/, '')) === norm(d.archetype)).length;
+    const variant = sameCount > 0 ? `（構築${sameCount + 1}）` : '';
+    const deckName = `${d.archetype}${variant}`;
     const column = {
       slug: d.slug,
       deckKey: d.slug,
-      deckName: d.archetype,
-      title: `【${label}】${d.archetype}デッキレシピ！採用カード最安値・代替パーツ提案`,
+      deckName,
+      title: `【${label}】${d.archetype}デッキレシピ${variant}！採用カード最安値・代替パーツ提案`,
       description: `${d.date ? `${d.date}の` : ''}ジムバトルで優勝した${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`,
       result: label,
       pubDate: todayJst(),

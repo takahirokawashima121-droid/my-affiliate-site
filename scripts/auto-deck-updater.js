@@ -28,6 +28,7 @@ import { fileURLToPath } from 'node:url';
 import * as cheerio from 'cheerio';
 import { cardEffects, deckCards, fetchText, norm, romaji } from './lib/official.js';
 import { importDecks } from './import-official-decks.js';
+import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
@@ -39,12 +40,6 @@ const COLUMNS_PATH = path('src/data/deck-columns.json');
 const DECKS_PATH = path('src/data/official-decks.json');
 const CARDS_PATH = path('src/data/cards.json');
 const PR_BODY_PATH = path('.cache/auto-deck-pr.md');
-/** どのデッキにも入る汎用カード（主力パーツとして記事上部に出さない） */
-const STAPLES = new Set([
-  'ハイパーボール', 'ポケパッド', 'なかよしポフィン', '夜のタンカ', 'リーリエの決心', 'ボスの指令', 'ジャッジマン', 'ポケギア3.0',
-  'ポケモンいれかえ', 'エネルギー回収', 'エネルギー転送', 'スペシャルレッドカード', 'ふしぎなアメ', 'キチキギスex', 'ニャースex',
-  'ノコッチ', 'ノココッチ', 'シークレットボックス', 'ヒカリ', 'トウコ', 'ペパー',
-]);
 
 function parseArgs(argv) {
   return {
@@ -88,12 +83,16 @@ async function articleDecks(url) {
   return decks;
 }
 
-/** 記事の主役（デッキ名と同じ名前、なければデッキ名に含まれる名前のポケモン）の公式画像から slug を作る */
-function makeSlug(archetype, list, date, taken) {
+/**
+ * 記事の主役（デッキ名と同じ名前、なければデッキ名に含まれる名前のポケモン）の公式画像から slug を作る。
+ * 同名デッキと区別するカード（variant）があれば、そのカードのローマ字も付ける（例: mgekkougaex-deck-0926-nokokotchiex）
+ */
+function makeSlug(archetype, list, date, taken, variant) {
   const pokemon = list.filter((c) => c.category === 'ポケモン');
   const main = pokemon.find((c) => norm(c.name) === norm(archetype)) ?? pokemon.find((c) => norm(archetype).includes(norm(c.name))) ?? pokemon[0];
   const [m, d] = (date ?? '').split('/').map((n) => n.padStart(2, '0'));
-  const base = `${main ? romaji(main.thumb) : 'deck'}-deck${m && d ? `-${m}${d}` : ''}`;
+  const variantCard = variant?.card ? list.find((c) => norm(c.name) === norm(variant.card)) : undefined;
+  const base = `${main ? romaji(main.thumb) : 'deck'}-deck${m && d ? `-${m}${d}` : ''}${variantCard?.thumb ? `-${romaji(variantCard.thumb)}` : ''}`;
   let slug = base;
   for (let i = 2; taken.has(slug); i++) slug = `${base}-${i}`;
   return slug;
@@ -186,7 +185,7 @@ async function main() {
   // 記事ごとのデッキを集める（記事化済みのデッキコードは除く）
   const columns = await readJson(COLUMNS_PATH, []);
   const imported = new Set(Object.values(await readJson(DECKS_PATH, {})).map((d) => d.deckId));
-  const existingNames = new Set(columns.map((c) => norm(c.deckName.replace(/（構築\d+）$/, ''))));
+  const existingNames = new Set(columns.map((c) => norm(baseDeckName(c.deckName))));
   const candidates = [];
   for (const it of fresh) {
     const decks = (await articleDecks(it.link)).filter((d) => !doneDecks.has(d.deckId) && !imported.has(d.deckId));
@@ -213,11 +212,20 @@ async function main() {
   }
   console.log(`\n■ 記事を生成するデッキ（最大 ${opts.maxColumns}件）`);
   const taken = new Set(columns.map((c) => c.slug));
+  const recipesBefore = await readJson(DECKS_PATH, {});
+  const asRecipe = (list) => list.map((c) => ({ name: c.name, qty: c.count, category: c.category, aceSpec: c.aceSpec }));
+  const sameBase = (c, archetype) => norm(baseDeckName(c.deckName)) === norm(archetype);
+  for (const d of selected) d.list = await deckCards(d.deckId);
   for (const d of selected) {
-    d.list = await deckCards(d.deckId);
-    d.slug = makeSlug(d.archetype, d.list, d.date, taken);
+    // 主軸名が同じ既存記事・同じ回のデッキがあれば、レシピの差分から「〇〇採用型」と名付ける（連番の「構築2」は使わない）
+    const peers = [
+      ...columns.filter((c) => sameBase(c, d.archetype) && recipesBefore[c.deckKey]).map((c) => recipesBefore[c.deckKey].cards),
+      ...selected.filter((o) => o !== d && norm(o.archetype) === norm(d.archetype)).map((o) => asRecipe(o.list)),
+    ];
+    d.variant = peers.length > 0 ? variantLabel(asRecipe(d.list), peers) : null;
+    d.slug = makeSlug(d.archetype, d.list, d.date, taken, d.variant);
     taken.add(d.slug);
-    console.log(`  - ${d.archetype}（${d.date ?? '日付不明'}）→ /columns/${d.slug}/`);
+    console.log(`  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}）→ /columns/${d.slug}/`);
   }
   if (opts.dryRun) return console.log('\n（dry-run: カード追加・記事生成・処理済みの記録は行いません）');
 
@@ -226,19 +234,26 @@ async function main() {
   const recipes = await readJson(DECKS_PATH, {});
   const cards = await readJson(CARDS_PATH, []);
   const generated = [];
+  const renamedColumns = []; // 同名デッキの追加で型名を付けた既存記事
   for (const d of selected.filter((x) => result.decks.includes(x.slug))) {
     const recipe = recipes[d.slug].cards;
     const keyCards = pickKeyCards(recipe, d.archetype);
     const label = `${d.date ?? ''} ジムバトル優勝`.trim();
-    // 同じ大会・同じデッキ名の記事がすでにあれば「（構築2）」のように区別する（タイトルの重複を避ける）
-    const sameCount = columns.filter((c) => c.result === label && norm(c.deckName.replace(/（構築\d+）$/, '')) === norm(d.archetype)).length;
-    const variant = sameCount > 0 ? `（構築${sameCount + 1}）` : '';
-    const deckName = `${d.archetype}${variant}`;
+    const deckName = d.variant ? `${d.archetype}（${d.variant.text}型）` : d.archetype;
+    // 型名のない既存の同名記事にも、新しいデッキとの差分から型名を付ける（一覧・タイトルで区別できるように）
+    for (const c of columns.filter((c) => c.deckName === d.archetype && recipes[c.deckKey])) {
+      const others = [recipe, ...columns.filter((o) => o !== c && sameBase(o, d.archetype) && recipes[o.deckKey]).map((o) => recipes[o.deckKey].cards)];
+      const renamed = `${d.archetype}（${variantLabel(recipes[c.deckKey].cards, others).text}型）`;
+      c.title = c.title.replace(`${d.archetype}デッキレシピ`, `${renamed}デッキレシピ`);
+      c.deckName = renamed;
+      renamedColumns.push(c);
+      console.log(`  ↻ 既存の記事を改名: /columns/${c.slug}/ → ${renamed}`);
+    }
     const column = {
       slug: d.slug,
       deckKey: d.slug,
       deckName,
-      title: `【${label}】${d.archetype}デッキレシピ${variant}！採用カード最安値・代替パーツ提案`,
+      title: `【${label}】${deckName}デッキレシピ！採用カード最安値・代替パーツ提案`,
       description: `${d.date ? `${d.date}の` : ''}ジムバトルで優勝した${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`,
       result: label,
       pubDate: todayJst(),
@@ -273,6 +288,7 @@ async function main() {
     `### 生成した記事（${generated.length}本）`,
     ...(generated.length ? generated.map((c) => `- \`/columns/${c.slug}/\` ${c.title}`) : ['- なし']),
     '',
+    ...(renamedColumns.length ? ['### 型名を付けた既存の記事（同名デッキと区別するため）', ...renamedColumns.map((c) => `- \`/columns/${c.slug}/\` → ${c.deckName}（本文中の表記も必要に応じて更新）`), ''] : []),
     `### 追加したカード（${addedCards.length}枚）`,
     ...(addedCards.length ? addedCards.map((c) => `- ${c.name} ${c.rarity} [${c.expansionCode} ${c.cardNumber}] ${c.regulationMark ?? ''}`) : ['- なし']),
     '',

@@ -101,6 +101,7 @@ npm run auto-decks                                         # 新着の優勝デ�
 
 - 既存の記事がないデッキ名を優先して最大4デッキを選び、未登録カードを最低レアリティで追加・価格取得
 - 記事（デッキの構成・公式テキストによる主力カードの効果・最安値つき60枚レシピ・代替案の枠）を生成
+- 同じデッキ名の記事がすでにある（または同じ回に複数ある）場合は、レシピを比べて一方にしか入っていないカード（ex → ACE SPEC → そのほかのポケモン → トレーナーズの順）から「メガゲッコウガex（ノココッチex採用型）」のように名付けます。型名のない既存の同名記事にも型名を付けます（`scripts/lib/deck-variant.js`）
 - 処理済みの記事・デッキは `scripts/cache/processed-decks.json` に記録（まとめ記事は同じURLのまま毎日更新されるため、URL＋タイトルとデッキコードで判定）
 
 回し方・代替カードは自動では書かないため、PR で各記事の `TODO` を追記してからマージしてください。PR の作成には、リポジトリの Settings → Actions → General → Workflow permissions で「Allow GitHub Actions to create and approve pull requests」を有効にする必要があります。

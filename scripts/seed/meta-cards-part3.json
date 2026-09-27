@@ -1,0 +1,20 @@
+{
+  "_comment": [
+    "H・I・J レギュレーションの残りの重要パーツ（最低レアリティ・初収録の版）。npm run add-cards -- --seed=scripts/seed/meta-cards-part3.json で追加する。",
+    "型番は楽天の出品タイトルで確認済み。依頼リストから修正: メガガルーラex は M1L ではなく M1S、オーガポンの正式名は「いしずえのめんex」。",
+    "登録済みのため除外: ドラパルトex・プライムキャッチャー・アンフェアスタンプ・夜のタンカ・なかよしポフィン・ゼロの大空洞。",
+    "スタンダード不可（G のまま）のため除外: 大地の器・カウンターキャッチャー。勇気のおまもりは H/I/J の版のマークを確認できないため除外。",
+    "初収録の版・マークを確認できないため除外: プレシャスキャリー（MC 版のみ）、ルミナスエネルギー・ジェットエネルギー（UR 版のみ確認）。"
+  ],
+  "cards": [
+    { "id": "terapagos-ex-rr-sv7-088", "name": "テラパゴスex", "rarity": "RR", "cardNumber": "088/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "テラパゴスex", "role": "アタッカー" },
+    { "id": "ogerpon-teal-ex-rr-sv6-016", "name": "オーガポン みどりのめんex", "rarity": "RR", "cardNumber": "016/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "タケルライコex", "role": "エネルギー加速" },
+    { "id": "ogerpon-wellspring-ex-rr-sv6-038", "name": "オーガポン いどのめんex", "rarity": "RR", "cardNumber": "038/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "オーガポン", "role": "アタッカー" },
+    { "id": "ogerpon-cornerstone-ex-rr-sv6-065", "name": "オーガポン いしずえのめんex", "rarity": "RR", "cardNumber": "065/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "オーガポン", "role": "アタッカー" },
+    { "id": "mega-kangaskhan-ex-rr-m1s-051", "name": "メガガルーラex", "rarity": "RR", "cardNumber": "051/063", "expansionCode": "M1S", "regulationMark": "I", "deck": "メガガルーラex", "role": "アタッカー" },
+    { "id": "legacy-energy-ace-sv6-101", "name": "レガシーエネルギー", "rarity": "ACE", "cardNumber": "101/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "汎用", "role": "ACE SPEC（特殊エネルギー）" },
+    { "id": "gravity-gemstone-u-sv7-095", "name": "重力玉", "rarity": "U", "cardNumber": "095/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "汎用", "role": "ポケモンのどうぐ" },
+    { "id": "kieran-u-sv6-096", "name": "スグリ", "rarity": "U", "cardNumber": "096/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "汎用", "role": "サポート" },
+    { "id": "carmine-u-sv6-097", "name": "ゼイユ", "rarity": "U", "cardNumber": "097/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "汎用", "role": "サポート" }
+  ]
+}

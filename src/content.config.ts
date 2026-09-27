@@ -14,6 +14,18 @@ const blog = defineCollection({
     draft: z.boolean().default(false),
     // アフィリエイトリンクを含む記事は true（PR表記を自動表示）
     affiliate: z.boolean().default(true),
+    // デッキレシピ（任意）。記事下に最新の最安値つきのレシピ表を表示する。合計は60枚であること（ビルド時に検証）
+    deck: z
+      .array(
+        z.object({
+          name: z.string(),
+          qty: z.number().int().min(1).max(60),
+          category: z.enum(['ポケモン', 'サポート', 'グッズ', 'ポケモンのどうぐ', 'スタジアム', 'エネルギー']),
+          cardId: z.string().optional(), // cards.json の id（掲載カードなら価格・リンクを表示）
+          note: z.string().optional(),
+        }),
+      )
+      .optional(),
   }),
 });
 

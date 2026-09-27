@@ -1,0 +1,91 @@
+---
+// デッキレシピ表：cards.json の最新の最安値（楽天・Yahoo! の安い方）で1枚価格・小計・合計目安を表示する
+import type { CollectionEntry } from 'astro:content';
+import { getCards, bestOffer, cardPath, cardModel, formatYen, isStandardLegal } from '../utils/cards';
+import { nameWithRarity } from '../utils/cardFormat';
+
+type Entry = NonNullable<CollectionEntry<'blog'>['data']['deck']>[number];
+interface Props {
+  deck: Entry[];
+  /** レシピ名（見出し） */
+  title?: string;
+}
+
+const { deck, title = 'デッキレシピ（60枚）' } = Astro.props;
+const cards = await getCards();
+const byId = new Map(cards.map((c) => [c.id, c]));
+
+// ビルド時の検証：合計60枚・存在する cardId・同名4枚まで（基本エネルギーを除く）
+const total = deck.reduce((sum, e) => sum + e.qty, 0);
+if (total !== 60) throw new Error(`デッキレシピの合計が ${total} 枚です（60枚である必要があります）`);
+for (const e of deck) {
+  if (e.cardId && !byId.has(e.cardId)) throw new Error(`デッキレシピの cardId「${e.cardId}」（${e.name}）が cards.json に存在しません`);
+  if (e.qty > 4 && !e.name.startsWith('基本')) throw new Error(`「${e.name}」が ${e.qty} 枚です（同名カードは4枚まで）`);
+}
+
+const rows = deck.map((e) => {
+  const card = e.cardId ? byId.get(e.cardId) : undefined;
+  const offer = card ? bestOffer(card) : null;
+  return { ...e, card, offer, subtotal: offer ? offer.price * e.qty : null };
+});
+const categories = ['ポケモン', 'サポート', 'グッズ', 'ポケモンのどうぐ', 'スタジアム', 'エネルギー'] as const;
+const priced = rows.filter((r) => r.subtotal !== null);
+const estimate = priced.reduce((sum, r) => sum + (r.subtotal ?? 0), 0);
+const unpricedQty = rows.filter((r) => r.subtotal === null).reduce((sum, r) => sum + r.qty, 0);
+const nonStandard = rows.filter((r) => r.card && !isStandardLegal(r.card));
+---
+
+<section aria-labelledby="deck-recipe" class="not-prose mt-10 rounded-2xl border-2 border-blue-200 bg-white p-5 shadow-sm">
+  <h2 id="deck-recipe" class="text-xl font-black text-slate-900">🃏 {title}</h2>
+  <p class="mt-1 text-xs text-slate-500">価格は楽天市場・Yahoo!ショッピングの最安値（毎日自動更新）。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+
+  {categories.map((cat) => {
+    const list = rows.filter((r) => r.category === cat);
+    if (list.length === 0) return null;
+    return (
+      <div class="mt-5">
+        <h3 class="flex items-baseline justify-between border-b border-slate-200 pb-1 text-sm font-bold text-slate-700">
+          {cat}
+          <span class="text-xs font-medium text-slate-500">{list.reduce((s, r) => s + r.qty, 0)}枚</span>
+        </h3>
+        <ul class="divide-y divide-slate-100">
+          {list.map((r) => (
+            <li class="flex items-center gap-3 py-2 text-sm">
+              <span class="w-8 shrink-0 text-right font-mono font-bold text-slate-900">×{r.qty}</span>
+              <span class="min-w-0 flex-1">
+                {r.card ? (
+                  <a href={cardPath(r.card)} class="font-bold text-blue-600 hover:underline">{nameWithRarity(r.card.data)}</a>
+                ) : (
+                  <span class="font-bold text-slate-900">{r.name}</span>
+                )}
+                {r.card && <span class="ml-1 font-mono text-[11px] text-slate-500">[{cardModel(r.card)}]</span>}
+                {r.note && <span class="block text-[11px] text-slate-500">{r.note}</span>}
+              </span>
+              <span class="shrink-0 text-right tabular-nums">
+                {r.offer ? (
+                  <Fragment>
+                    <span class="block text-xs text-slate-500">1枚 {formatYen(r.offer.price)}</span>
+                    <span class="block font-bold text-rose-600">{formatYen(r.subtotal ?? 0)}</span>
+                  </Fragment>
+                ) : (
+                  <span class="text-xs text-slate-400">{r.card ? '在庫なし' : '価格未掲載'}</span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  })}
+
+  <div class="mt-5 rounded-xl bg-amber-50 p-4">
+    <p class="flex items-baseline justify-between text-sm font-bold text-slate-900">
+      合計 {total}枚の概算（掲載カード分）
+      <span class="text-2xl font-black tabular-nums text-rose-600">{formatYen(estimate)}</span>
+    </p>
+    <p class="mt-1 text-xs leading-relaxed text-slate-600">
+      {unpricedQty > 0 && `価格未掲載・在庫なしの ${unpricedQty} 枚（基本エネルギーなど）は含みません。`}送料や、ショップをまたいで購入する場合の手数料は含みません。価格は変動するため、購入前に各ショップでご確認ください。
+    </p>
+    {nonStandard.length > 0 && <p class="mt-1 text-xs font-bold text-rose-700">※ スタンダードで使えないカードが含まれています: {nonStandard.map((r) => r.name).join('、')}</p>}
+  </div>
+</section>

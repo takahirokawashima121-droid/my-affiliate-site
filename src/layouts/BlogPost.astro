@@ -3,6 +3,7 @@ import type { MarkdownHeading } from 'astro';
 import BaseLayout from './BaseLayout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import PostCard from '../components/PostCard.astro';
+import DeckRecipe from '../components/DeckRecipe.astro';
 import { SITE } from '../consts';
 import { formatDate, readingTime, type Post } from '../utils/posts';
 
@@ -13,7 +14,7 @@ interface Props {
 }
 
 const { post, headings, related } = Astro.props;
-const { title, description, pubDate, updatedDate, heroImage, tags, affiliate } = post.data;
+const { title, description, pubDate, updatedDate, heroImage, tags, affiliate, deck } = post.data;
 const url = new URL(Astro.url.pathname, Astro.site).toString();
 const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
@@ -75,6 +76,8 @@ const jsonLd = {
       <div class="prose prose-gray max-w-none prose-headings:scroll-mt-20 prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2 prose-a:text-brand-600 prose-img:rounded-lg">
         <slot />
       </div>
+
+      {deck && <DeckRecipe deck={deck} />}
     </article>
 
     {related.length > 0 && (

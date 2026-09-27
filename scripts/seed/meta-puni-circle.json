@@ -1,0 +1,25 @@
+{
+  "_comment": [
+    "「ぷにぷにサークル」デッキ（ジムバトル 2026/9/21 優勝、https://cardrush.media/pokemon/decks/97521）のパーツのうち未登録のもの。npm run add-cards -- --seed=scripts/seed/meta-puni-circle.json で追加する。",
+    "ぷにぷにサークルはカード名ではなくデッキ名。ポケモンはレシピと同じ版（ヒビキのピチューのみ、同じカードで最低レアリティの SV9a C 版）。トレーナーズは H・I・J の最低レアリティ版を選択。",
+    "M2a（ハイクラスパック）はレアリティ表記なしのため rarity は「-」。",
+    "登録済みのため対象外: なかよしポフィン、夜のタンカ、ポケギア3.0、リーリエの決心、ボスの指令、ニュートラルセンター。"
+  ],
+  "cards": [
+    { "id": "igglybuff-m6a-096", "name": "ププリン", "rarity": "-", "cardNumber": "096/103", "expansionCode": "M6a", "regulationMark": "J", "deck": "ぷにぷにサークル", "role": "たねポケモン" },
+    { "id": "poltchageist-c-m5-005", "name": "チャデス", "rarity": "C", "cardNumber": "005/081", "expansionCode": "M5", "regulationMark": "J", "deck": "ぷにぷにサークル", "role": "たねポケモン" },
+    { "id": "budew-m2a-011", "name": "スボミー", "rarity": "-", "cardNumber": "011/193", "expansionCode": "M2a", "regulationMark": "I", "deck": "ぷにぷにサークル", "role": "たねポケモン" },
+    { "id": "ethans-pichu-c-sv9a-036", "name": "ヒビキのピチュー", "rarity": "C", "cardNumber": "036/063", "expansionCode": "SV9a", "regulationMark": "I", "deck": "ぷにぷにサークル", "role": "たねポケモン" },
+    { "id": "tyrogue-c-m1l-023", "name": "バルキー", "rarity": "C", "cardNumber": "023/063", "expansionCode": "M1L", "regulationMark": "I", "deck": "ぷにぷにサークル", "role": "たねポケモン" },
+    { "id": "poke-pad-u-m3-070", "name": "ポケパッド", "rarity": "U", "cardNumber": "070/080", "expansionCode": "M3", "regulationMark": "J", "deck": "ぷにぷにサークル", "role": "グッズ（サーチ）" },
+    { "id": "special-red-card-u-m4-072", "name": "スペシャルレッドカード", "rarity": "U", "cardNumber": "072/083", "expansionCode": "M4", "regulationMark": "J", "deck": "ぷにぷにサークル", "role": "グッズ（妨害）" },
+    { "id": "pokemon-catcher-u-sv5a-057", "name": "ポケモンキャッチャー", "rarity": "U", "cardNumber": "057/066", "expansionCode": "SV5a", "regulationMark": "H", "deck": "ぷにぷにサークル", "role": "グッズ（呼び出し）" },
+    { "id": "dark-bell-u-m5-070", "name": "ダークベル", "rarity": "U", "cardNumber": "070/081", "expansionCode": "M5", "regulationMark": "J", "deck": "ぷにぷにサークル", "role": "グッズ" },
+    { "id": "sacred-ash-u-sv9a-056", "name": "せいなるはい", "rarity": "U", "cardNumber": "056/063", "expansionCode": "SV9a", "regulationMark": "I", "deck": "ぷにぷにサークル", "role": "グッズ（回収）" },
+    { "id": "tool-scrapper-m2a-151", "name": "ツールスクラッパー", "rarity": "-", "cardNumber": "151/193", "expansionCode": "M2a", "regulationMark": "I", "deck": "ぷにぷにサークル", "role": "グッズ（どうぐ除去）" },
+    { "id": "brave-bangle-m2a-166", "name": "ブレイブバングル", "rarity": "-", "cardNumber": "166/193", "expansionCode": "M2a", "regulationMark": "I", "deck": "ぷにぷにサークル", "role": "ポケモンのどうぐ" },
+    { "id": "mook-u-m5-078", "name": "ムク", "rarity": "U", "cardNumber": "078/081", "expansionCode": "M5", "regulationMark": "J", "deck": "ぷにぷにサークル", "role": "サポート" },
+    { "id": "drayton-u-sv6-098", "name": "ハッサク", "rarity": "U", "cardNumber": "098/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "ぷにぷにサークル", "role": "サポート" },
+    { "id": "battle-colosseum-u-m2-079", "name": "バトルコロシアム", "rarity": "U", "cardNumber": "079/080", "expansionCode": "M2", "regulationMark": "I", "deck": "ぷにぷにサークル", "role": "スタジアム" }
+  ]
+}

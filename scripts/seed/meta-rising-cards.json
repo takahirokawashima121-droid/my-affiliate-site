@@ -3,7 +3,7 @@
     "急上昇デッキのキーカード（最低レアリティ・初収録の版）。npm run add-cards -- --seed=scripts/seed/meta-rising-cards.json で追加する。",
     "型番は楽天の出品タイトルで確認済み。依頼リストから修正: ヤドン/ヤドキング SV7 044・045 → 038・039、フーディン系統 SV8 → SV6（047〜049）、ユンゲラー U → C、ノココッチ U → R。",
     "ノココッチ・ノコッチの 057/071・056/071 は SV2P（G）にも同じ番号があるため、H の SV5K 版であることを弾記号で確認して登録。",
-    "ぷにぷにサークルは H/I/J の出品を確認できないため除外。"
+    "ぷにぷにサークルはカード名ではなくデッキ名のため、パーツは scripts/seed/meta-puni-circle.json で追加。"
   ],
   "cards": [
     { "id": "slowpoke-c-sv7-038", "name": "ヤドン", "rarity": "C", "cardNumber": "038/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "ヤドキング", "role": "たねポケモン" },

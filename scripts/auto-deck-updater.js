@@ -292,7 +292,7 @@ async function main() {
     return [`#### ${c.deckName}`, '1ポスト目（親）', '```', parent, '```', '2ポスト目（リプライ）', '```', reply, '```', ''];
   });
   const body = [
-    '## 新着優勝デッキ記事の自動生成',
+    '## 🏭 ポケカファクトリー｜新着優勝デッキ記事の自動生成',
     '',
     `RSS（${FEED_URL}）の新着記事から自動生成しました。`,
     '',
@@ -311,6 +311,8 @@ async function main() {
     '- [ ] 各記事の TODO（回し方・代替カード / カスタマイズ案）を追記した',
     '- [ ] 追加したカードの型番・レギュレーションマークに誤りがない',
     '- [ ] トップページの特集（src/data/deck-columns.ts の FEATURED_DECKS）を更新するか決めた',
+    '',
+    '— ポケカファクトリー（ポケトリー）自動デッキ更新',
     '',
     '🤖 Generated with [Claude Code](https://claude.com/claude-code)',
   ].join('\n');

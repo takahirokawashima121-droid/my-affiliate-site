@@ -1,10 +1,12 @@
 // サイト全体の設定（ここを書き換えるだけでサイト名などが変わります）
 export const SITE = {
-  title: 'ポケカ価格ナビ', // サイト名（ヘッダー・OGP の og:site_name・各ページ <title> の末尾）
-  tagline: '中古ポケモンカードの販売最安値・買取相場比較', // トップページの <title> に付くキャッチコピー
+  title: 'ポケカファクトリー', // サイト名（ヘッダー・OGP の og:site_name・各ページ <title> の末尾）
+  shortName: 'ポケトリー', // 略称（トップページの <title>・ヘッダーのサブ表記）
+  englishName: 'POKECA FACTORY', // 英語表記（ヘッダーのサブ表記）
+  tagline: 'デッキ構築＆パーツ調達ナビ', // トップページの <title> に付くキャッチコピー
   description:
-    '人気の中古ポケモンカードの販売最安値と買取最高値を、主要ショップ横断で比較。一番安く買えるお店・一番高く売れるお店がすぐに分かります。',
-  author: 'ポケカ価格ナビ運営事務局',
+    '現行スタンダード（H・I・J）特化のデッキ研究＆パーツ調達工房。毎日のジムバトル優勝デッキ60枚レシピ・回し方・同名軸の採用差分（〇〇型）と、不足パーツの最安値を一括チェック。',
+  author: 'ポケカファクトリー運営事務局',
   // 連絡先メール。スパム対策のため @ の前後に分けて持ち、完全なアドレスは HTML に出力しない
   contactEmail: { user: 'pokeca.price.contact', domain: 'gmail.com' },
   lang: 'ja',
@@ -42,7 +44,7 @@ export const STANDARD_EXEMPT_NAMES: readonly string[] = [
 ];
 
 export const NAV = [
-  { href: '/', label: '相場比較' },
+  { href: '/', label: 'パーツ検索' },
   { href: '/columns/', label: 'デッキ解説' },
   { href: '/blog/', label: 'コラム一覧' },
   { href: '/about/', label: '運営者情報' },

@@ -40,14 +40,14 @@ export function buildXPosts({ deckName, result, highlight, estimate, url }: Shar
   const date = result.match(/\d{1,2}\/\d{1,2}/)?.[0];
   const head = `🏆【${deckName}】がジムバトル優勝！${date ? `（${date}）` : ''}`;
   const price = estimate > 0 ? `・60枚の最安パーツ概算 約${estimate.toLocaleString('ja-JP')}円` : '';
-  const tags = '#ポケカ #ジムバトル優勝';
+  const tags = '#ポケカ #ジムバトル優勝 #ポケトリー';
   const compose = (h: string) => [head, `・${h}`, price, tags].filter(Boolean).join('\n');
 
   let summary = highlight;
   while (summary.length > 1 && xWeightedLength(compose(summary)) > PARENT_POST_LIMIT) summary = `${summary.slice(0, -2)}…`;
   return {
     parent: compose(summary),
-    reply: `確定レシピ・最安パーツ内訳・回し方はこちら👇\n${url}`,
+    reply: `確定レシピ・最安パーツ内訳・回し方は「ポケカファクトリー（ポケトリー）」でチェック👇\n${url}`,
   };
 }
 

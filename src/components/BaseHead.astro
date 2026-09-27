@@ -28,7 +28,7 @@ const {
   jsonLd,
 } = Astro.props;
 
-const fullTitle = title ? (titleSuffix ? `${title} | ${SITE.title}` : title) : `${SITE.title}｜${SITE.tagline}`;
+const fullTitle = title ? (titleSuffix ? `${title} | ${SITE.title}` : title) : `${SITE.title}（${SITE.shortName}）｜${SITE.tagline}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
 ---

@@ -28,9 +28,9 @@ const yahooCredit = `<!-- Begin Yahoo! JAPAN Web Services Attribution Snippet --
       販売価格は楽天ウェブサービス・Yahoo!ショッピングAPIのデータを利用しています。<Fragment set:html={rakutenCredit} /><Fragment set:html={yahooCredit} />
     </p>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p>&copy; {year} {SITE.title}</p>
+      <p>&copy; {year} {SITE.title}（{SITE.shortName}）<span class="ml-2 text-xs tracking-widest text-slate-400">{SITE.englishName}</span></p>
       <ul class="flex flex-wrap gap-4">
-        <li><a href="/" class="hover:text-brand-600">相場比較</a></li>
+        <li><a href="/" class="hover:text-brand-600">パーツ検索</a></li>
         <li><a href="/blog/" class="hover:text-brand-600">コラム一覧</a></li>
         <li><a href="/about/" class="hover:text-brand-600">運営者情報</a></li>
         <li><a href="/privacy/" class="hover:text-brand-600">プライバシーポリシー・免責事項</a></li>

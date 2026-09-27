@@ -14,6 +14,7 @@
 // 安全のための仕様:
 // - 検索キーワードは「${name} ${rarity} ${cardNumber} ポケカ」→ 該当なしなら「${name} ${rarity} ${cardNumber}」→「${name} ${cardNumber}」の順に再検索（src/utils/cardFormat.ts の cardSearchKeywords）
 // - カード名とカード番号（例: 096/071）の両方を商品名に含む商品だけを候補にする（オリパ・鑑定品・傷有り等の状態難は除外）
+// - 商品名に別の弾記号・別のレアリティだけが書かれた商品は除外する（同名・同番号の別の弾の出品を拾わないため。例: ノココッチ 057/071 の SV5K R と SV2P U）
 // - 全キーワードで在庫のある該当商品がないカードは「在庫なし」（salePrice=0, saleInStock=false）にする
 // - APIエラーのカードは一切変更しない
 // - 価格・在庫・購入リンク・商品画像のいずれかに変化があったカードだけを更新する（変化がなければ updatedAt も変えない）
@@ -52,7 +53,33 @@ export function normalize(text) {
   return text.normalize('NFKC').toLowerCase().replace(/\s+/g, '');
 }
 
-/** 検索結果から、カード名とカード番号の両方を商品名に含む最安の商品を選ぶ */
+// 商品名に書かれた弾記号（SV5K・M2a・S12a・SM4+ など）
+const EXPANSION_CODE = /(?<![a-z0-9])(sv\d+[a-z]?|svp|m\d+[a-z]?|mc|mp|s\d+[a-z]?|sm\d+[a-z+]?)(?![a-z0-9])/gi;
+
+/**
+ * 商品名に別の弾の記号だけが書かれているか。
+ * 同じカード名・同じ番号が別の弾にもある場合（例: ノココッチ 057/071 は SV5K と SV2P の両方にある）に、
+ * 別の弾の出品を最安値として拾わないようにする。弾記号の書かれていない商品名は判定できないため対象外
+ */
+export function mentionsOtherExpansion(card, rawTitle) {
+  const codes = [...rawTitle.normalize('NFKC').matchAll(EXPANSION_CODE)].map((m) => m[1].toUpperCase());
+  return codes.length > 0 && !codes.includes(card.expansionCode.toUpperCase());
+}
+
+// 商品名に書かれたレアリティ記号（(U アンコモン)・[R]・/U/ など）
+const RARITY_TOKEN = /(?<![A-Za-z])(MUR|FUR|SAR|SSR|CHR|ACE|RRR|UR|HR|SR|AR|RR|SA|R|U|C)(?![A-Za-z])/g;
+
+/**
+ * 商品名に別のレアリティだけが書かれているか。
+ * 弾記号のない商品名でも、同番号の別の弾の出品（例: SV2P のノココッチ U）を除外できるようにする。
+ * レアリティ表記のないカード（rarity「-」）や、商品名にレアリティが書かれていない場合は対象外
+ */
+export function mentionsOtherRarity(card, rawTitle) {
+  const tokens = [...rawTitle.normalize('NFKC').matchAll(RARITY_TOKEN)].map((m) => m[1]);
+  return card.rarity !== '-' && tokens.length > 0 && !tokens.includes(card.rarity);
+}
+
+/** 検索結果から、カード名とカード番号の両方を商品名に含む最安の商品を選ぶ（別の弾・別のレアリティと明記された商品は除く） */
 export function pickCheapest(card, items) {
   const name = normalize(card.name);
   const number = normalize(card.cardNumber);
@@ -65,6 +92,8 @@ export function pickCheapest(card, items) {
       title.includes(name) &&
       number !== '' &&
       title.includes(number) &&
+      !mentionsOtherExpansion(card, rawTitle) &&
+      !mentionsOtherRarity(card, rawTitle) &&
       Number.isFinite(item.itemPrice) &&
       item.itemPrice > 0
     );

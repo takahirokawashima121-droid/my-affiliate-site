@@ -24,10 +24,10 @@ export type DeckColumn = {
 // 記事の一覧は deck-columns.json（scripts/auto-deck-updater.js が新着デッキの記事を追記する）
 export const DECK_COLUMNS: DeckColumn[] = deckColumns;
 
-/** トップページの特集（最新の大会結果） */
+/** トップページの特集（最新の大会結果から4〜6件。メガシンカ・ex・非ex・低予算が偏らないように選ぶ） */
 export const FEATURED_DECKS = {
   title: '最新ジムバトル優勝デッキ特集（9/26）',
-  slugs: ['mega-gengar-deck', 'mega-diancie-deck', 'hops-zacian-deck', 'mega-greninja-deck'],
+  slugs: ['mega-gengar-deck', 'mega-diancie-deck', 'hops-zacian-deck', 'mega-greninja-deck', 'dekanuchixyan-deck-0926', 'soubureizuex-deck-0926'],
 };
 
 export const columnPath = (c: DeckColumn) => `/columns/${c.slug}/`;

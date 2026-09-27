@@ -26,3 +26,45 @@ export function recipeCard(deckKey: string, name: string, cards: Card[]): Card |
   const entry = getRecipe(deckKey).cards.find((e) => e.name === name && e.cardId);
   return entry ? cards.find((c) => c.id === entry.cardId) : undefined;
 }
+
+/** 「低予算」とみなす60枚の概算の上限（円） */
+export const BUDGET_LIMIT = 5000;
+
+export type DeckCategory = 'mega' | 'ex' | 'budget';
+
+/** 一覧のフィルター（コラム一覧のタブ・URL の ?filter= に使う） */
+export const DECK_FILTERS: { key: DeckCategory | 'all'; label: string }[] = [
+  { key: 'all', label: 'すべて' },
+  { key: 'mega', label: 'メガシンカ' },
+  { key: 'ex', label: 'exアタッカー' },
+  { key: 'budget', label: '非ex / 低予算' },
+];
+
+/**
+ * デッキ解説の一覧表示用の情報（主役のカード・60枚の概算・カテゴリ・バッジ）。
+ * カテゴリは主役のカード（keyCards の先頭）と概算から自動で決める:
+ *   メガシンカ = 主役が「メガ〇〇ex」、exアタッカー = 主役がそれ以外の ex、非ex / 低予算 = 主役が ex でない、または概算が BUDGET_LIMIT 円未満
+ */
+export function deckSummary(column: { deckKey: string; keyCards: string[] }, cards: Card[]) {
+  const mainCard = recipeCard(column.deckKey, column.keyCards[0], cards);
+  const mainName = mainCard?.data.name ?? column.keyCards[0] ?? '';
+  const estimate = deckEstimate(column.deckKey, cards);
+  const isEx = /ex$/.test(mainName);
+  const isMega = isEx && mainName.startsWith('メガ');
+  const isBudget = !isEx || (estimate > 0 && estimate < BUDGET_LIMIT);
+  const categories: DeckCategory[] = [...(isMega ? ['mega' as const] : isEx ? ['ex' as const] : []), ...(isBudget ? ['budget' as const] : [])];
+  const badges = [isMega ? 'メガシンカ' : isEx ? 'exアタッカー' : '非ex', ...(isEx && isBudget ? ['低予算'] : [])];
+  return { mainCard, estimate, categories, badges };
+}
+
+/** バッジの配色（サイト全体の配色に合わせ、紫は使わない） */
+export function deckBadgeClass(badge: string): string {
+  return (
+    {
+      メガシンカ: 'bg-gradient-to-r from-rose-600 to-orange-500 text-white',
+      exアタッカー: 'bg-blue-600 text-white',
+      非ex: 'bg-emerald-600 text-white',
+      低予算: 'bg-emerald-100 text-emerald-800',
+    }[badge] ?? 'bg-slate-200 text-slate-700'
+  );
+}

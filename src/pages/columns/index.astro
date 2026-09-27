@@ -1,48 +1,100 @@
 ---
-// デッキ解説コラムの一覧（src/data/deck-columns.ts の記事を新しい順に表示）
+// デッキ解説コラムの一覧（src/data/deck-columns.json の記事を新しい順に表示）
+// 上部のタブでカテゴリを絞り込める（JS でカードの表示を切り替え、URL の ?filter= にも反映。JS なしでも全件表示）
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CardImage from '../../components/CardImage.astro';
 import { DECK_COLUMNS, columnPath } from '../../data/deck-columns';
 import { formatYen, getCards } from '../../utils/cards';
-import { deckEstimate, recipeCard } from '../../utils/decks';
-import { formatDate } from '../../utils/posts';
+import { DECK_FILTERS, BUDGET_LIMIT, deckBadgeClass, deckSummary } from '../../utils/decks';
 
 const cards = await getCards();
-const columns = [...DECK_COLUMNS]
-  .sort((a, b) => b.pubDate.localeCompare(a.pubDate))
-  .map((c) => ({ ...c, mainCard: recipeCard(c.deckKey, c.keyCards[0], cards), estimate: deckEstimate(c.deckKey, cards) }));
+const columns = DECK_COLUMNS.map((c, i) => ({ ...c, ...deckSummary(c, cards), order: i }))
+  // 新しい順（同じ日なら登録順）
+  .sort((a, b) => b.pubDate.localeCompare(a.pubDate) || a.order - b.order);
+const counts = Object.fromEntries(DECK_FILTERS.map((f) => [f.key, f.key === 'all' ? columns.length : columns.filter((c) => c.categories.includes(f.key as never)).length]));
 
 const title = 'デッキ解説コラム一覧';
 const description = 'ジムバトルなどで結果を残した現行スタンダードのデッキを、60枚レシピ・回し方・採用カードの最安値つきで解説するコラムの一覧です。';
+const tab =
+  'deck-filter shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 aria-pressed:border-amber-400 aria-pressed:bg-amber-400 aria-pressed:font-black aria-pressed:text-slate-900 aria-pressed:shadow-sm';
 ---
 
 <BaseLayout title={title} description={description}>
-  <div class="mx-auto max-w-4xl">
+  <div class="mx-auto max-w-5xl">
     <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: 'デッキ解説', href: '/columns/' }]} />
-    <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
-    <p class="mt-2 text-sm text-gray-600">{description}</p>
+    <h1 class="text-xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
+    <p class="mt-2 text-xs leading-relaxed text-gray-600 sm:text-sm">{description}</p>
 
-    <ul class="mt-8 grid gap-6 sm:grid-cols-2">
+    <div class="mt-6" role="group" aria-label="デッキの種類で絞り込む">
+      <div class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+        {DECK_FILTERS.map((f, i) => (
+          <button type="button" class={tab} data-filter={f.key} aria-pressed={i === 0 ? 'true' : 'false'}>
+            {f.label}<span class="ml-1 text-xs tabular-nums opacity-70">{counts[f.key]}</span>
+          </button>
+        ))}
+      </div>
+      <p class="mt-2 text-xs text-slate-500">
+        「非ex / 低予算」は、主役が ex 以外のデッキと、60枚の概算が{formatYen(BUDGET_LIMIT)}未満のデッキです。<span id="deck-count" aria-live="polite"></span>
+      </p>
+    </div>
+
+    <ul class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3" id="deck-list">
       {columns.map((c) => (
-        <li>
-          <a href={columnPath(c)} class="group flex h-full gap-4 rounded-2xl border border-gray-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-md">
-            {c.mainCard && <span class="block w-24 shrink-0"><CardImage card={c.mainCard} sizes="96px" /></span>}
-            <span class="flex min-w-0 flex-col">
-              <span class="text-xs font-bold text-rose-600">🏆 {c.result}</span>
-              <span class="mt-1 font-bold leading-snug text-gray-900 group-hover:text-blue-600">{c.title}</span>
-              <span class="mt-2 text-xs text-gray-500">
-                <time datetime={c.pubDate}>{formatDate(new Date(c.pubDate))}</time>
-                {c.estimate > 0 && <Fragment> ・ 60枚の概算 <span class="font-bold tabular-nums text-rose-600">{formatYen(c.estimate)}</span></Fragment>}
+        <li class="deck-item" data-categories={c.categories.join(' ')}>
+          <a href={columnPath(c)} class="group flex h-full gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm transition hover:border-blue-300 hover:shadow-md sm:p-4">
+            {c.mainCard && <span class="block w-14 shrink-0 sm:w-20"><CardImage card={c.mainCard} sizes="80px" /></span>}
+            <span class="flex min-w-0 flex-1 flex-col">
+              <span class="flex flex-wrap items-center gap-1">
+                <span class="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-bold text-white">🏆 {c.result}</span>
+                {c.badges.map((b) => <span class={`rounded-full px-2 py-0.5 text-[10px] font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
+              </span>
+              <span class="mt-1 text-base font-black leading-snug text-gray-900 group-hover:text-blue-600">{c.deckName}</span>
+              <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-gray-600">{c.highlight}</span>
+              <span class="mt-auto flex flex-wrap items-baseline justify-between gap-x-2 pt-2 text-xs">
+                {c.estimate > 0 ? <span class="text-gray-500">60枚の概算 <span class="font-bold tabular-nums text-rose-600">{formatYen(c.estimate)}</span></span> : <span></span>}
+                <span class="font-bold text-blue-600">レシピ・最安パーツを見る →</span>
               </span>
             </span>
           </a>
         </li>
       ))}
     </ul>
+    <p id="deck-empty" class="mt-6 rounded-xl bg-white p-6 text-center text-sm text-gray-500" hidden>該当するデッキ解説はまだありません。</p>
 
     <p class="mt-10 text-sm text-gray-600">
       カードの買い方・売り方のコラムは <a href="/blog/" class="text-brand-600 underline">コラム一覧</a> をご覧ください。
     </p>
   </div>
 </BaseLayout>
+
+<script>
+  // カテゴリの絞り込み（?filter=mega などの URL でも開ける）
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('.deck-filter')];
+  const items = [...document.querySelectorAll<HTMLElement>('.deck-item')];
+  const count = document.getElementById('deck-count');
+  const empty = document.getElementById('deck-empty');
+  const keys = buttons.map((b) => b.dataset.filter ?? 'all');
+
+  const apply = (key: string, updateUrl: boolean) => {
+    let shown = 0;
+    for (const item of items) {
+      const match = key === 'all' || (item.dataset.categories ?? '').split(' ').includes(key);
+      item.hidden = !match;
+      if (match) shown++;
+    }
+    for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.filter === key));
+    if (count) count.textContent = key === 'all' ? '' : `（${items.length}件中 ${shown}件を表示）`;
+    if (empty) empty.hidden = shown > 0;
+    if (updateUrl) {
+      const url = new URL(location.href);
+      if (key === 'all') url.searchParams.delete('filter');
+      else url.searchParams.set('filter', key);
+      history.replaceState(null, '', url);
+    }
+  };
+
+  for (const b of buttons) b.addEventListener('click', () => apply(b.dataset.filter ?? 'all', true));
+  const initial = new URLSearchParams(location.search).get('filter');
+  if (initial && keys.includes(initial)) apply(initial, false);
+</script>

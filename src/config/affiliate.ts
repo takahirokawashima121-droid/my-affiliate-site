@@ -36,6 +36,26 @@ export const SHOPS = {
 
 export type ShopKey = keyof typeof SHOPS;
 
+/** メルカリアンバサダーの afid（メルカリへのリンクに付けると紹介として計測される） */
+export const MERCARI_AFID = '8253399577';
+
+/**
+ * メルカリのURLに afid を付ける（既存のクエリはそのまま残し、afid があれば上書き）。
+ * メルカリへのリンクは必ずこの関数か mercariSearchUrl を通すこと
+ */
+export function withMercariAfid(href: string): string {
+  const url = new URL(href);
+  url.searchParams.set('afid', MERCARI_AFID);
+  return url.toString();
+}
+
+/** メルカリの検索結果URL（例: https://jp.mercari.com/search?keyword=ナンジャモ+096%2F071&afid=…） */
+export function mercariSearchUrl(keyword: string): string {
+  const url = new URL('https://jp.mercari.com/search');
+  url.searchParams.set('keyword', keyword);
+  return withMercariAfid(url.toString());
+}
+
 /**
  * Bee本舗通販店のサイト内検索URL（MakeShop の検索ページ。例: 「ナンジャモ 096/071」）
  */

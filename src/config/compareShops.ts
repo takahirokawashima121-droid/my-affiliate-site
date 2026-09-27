@@ -1,12 +1,17 @@
-// 横断価格比較用のショップ検索リンク（提携していない＝アフィリエイトではないリンク）
+// 横断価格比較用のショップ・フリマ検索リンク
 // 収益導線（楽天・Yahoo!・Bee本舗）とは別枠で、落ち着いたスタイルで表示する。
+// メルカリのみメルカリアンバサダーのアフィリエイトリンク（afid 付き）。それ以外は提携していないリンク。
 //
 // 各URLは実際に検索結果が表示されることを確認済み（2026年9月）。
 // ※晴れる屋2は /product-list?keyword= だと 404 になるため、Shopify の /search?q= を使う。
 
+import { mercariSearchUrl } from './affiliate';
+
 export type CompareShop = {
   key: string;
   name: string;
+  /** アフィリエイトリンクか（true なら rel="sponsored" を付け、GA4 の affiliate_click で計測する） */
+  affiliate?: boolean;
   /** 検索キーワード（例: 「ナンジャモ 096/071」）から検索結果URLを作る */
   searchUrl: (keyword: string) => string;
 };
@@ -30,7 +35,8 @@ export const COMPARE_SHOPS: CompareShop[] = [
   {
     key: 'mercari',
     name: 'メルカリ',
-    searchUrl: (kw) => `https://jp.mercari.com/search?keyword=${encodeURIComponent(kw)}`,
+    affiliate: true,
+    searchUrl: mercariSearchUrl,
   },
 ];
 

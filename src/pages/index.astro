@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import CardItem from '../components/CardItem.astro';
 import AffiliatePixels from '../components/AffiliatePixels.astro';
 import PostCard from '../components/PostCard.astro';
+import FeaturedDecks from '../components/FeaturedDecks.astro';
 import { SITE, STANDARD_REGULATIONS } from '../consts';
 import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cardModel, cheapestVariantIds, bestOffer, hasSaleStock } from '../utils/cards';
 import { getPosts } from '../utils/posts';
@@ -99,6 +100,8 @@ const chip =
     </ul>
     <p class="relative mt-4 text-xs text-blue-100">最終更新: {updated ? formatDateTime(updated) : '-'}</p>
   </section>
+
+  <FeaturedDecks cards={cards} />
 
   <p class="mb-6 rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs leading-relaxed text-slate-600 sm:text-sm" role="note">{SITE.priceNotice}</p>
 

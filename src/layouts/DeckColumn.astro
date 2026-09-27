@@ -10,10 +10,10 @@ import AffiliatePixels from '../components/AffiliatePixels.astro';
 import { SITE } from '../consts';
 import { SHOPS } from '../config/affiliate';
 import { DECK_COLUMNS, columnPath } from '../data/deck-columns';
-import officialDecks from '../data/official-decks.json';
 import { bestOffer, cardPath, formatYen, getCards, mallOffers, type Card } from '../utils/cards';
 import { nameWithRarity } from '../utils/cardFormat';
 import { formatDate } from '../utils/posts';
+import { getRecipe } from '../utils/decks';
 
 interface Props {
   slug: string;
@@ -22,8 +22,7 @@ interface Props {
 const { slug } = Astro.props;
 const column = DECK_COLUMNS.find((c) => c.slug === slug);
 if (!column) throw new Error(`src/data/deck-columns.ts に「${slug}」がありません`);
-const recipe = (officialDecks as Record<string, { url: string; cards: { name: string; qty: number; category: string; cardId?: string; note?: string }[] }>)[column.deckKey];
-if (!recipe) throw new Error(`src/data/official-decks.json に「${column.deckKey}」がありません（npm run import-decks で取り込む）`);
+const recipe = getRecipe(column.deckKey);
 
 const deck = recipe.cards.map(({ name, qty, category, cardId, note }) => ({ name, qty, category, cardId, note })) as Parameters<typeof DeckRecipe>[0]['deck'];
 const cards = await getCards();
@@ -63,7 +62,7 @@ const jsonLd = {
   <div class="mx-auto max-w-3xl">
     <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: 'デッキ解説', href: '/columns/' }, { name: column.deckName, href: Astro.url.pathname }]} />
 
-    <article>
+    <article data-ga-item={column.title}>
       <header class="mb-8">
         <p class="mb-3 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">PR・本記事はアフィリエイト広告を含みます</p>
         <p class="text-sm font-bold text-rose-600">🏆 {column.result}</p>

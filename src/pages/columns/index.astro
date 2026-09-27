@@ -4,26 +4,14 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CardImage from '../../components/CardImage.astro';
 import { DECK_COLUMNS, columnPath } from '../../data/deck-columns';
-import officialDecks from '../../data/official-decks.json';
-import { bestOffer, formatYen, getCards } from '../../utils/cards';
+import { formatYen, getCards } from '../../utils/cards';
+import { deckEstimate, recipeCard } from '../../utils/decks';
 import { formatDate } from '../../utils/posts';
 
 const cards = await getCards();
-const byId = new Map(cards.map((c) => [c.id, c]));
-const decks = officialDecks as Record<string, { cards: { name: string; qty: number; cardId?: string }[] }>;
-
 const columns = [...DECK_COLUMNS]
   .sort((a, b) => b.pubDate.localeCompare(a.pubDate))
-  .map((c) => {
-    const recipe = decks[c.deckKey].cards;
-    const main = recipe.find((e) => e.name === c.keyCards[0] && e.cardId);
-    // 掲載カード分の概算（在庫のあるカードの最安値 × 枚数）
-    const estimate = recipe.reduce((sum, e) => {
-      const offer = e.cardId ? bestOffer(byId.get(e.cardId)!) : null;
-      return sum + (offer ? offer.price * e.qty : 0);
-    }, 0);
-    return { ...c, mainCard: main ? byId.get(main.cardId!) : undefined, estimate };
-  });
+  .map((c) => ({ ...c, mainCard: recipeCard(c.deckKey, c.keyCards[0], cards), estimate: deckEstimate(c.deckKey, cards) }));
 
 const title = 'デッキ解説コラム一覧';
 const description = 'ジムバトルなどで結果を残した現行スタンダードのデッキを、60枚レシピ・回し方・採用カードの最安値つきで解説するコラムの一覧です。';

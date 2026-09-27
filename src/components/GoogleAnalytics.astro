@@ -1,18 +1,28 @@
 ---
 // Google Analytics 4（gtag.js）
 // - ページビュー: 各ページは通常のページ遷移のため、config で自動計測される
-// - アフィリエイトクリック: rel="sponsored" のリンクのクリックを affiliate_click イベントとして送信
-// - 開発環境（npm run dev）では計測しない
+// - 外部ショップへのクリック: アフィリエイトリンク（rel="sponsored"）と、横断比較のショップリンク（data-compare-shop）の
+//   クリックを affiliate_click イベントとして送信する（アフィリエイトかどうかは is_affiliate で区別）
+//   - shop_name   : rakuten / yahoo / mercari / beehonpo / furuichi / carnavel / cardrush / hareruya2 / surugaya（判定できなければドメイン）
+//   - card_name   : リンクを囲む data-ga-item（カード名・コラムタイトル）。なければページの h1
+//   - outbound_url: 遷移先URL
+//   - 従来のパラメータ（affiliate_network・affiliate_shop・affiliate_type・item_name 等）も引き続き送る
+// - 開発環境（npm run dev）では計測しない。window.gtag がない場合（広告ブロッカー等）は何もしない
 import { SITE } from '../consts';
+import { GA_SHOP_KEYS } from '../config/affiliate';
+import { MALLS } from '../utils/moshimo';
 
 const id = SITE.gaMeasurementId;
 const enabled = import.meta.env.PROD && Boolean(id);
+const shopKeys = GA_SHOP_KEYS;
+// もしもアフィリエイトの a_id → モール（リンクに表示名がない場合の判定用）
+const moshimoIds = { [MALLS.rakuten.ids.a_id]: 'rakuten', [MALLS.yahoo.ids.a_id]: 'yahoo' };
 ---
 
 {enabled && (
   <Fragment>
     <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${id}`}></script>
-    <script is:inline define:vars={{ id }}>
+    <script is:inline define:vars={{ id, shopKeys, moshimoIds }}>
       window.dataLayer = window.dataLayer || [];
       window.gtag = function () {
         window.dataLayer.push(arguments);
@@ -20,21 +30,48 @@ const enabled = import.meta.env.PROD && Boolean(id);
       window.gtag('js', new Date());
       window.gtag('config', id);
 
-      // アフィリエイトリンクのクリック計測（左クリック・中クリックの両方）
+      // A8.net のプログラム（a8mat の3番目の値）→ ショップ
+      const a8Programs = { '5NJ8': 'beehonpo', '5W1M': 'furuichi', '49YI': 'carnavel' };
+      const shopFromUrl = (url) => {
+        const host = url.hostname;
+        if (host.endsWith('moshimo.com')) return moshimoIds[url.searchParams.get('a_id')] || 'moshimo';
+        if (host.endsWith('a8.net')) return a8Programs[(url.searchParams.get('a8mat') || '').split('+')[2]] || 'a8';
+        if (host.endsWith('mercari.com')) return 'mercari';
+        if (host.includes('rakuten')) return 'rakuten';
+        if (host.includes('yahoo')) return 'yahoo';
+        if (host.includes('cardrush')) return 'cardrush';
+        if (host.includes('hareruya2')) return 'hareruya2';
+        if (host.includes('suruga-ya')) return 'surugaya';
+        return host;
+      };
+
+      // 外部ショップへのクリック計測（左クリック・中クリックの両方）
       const track = (event) => {
         if (event.type === 'auxclick' && event.button !== 1) return;
-        const link = event.target instanceof Element && event.target.closest('a[rel~="sponsored"]');
+        if (typeof window.gtag !== 'function') return;
+        const link = event.target instanceof Element && event.target.closest('a[rel~="sponsored"], a[data-compare-shop]');
         if (!link) return;
-        const d = link.dataset;
-        window.gtag('event', 'affiliate_click', {
-          link_url: link.href,
-          link_domain: link.hostname,
-          link_text: (link.textContent || '').replace(/\s+/g, ' ').trim(),
-          affiliate_network: d.affNetwork || link.hostname,
-          affiliate_shop: d.affShop || '',
-          affiliate_type: d.affType || 'other',
-          item_name: d.affItem || '',
-        });
+        try {
+          const d = link.dataset;
+          const url = new URL(link.href);
+          const context = link.closest('[data-ga-item]');
+          const heading = document.querySelector('h1');
+          window.gtag('event', 'affiliate_click', {
+            shop_name: d.compareShop || shopKeys[d.affShop] || shopFromUrl(url),
+            card_name: (context && context.dataset.gaItem) || (heading ? heading.textContent.replace(/\s+/g, ' ').trim() : document.title),
+            outbound_url: url.href,
+            is_affiliate: (link.getAttribute('rel') || '').split(/\s+/).includes('sponsored'),
+            link_url: url.href,
+            link_domain: url.hostname,
+            link_text: (link.textContent || '').replace(/\s+/g, ' ').trim(),
+            affiliate_network: d.affNetwork || url.hostname,
+            affiliate_shop: d.affShop || '',
+            affiliate_type: d.affType || 'other',
+            item_name: d.affItem || '',
+          });
+        } catch (error) {
+          // 計測の失敗でリンクの遷移を妨げない
+        }
       };
       document.addEventListener('click', track, true);
       document.addEventListener('auxclick', track, true);

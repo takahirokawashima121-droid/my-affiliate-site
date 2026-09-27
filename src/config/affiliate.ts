@@ -36,6 +36,22 @@ export const SHOPS = {
 
 export type ShopKey = keyof typeof SHOPS;
 
+/**
+ * GA4 の affiliate_click で送る shop_name（リンクの data-aff-shop の表示名 → 英字キー）。
+ * 表示名で判定できないリンクは、GoogleAnalytics.astro が遷移先URL（もしもの a_id・A8 のプログラム・ドメイン）から判定する
+ */
+export const GA_SHOP_KEYS: Record<string, string> = {
+  楽天市場: 'rakuten',
+  'Yahoo!ショッピング': 'yahoo',
+  メルカリ: 'mercari',
+  [SHOPS.beehonpo.name]: 'beehonpo',
+  [SHOPS.furuichi.name]: 'furuichi',
+  カーナベル: 'carnavel',
+  カードラッシュ: 'cardrush',
+  晴れる屋2: 'hareruya2',
+  駿河屋: 'surugaya',
+};
+
 /** メルカリアンバサダーの afid（メルカリへのリンクに付けると紹介として計測される） */
 export const MERCARI_AFID = '8253399577';
 

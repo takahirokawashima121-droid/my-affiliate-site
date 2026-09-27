@@ -1,0 +1,48 @@
+---
+// トップページの「最新優勝デッキ特集」（src/data/deck-columns.ts の FEATURED_DECKS）
+// PC は4列、スマホは横スクロール（スナップ）で表示する
+import CardImage from './CardImage.astro';
+import { DECK_COLUMNS, FEATURED_DECKS, columnPath } from '../data/deck-columns';
+import { formatYen, type Card } from '../utils/cards';
+import { deckEstimate, recipeCard } from '../utils/decks';
+
+interface Props {
+  cards: Card[];
+}
+
+const { cards } = Astro.props;
+const featured = FEATURED_DECKS.slugs.map((slug) => {
+  const column = DECK_COLUMNS.find((c) => c.slug === slug);
+  if (!column) throw new Error(`FEATURED_DECKS の「${slug}」が DECK_COLUMNS にありません`);
+  return { ...column, mainCard: recipeCard(column.deckKey, column.keyCards[0], cards), estimate: deckEstimate(column.deckKey, cards) };
+});
+---
+
+<section aria-labelledby="featured-decks" class="mb-8 rounded-3xl border-2 border-amber-300 bg-gradient-to-br from-amber-50 via-white to-rose-50 p-5 shadow-sm sm:p-6">
+  <div class="flex flex-wrap items-end justify-between gap-2">
+    <h2 id="featured-decks" class="text-lg font-black text-slate-900 sm:text-xl">
+      <span aria-hidden="true">🏆</span> {FEATURED_DECKS.title}
+    </h2>
+    <a href="/columns/" class="text-sm font-bold text-blue-600 hover:underline">デッキ解説の一覧 →</a>
+  </div>
+  <p class="mt-1 text-xs text-slate-600 sm:text-sm">優勝デッキの60枚レシピ・回し方を、採用カードの最安値つきで解説しています。</p>
+
+  <ul class="-mx-5 mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-4">
+    {featured.map((c) => (
+      <li class="w-64 shrink-0 snap-start sm:w-auto">
+        <a href={columnPath(c)} class="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-400 hover:shadow-md">
+          <span class="flex items-start gap-3">
+            {c.mainCard && <span class="block w-16 shrink-0"><CardImage card={c.mainCard} sizes="64px" /></span>}
+            <span class="min-w-0">
+              <span class="inline-block rounded-full bg-rose-600 px-2 py-0.5 text-[11px] font-bold text-white">{c.result}</span>
+              <span class="mt-1.5 block text-base font-black leading-snug text-slate-900 group-hover:text-blue-600">{c.deckName}</span>
+              {c.estimate > 0 && <span class="mt-1 block text-xs text-slate-500">60枚の概算 <span class="font-bold tabular-nums text-rose-600">{formatYen(c.estimate)}</span></span>}
+            </span>
+          </span>
+          <span class="mt-3 flex-1 text-xs leading-relaxed text-slate-600">{c.highlight}</span>
+          <span class="mt-3 inline-flex items-center justify-center rounded-xl bg-amber-400 px-3 py-2 text-sm font-black text-slate-900 transition group-hover:bg-amber-300">デッキを見る →</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

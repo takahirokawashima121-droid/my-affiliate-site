@@ -27,6 +27,7 @@ const model = cardModel(card);
 ---
 
 <article
+  data-ga-item={card.data.name}
   class="card-item flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
   data-search={`${name} ${rarity} ${expansionCode} ${cardNumber}`}
   data-rarity={rarity}

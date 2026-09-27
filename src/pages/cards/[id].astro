@@ -106,7 +106,7 @@ const jsonLd = {
 <BaseLayout title={title} titleSuffix={false} description={description} image={imageUrl || undefined} jsonLd={jsonLd}>
   <Breadcrumbs items={[{ name: 'ホーム（相場一覧）', href: '/' }, { name: label, href: cardPath(card) }]} />
 
-  <article class="grid gap-8 md:grid-cols-[minmax(0,280px)_1fr] lg:gap-12">
+  <article data-ga-item={card.data.name} class="grid gap-8 md:grid-cols-[minmax(0,280px)_1fr] lg:gap-12">
     <!-- 画像 -->
     <div class="mx-auto w-full max-w-[240px] md:max-w-none">
       {rakutenImage ? (

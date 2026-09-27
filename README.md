@@ -40,6 +40,18 @@
 
 販売価格は `npm run update-prices` で楽天市場・Yahoo!ショッピングの最安値に更新でき、安い方を販売最安値として表示します（`.env` に `RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`・`YAHOO_APP_ID` が必要。`YAHOO_APP_ID` がなければ楽天のみ）。買取価格は販売相場から算出した目安です。価格の出典に関する注意書きは `src/consts.ts` の `priceNotice` で変更できます（データの取得方法を変えたら実態に合わせて更新してください）。
 
+## カードの追加（シードデータ）
+
+環境上位デッキのパーツなどを追加するときは、`scripts/seed/meta-cards.json` にカード（id・name・rarity・cardNumber・expansionCode・regulationMark・deck・role）を追記して、次を実行します。
+
+```
+npm run add-cards -- --dry-run              # 楽天の出品で型番を確認（保存しない）
+npm run add-cards                           # 確認できたカードだけ cards.json に追加
+npm run update-prices -- --ids=<追加したid>  # 販売価格・画像・Yahoo!価格・買取目安を取得
+```
+
+楽天で「カード名・番号・弾記号」をすべて含む出品が3件以上あるカードだけが追加されます（`--min-hits=` で変更可）。既存と id・型番が重複するカードは追加されません。買取目安は、未設定（0）の場合に update-prices が販売最安値の約62%で自動設定します。
+
 ## 価格の自動更新（GitHub Actions）
 
 `.github/workflows/update-prices.yml` が毎日 日本時間 午前4時7分に `npm run update-prices` を実行し、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。

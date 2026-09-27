@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "update-prices": "node scripts/update-prices.js"
+    "update-prices": "node scripts/update-prices.js",
+    "add-cards": "node scripts/add-cards.js"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",

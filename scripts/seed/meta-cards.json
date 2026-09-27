@@ -1,0 +1,20 @@
+{
+  "_comment": [
+    "環境上位デッキのパーツ（最低レアリティ版）のシードデータ。npm run add-cards で cards.json に追加する。",
+    "各カードは楽天の出品タイトルで「名前・番号・弾記号」が一致する出品が一定数あることを確認してから追加される（未確認のものは追加されない）。",
+    "regulationMark は弾ではなくカードに印刷されたマークを入力する（再録カードは元のマークのままの場合がある）。不明なら省略する。",
+    "id は半角英数字とハイフン。deck / role は整理用で cards.json には書き込まれない。"
+  ],
+  "cards": [
+    { "id": "dreepy-c-sv6-079", "name": "ドラメシヤ", "rarity": "C", "cardNumber": "079/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "ドラパルトex", "role": "たねポケモン" },
+    { "id": "drakloak-c-sv6-080", "name": "ドロンチ", "rarity": "C", "cardNumber": "080/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "ドラパルトex", "role": "1進化" },
+    { "id": "dragapult-ex-rr-sv6-081", "name": "ドラパルトex", "rarity": "RR", "cardNumber": "081/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "ドラパルトex", "role": "アタッカー" },
+    { "id": "raging-bolt-ex-rr-sv5k-053", "name": "タケルライコex", "rarity": "RR", "cardNumber": "053/071", "expansionCode": "SV5K", "regulationMark": "H", "deck": "タケルライコex", "role": "アタッカー" },
+    { "id": "riolu-c-m1l-028", "name": "リオル", "rarity": "C", "cardNumber": "028/063", "expansionCode": "M1L", "regulationMark": "I", "deck": "メガルカリオex", "role": "たねポケモン" },
+    { "id": "mega-lucario-ex-rr-m1l-029", "name": "メガルカリオex", "rarity": "RR", "cardNumber": "029/063", "expansionCode": "M1L", "regulationMark": "I", "deck": "メガルカリオex", "role": "アタッカー" },
+    { "id": "mega-rayquaza-ex-rr-m6-058", "name": "メガレックウザex", "rarity": "RR", "cardNumber": "058/076", "expansionCode": "M6", "regulationMark": "J", "deck": "メガレックウザex", "role": "アタッカー" },
+    { "id": "ns-zorua-c-sv9-060", "name": "Nのゾロア", "rarity": "C", "cardNumber": "060/100", "expansionCode": "SV9", "regulationMark": "I", "deck": "Nのゾロアークex", "role": "たねポケモン" },
+    { "id": "ns-zoroark-ex-rr-sv9-061", "name": "Nのゾロアークex", "rarity": "RR", "cardNumber": "061/100", "expansionCode": "SV9", "regulationMark": "I", "deck": "Nのゾロアークex", "role": "アタッカー" },
+    { "id": "pokegear-3-u-sv11b-081", "name": "ポケギア3.0", "rarity": "U", "cardNumber": "081/086", "expansionCode": "SV11B", "deck": "汎用", "role": "グッズ（公式の例外リストにより版を問わずスタンダード使用可）" }
+  ]
+}

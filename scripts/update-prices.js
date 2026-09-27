@@ -264,6 +264,22 @@ export function yahooFields(best) {
   return best ? { yahooPrice: best.itemPrice, yahooUrl: moshimoLinkUrl('yahoo', best.itemUrl) } : { yahooPrice: null, yahooUrl: '' };
 }
 
+/**
+ * 買取目安が未設定（0）のカードに、2大モールの販売最安値の約62%を目安として返す（端数は 1万円以上 500円・千円以上 100円・それ未満 10円単位で切り捨て）。
+ * 販売在庫がない、または設定済みの場合は undefined。
+ */
+export function estimateBuyback(card) {
+  if (card.buybackPrice !== 0) return undefined;
+  const prices = [card.saleInStock && card.salePrice > 0 ? card.salePrice : null, typeof card.yahooPrice === 'number' && card.yahooPrice > 0 ? card.yahooPrice : null].filter(
+    (p) => p !== null,
+  );
+  if (prices.length === 0) return undefined;
+  const raw = Math.min(...prices) * 0.62;
+  const unit = raw >= 10000 ? 500 : raw >= 1000 ? 100 : 10;
+  const value = Math.floor(raw / unit) * unit;
+  return value > 0 ? value : undefined;
+}
+
 function parseArgs(argv) {
   const get = (name) => argv.find((a) => a.startsWith(`--${name}=`))?.split('=')[1];
   return {
@@ -360,6 +376,13 @@ async function main() {
         yahooFailed++;
         lines.push(`  Yahoo!: ✗ エラー: ${error.message} → 変更しません`);
       }
+    }
+
+    // 買取目安が未設定（0）のカード（add-cards で追加した直後など）は、販売最安値の約62%を目安として設定する
+    const estimate = estimateBuyback(next);
+    if (estimate !== undefined) {
+      next = { ...next, buybackPrice: estimate };
+      lines.push(`  買取  : 目安を設定 ¥${estimate.toLocaleString()}（販売最安値の約62%）`);
     }
 
     console.log(lines.join('\n'));

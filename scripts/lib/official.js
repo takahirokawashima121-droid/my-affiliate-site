@@ -22,13 +22,13 @@ const WAIT_MS = 1500;
 export const SET_MARKS = {
   // G の弾は、公式の例外リストのカード（クラッシュハンマー等）の版を選ぶためにだけ使う
   SV1S: 'G', SV1V: 'G', SV1a: 'G', SV2P: 'G', SV2D: 'G', SV2a: 'G', SV3: 'G', SV3a: 'G', SV4K: 'G', SV4M: 'G', SV4a: 'G',
-  // 構築済みデッキ等（カード画像で確認）: SVN = H、MC（スタートデッキ100 バトルコレクション）・MBG・MBD = I、MEM（スターターセットex）= J
-  SVN: 'H', MC: 'I', MBG: 'I', MBD: 'I', MEM: 'J',
+  // 構築済みデッキ等（カード画像で確認）: SVN = H、MC（スタートデッキ100 バトルコレクション）・MBG・MBD・SVOD = I、MEM（スターターセットex）= J
+  SVN: 'H', MC: 'I', MBG: 'I', MBD: 'I', SVOD: 'I', MEM: 'J',
   SV5K: 'H', SV5M: 'H', SV5a: 'H', SV6: 'H', SV6a: 'H', SV7: 'H', SV7a: 'H', SV8: 'H', SV8a: 'H',
   SV9: 'I', SV9a: 'I', SV10: 'I', SV11B: 'I', SV11W: 'I', M1L: 'I', M1S: 'I', M2: 'I', M2a: 'I',
   M3: 'J', M4: 'J', M5: 'J', M6: 'J', M6a: 'J',
 };
-export const REPRINT_SETS = new Set(['SV4a', 'SV8a', 'M2a', 'M6a', 'MC', 'SVN', 'MBG', 'MBD', 'MEM']);
+export const REPRINT_SETS = new Set(['SV4a', 'SV8a', 'M2a', 'M6a', 'MC', 'SVN', 'MBG', 'MBD', 'SVOD', 'MEM']);
 /**
  * 最低レアリティを選ぶときの順。「-」はレアリティ表記のない版（MC・M2a などデッキ・ハイクラスパックの再録）で、
  * 拡張パックの通常レアリティ（C〜RR）の版がない場合に使う
@@ -141,19 +141,20 @@ export async function cardEffects(cardId) {
       return;
     }
     if (kind === '進化' || kind === '特別なルール') return;
+    const label = kind || 'ルール'; // 見出しより前の文（テラスタルの「ベンチにいるかぎりワザのダメージを受けない」等）
     if (el.tagName === 'h4') {
       const h = $(el).clone();
       const damage = h.find('.f_right').text().trim();
       const cost = h.find('span.icon').map((_, s) => icon(s)).get().join('');
       h.find('span').remove();
-      entries.push({ kind, name: h.text().trim(), cost, damage, text: '' });
+      entries.push({ kind: label, name: h.text().trim(), cost, damage, text: '' });
       return;
     }
     const text = textOf(el);
     if (!text || /は、自分の番に(何枚でも|1枚しか)|自分のポケモンにつけられる|バトル場の横に出せる/.test(text)) return; // 種類ごとの共通ルールは省く
     const last = entries[entries.length - 1];
-    if (last && last.kind === kind && !last.text) last.text = text;
-    else entries.push({ kind, name: '', cost: '', damage: '', text });
+    if (last && last.kind === label && !last.text) last.text = text;
+    else entries.push({ kind: label, name: '', cost: '', damage: '', text });
   });
   return entries;
 }
@@ -165,10 +166,12 @@ const rank = (r) => (RARITY_RANK.includes(r) ? RARITY_RANK.indexOf(r) : RARITY_R
 
 /**
  * デッキで使われた版（usedCardIds の先頭ほど優先）と効果テキストが同じ、現行スタンダードの版をすべて調べる。
- * 返り値の same は効果が同じ版（最低レアリティ・拡張パック優先の順）
+ * 返り値の any は現行スタンダードの版があるか（プロモを含む）、same は効果が同じ版（プロモを除き、最低レアリティ・拡張パック優先の順）
  */
 export async function samePrintings(name, usedCardIds) {
-  const printings = (await standardPrintings(name)).filter((p) => !/-P$/i.test(setCode(p.thumb))); // プロモは除く
+  const all = await standardPrintings(name);
+  // プロモは型番（弾記号・番号）で登録できないため除く。プロモだけのカードも現行スタンダードでは使える（any: true, same: []）
+  const printings = all.filter((p) => !/-P$/i.test(setCode(p.thumb)));
   const details = [];
   for (const p of printings) details.push({ ...p, code: setCode(p.thumb), ...(await cardDetail(p.cardId)) });
   const reference = usedCardIds.map((id) => details.find((d) => d.cardId === id)).find(Boolean) ?? (usedCardIds[0] ? await cardDetail(usedCardIds[0]) : null);
@@ -177,13 +180,17 @@ export async function samePrintings(name, usedCardIds) {
         .filter((d) => d.signature === reference.signature && d.cardNumber)
         .sort((a, b) => rank(a.rarity) - rank(b.rarity) || REPRINT_SETS.has(a.code) - REPRINT_SETS.has(b.code))
     : [];
-  return { any: printings.length > 0, reference, same };
+  return { any: all.length > 0, reference, same };
 }
 
 /** 効果が同じ版のうち、登録できる（マークの分かる弾・現行スタンダード）最低レアリティの版からシードを作る */
 export function seedFromPrintings(name, same, extra = {}) {
   const best = same.find((d) => SET_MARKS[d.code]);
-  if (!best) return { skip: '型番・マークを特定できる版なし（プロモのみ・未対応の弾など）' };
+  if (!best) {
+    // 新しい弾が出たら SET_MARKS に追記する（未対応の弾の記号を表示）
+    const unknown = [...new Set(same.map((d) => d.code).filter((c) => !SET_MARKS[c]))];
+    return { skip: unknown.length ? `マーク未対応の弾（${unknown.join('・')}）の版のみ → SET_MARKS に追記すると登録できます` : '型番で登録できる版なし（プロモのみ）' };
+  }
   const mark = SET_MARKS[best.code];
   if (!isStandardLegal(name, mark)) return { skip: `レギュレーション ${mark}（現行スタンダード外）` };
   const num = best.cardNumber.split('/')[0];

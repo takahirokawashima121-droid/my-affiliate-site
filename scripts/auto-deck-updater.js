@@ -99,10 +99,14 @@ function makeSlug(archetype, list, date, taken) {
   return slug;
 }
 
-/** 主力パーツ: ex・メガシンカなどのポケモン（枚数の多い順）と、汎用カード以外のトレーナーズ */
-function pickKeyCards(recipe) {
+/** 主力パーツ: デッキ名のポケモン、ex・メガシンカなどのポケモン（枚数の多い順）、汎用カード以外のトレーナーズの順 */
+function pickKeyCards(recipe, archetype) {
   const priced = recipe.filter((e) => e.cardId && !STAPLES.has(e.name));
-  const pokemon = priced.filter((e) => e.category === 'ポケモン').sort((a, b) => Number(/ex$/.test(b.name)) - Number(/ex$/.test(a.name)) || b.qty - a.qty);
+  // デッキ名と同じ名前 > デッキ名に含まれる名前（「デカヌチャン」に対する「カヌチャン」など）の順に優先
+  const mainRank = (e) => (norm(e.name) === norm(archetype) ? 2 : norm(archetype).includes(norm(e.name)) ? 1 : 0);
+  const pokemon = priced
+    .filter((e) => e.category === 'ポケモン')
+    .sort((a, b) => mainRank(b) - mainRank(a) || Number(/ex$/.test(b.name)) - Number(/ex$/.test(a.name)) || b.qty - a.qty);
   const trainers = priced.filter((e) => e.category !== 'ポケモン').sort((a, b) => b.qty - a.qty);
   const picked = [...pokemon.slice(0, 4), ...trainers].slice(0, 6);
   return [...new Set(picked.map((e) => e.name))];
@@ -189,10 +193,16 @@ async function main() {
     for (const d of decks) candidates.push({ ...d, article: it });
   }
   const seenNames = new Set();
-  const selected = candidates
+  const ordered = candidates
     .filter((d) => (seenNames.has(norm(d.archetype)) ? false : seenNames.add(norm(d.archetype))))
-    .sort((a, b) => Number(existingNames.has(norm(a.archetype))) - Number(existingNames.has(norm(b.archetype))))
-    .slice(0, opts.maxColumns);
+    .sort((a, b) => Number(existingNames.has(norm(a.archetype))) - Number(existingNames.has(norm(b.archetype))));
+  // 取り込めないデッキ（60枚でない・現行スタンダード外のカードを含む）は飛ばして次の候補で埋める
+  const selected = [];
+  for (const d of ordered) {
+    if (selected.length >= opts.maxColumns) break;
+    const check = await importDecks([{ slug: `check-${d.deckId}`, deckId: d.deckId }], { dryRun: true, skipInvalid: true });
+    if (check.decks.length > 0) selected.push(d);
+  }
   console.log(`\n■ 記事を生成するデッキ（最大 ${opts.maxColumns}件）`);
   const taken = new Set(columns.map((c) => c.slug));
   for (const d of selected) {
@@ -204,13 +214,13 @@ async function main() {
   if (opts.dryRun) return console.log('\n（dry-run: カード追加・記事生成・処理済みの記録は行いません）');
 
   // カードの取り込み（無効なデッキは飛ばす）
-  const result = selected.length > 0 ? await importDecks(selected.map((d) => ({ slug: d.slug, deckId: d.deckId })), { skipInvalid: true }) : { decks: [], added: [] };
+  const result = selected.length > 0 ? await importDecks(selected.map((d) => ({ slug: d.slug, deckId: d.deckId })), { skipInvalid: true }) : { decks: [], added: [], skipped: [] };
   const recipes = await readJson(DECKS_PATH, {});
   const cards = await readJson(CARDS_PATH, []);
   const generated = [];
   for (const d of selected.filter((x) => result.decks.includes(x.slug))) {
     const recipe = recipes[d.slug].cards;
-    const keyCards = pickKeyCards(recipe);
+    const keyCards = pickKeyCards(recipe, d.archetype);
     const label = `${d.date ?? ''} ジムバトル優勝`.trim();
     const column = {
       slug: d.slug,
@@ -254,6 +264,7 @@ async function main() {
     `### 追加したカード（${addedCards.length}枚）`,
     ...(addedCards.length ? addedCards.map((c) => `- ${c.name} ${c.rarity} [${c.expansionCode} ${c.cardNumber}] ${c.regulationMark ?? ''}`) : ['- なし']),
     '',
+    ...(result.skipped?.length ? ['### 価格を掲載できなかったカード（レシピには載るがリンクなし）', ...result.skipped.map((x) => `- ${x.name}: ${x.reason}`), ''] : []),
     '### マージ前に確認すること',
     '- [ ] 各記事の TODO（回し方・代替カード / カスタマイズ案）を追記した',
     '- [ ] 追加したカードの型番・レギュレーションマークに誤りがない',

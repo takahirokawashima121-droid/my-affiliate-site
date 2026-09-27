@@ -85,6 +85,28 @@ npm run sync-trending                # 追加候補のシードを作り、add-c
 
 `src/content/blog/` に `.md` ファイルを追加するだけです。書き方は `src/content/blog/how-to-write-post.md` を参照してください。
 
+## デッキ解説コラム（/columns/）
+
+デッキ解説は `src/pages/columns/{slug}.astro`（共通レイアウト `src/layouts/DeckColumn.astro`）で、記事の一覧情報は `src/data/deck-columns.json`、60枚レシピは `src/data/official-decks.json` にあります。
+
+```
+npm run import-decks -- --deck=スラッグ:公式デッキコード   # 公式デッキを取り込み、未登録カードを追加（手動で記事を書くとき）
+npm run auto-decks -- --dry-run                            # 新着の優勝デッキと生成予定を表示
+npm run auto-decks                                         # 新着の優勝デッキから記事を自動生成
+```
+
+### 新着優勝デッキの自動生成（GitHub Actions）
+
+`.github/workflows/auto-deck-sync.yml` が1日2回（日本時間 6時6分・18時6分）、ポケカブックのRSSから新着の「ジムバトル優勝デッキまとめ」を検知し、次の処理をして **Pull Request** を作成します（`scripts/auto-deck-updater.js`）。
+
+- 既存の記事がないデッキ名を優先して最大4デッキを選び、未登録カードを最低レアリティで追加・価格取得
+- 記事（デッキの構成・公式テキストによる主力カードの効果・最安値つき60枚レシピ・代替案の枠）を生成
+- 処理済みの記事・デッキは `scripts/cache/processed-decks.json` に記録（まとめ記事は同じURLのまま毎日更新されるため、URL＋タイトルとデッキコードで判定）
+
+回し方・代替カードは自動では書かないため、PR で各記事の `TODO` を追記してからマージしてください。PR の作成には、リポジトリの Settings → Actions → General → Workflow permissions で「Allow GitHub Actions to create and approve pull requests」を有効にする必要があります。
+
+PR に「マーク未対応の弾」と表示されたカードは、`scripts/lib/official.js` の `SET_MARKS` に弾とレギュレーションマーク（カード画像の左下）を追記すると、次回から登録されます。
+
 ## フォルダ構成
 
 ```

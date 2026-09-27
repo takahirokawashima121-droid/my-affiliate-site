@@ -56,7 +56,7 @@ function registeredMatch(cards, name, same) {
 /**
  * 公式デッキを取り込む（未登録カードの追加・価格取得・レシピ保存）。
  * skipInvalid: true なら、60枚でない・現行スタンダードの版がないカードを含むデッキは例外にせず飛ばす（自動取り込み用）
- * 返り値: 取り込めたデッキのキーと、追加したカードの id
+ * 返り値: 取り込めたデッキのキー・追加したカードの id・価格を掲載できないカード（skipped）
  */
 export async function importDecks(decks, { dryRun = false, skipInvalid = false } = {}) {
   let cards = JSON.parse(await readFile(CARDS_PATH, 'utf8'));
@@ -90,6 +90,7 @@ export async function importDecks(decks, { dryRun = false, skipInvalid = false }
   }
 
   const seeds = [];
+  const skipped = []; // 価格を掲載できないカード（プロモのみ・未対応の弾）
   for (const { slug, list } of loaded) {
     for (const c of list) {
       if (SKIP_NAME.test(c.name)) continue;
@@ -100,6 +101,7 @@ export async function importDecks(decks, { dryRun = false, skipInvalid = false }
       if (registered && (r.skip || registered.rarity === r.seed.rarity || model(registered.expansionCode, registered.cardNumber) === model(r.seed.expansionCode, r.seed.cardNumber))) continue;
       if (r.skip) {
         console.log(`  - ${c.name}: ${r.skip} → 追加できません`);
+        if (!skipped.some((x) => x.name === c.name)) skipped.push({ name: c.name, reason: r.skip });
         continue;
       }
       if (!seeds.some((s) => s.id === r.seed.id)) seeds.push(r.seed);
@@ -110,7 +112,7 @@ export async function importDecks(decks, { dryRun = false, skipInvalid = false }
 
   if (dryRun) {
     console.log('\n（dry-run: カードの追加・レシピの保存は行いません）');
-    return { decks: loaded.map((d) => d.slug), added: [], printingsById, loaded };
+    return { decks: loaded.map((d) => d.slug), added: [], skipped, printingsById, loaded };
   }
 
   // 3. add-cards → update-prices
@@ -157,7 +159,7 @@ export async function importDecks(decks, { dryRun = false, skipInvalid = false }
   }
   await writeFile(DECKS_PATH, `${JSON.stringify(saved, null, 2)}\n`, 'utf8');
   console.log(`保存しました: src/data/official-decks.json`);
-  return { decks: loaded.map((d) => d.slug), added, printingsById, loaded };
+  return { decks: loaded.map((d) => d.slug), added, skipped, printingsById, loaded };
 }
 
 // コマンドとして実行されたときだけ動く（auto-deck-updater.js から import されたときは動かない）

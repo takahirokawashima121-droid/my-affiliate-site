@@ -19,6 +19,10 @@ import { fileURLToPath } from 'node:url';
 import { cardDisplayName, cardSearchKeyword } from '../src/utils/cardFormat.ts';
 import { moshimoClickUrl, moshimoImpressionUrl } from '../src/utils/moshimo.ts';
 import { normalize } from './update-prices.js';
+import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../src/consts.ts';
+
+/** 現行スタンダードで使えるか（マークが H・I・J 等、または公式の例外リストのカード）。サイトはスタンダード専用 */
+const isStandardLegal = (s) => STANDARD_REGULATIONS.includes(s.regulationMark) || STANDARD_EXEMPT_NAMES.includes(s.name);
 
 const ROOT = new URL('../', import.meta.url);
 const CARDS_PATH = fileURLToPath(new URL('src/data/cards.json', ROOT));
@@ -109,6 +113,10 @@ async function main() {
     const label = `[${i + 1}/${seedCards.length}] ${cardDisplayName(s)}`;
     if (!/^[a-z0-9-]+$/.test(s.id ?? '')) {
       console.log(`${label}\n  ✗ id「${s.id}」が不正です（半角英小文字・数字・ハイフン）→ スキップ`);
+      continue;
+    }
+    if (!isStandardLegal(s)) {
+      console.log(`${label}\n  ✗ 現行スタンダード外（regulationMark: ${s.regulationMark ?? 'なし'}）のため追加しません（H・I・J または公式の例外リストのみ）`);
       continue;
     }
     if (ids.has(s.id) || models.has(`${s.expansionCode} ${s.cardNumber}`.toUpperCase())) {

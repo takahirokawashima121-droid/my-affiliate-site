@@ -9,6 +9,13 @@ const RARITY_ORDER = ['MUR', 'FUR', 'UR', 'SSR', 'SAR', 'HR', 'SR', 'SA', 'ACE',
 
 export async function getCards(): Promise<Card[]> {
   const cards = await getCollection('cards');
+  // 本サイトは現行スタンダード（H・I・J ＋公式の例外リスト）専用。範囲外のカードが混入したらビルドを止める
+  const illegal = cards.filter((c) => !isStandardLegal(c));
+  if (illegal.length > 0) {
+    throw new Error(
+      `cards.json に現行スタンダード外のカードがあります（H・I・J または公式の例外リストのみ掲載可）: ${illegal.map((c) => `${c.id}（${c.data.regulationMark ?? 'マークなし'}）`).join(', ')}`,
+    );
+  }
   return cards.sort((a, b) => b.data.updatedAt.valueOf() - a.data.updatedAt.valueOf());
 }
 

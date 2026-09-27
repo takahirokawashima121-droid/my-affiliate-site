@@ -58,7 +58,7 @@ const chip =
 ---
 
 <BaseLayout jsonLd={jsonLd}>
-  <!-- ヒーロー：はじめてのデッキ作りを応援 -->
+  <!-- ヒーロー：現行スタンダード（H・I・J）で対戦するプレイヤー向け -->
   <section class="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 px-6 py-10 text-white shadow-xl shadow-blue-600/25 sm:px-10 sm:py-14">
     <!-- 装飾：ポップなモンスターボール（赤・白・黄のアクセント）ときらめき -->
     <svg class="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rotate-12 opacity-40 drop-shadow-xl sm:-right-4 sm:-top-8 sm:h-64 sm:w-64 sm:opacity-95 lg:h-72 lg:w-72" viewBox="0 0 100 100" aria-hidden="true">
@@ -75,26 +75,26 @@ const chip =
     <svg class="pointer-events-none absolute bottom-10 right-[30%] hidden h-4 w-4 text-white/70 sm:block" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0l2.6 9.4L24 12l-9.4 2.6L12 24l-2.6-9.4L0 12l9.4-2.6z"></path></svg>
     <div class="pointer-events-none absolute -bottom-20 right-24 h-48 w-48 rounded-full bg-white/10" aria-hidden="true"></div>
 
-    <p class="relative text-xs font-black tracking-widest text-amber-300">POKEMON CARD DECK BUILDER SUPPORT</p>
+    <p class="relative text-xs font-black tracking-widest text-amber-300">FOR COMPETITIVE PLAYERS / REGULATION H・I・J ONLY</p>
     <h1 class="relative mt-3 text-2xl font-black leading-snug [text-shadow:0_2px_10px_rgb(30_58_138/0.45)] sm:text-4xl sm:leading-tight">
-      はじめてのデッキ作りを応援！<br />
-      ポケカ<span class="whitespace-nowrap underline decoration-amber-300 decoration-[6px] underline-offset-[6px] sm:decoration-[8px] sm:underline-offset-8">最安パーツ</span>検索ナビ
+      実戦プレイヤーのための<br />
+      ポケカ<span class="underline decoration-amber-300 decoration-[6px] underline-offset-[6px] sm:decoration-[8px] sm:underline-offset-8">最安パーツ検索ナビ</span>
     </h1>
     <p class="relative mt-5 max-w-2xl text-sm leading-relaxed text-blue-50 sm:text-base">
-      「どの店で買うのが一番安いの？」「大会で使えるカードはどれ？」そんな悩みを丸ごと解決！楽天市場やYahoo!ショッピングの最安値を一発比較して、必要なカードを一番おトクに揃えられます。
+      高額転売や資産運用、コレクター向けの相場サイトではありません。本サイトは『大会で使える現行スタンダード（H・I・J）』の実戦パーツだけに特化しています。スタン落ちカードをつかまされる心配なく、楽天市場やYahoo!ショッピングの最安値を一撃で比較できます。
     </p>
     <ul class="relative mt-8 flex flex-wrap gap-3">
       <li class="flex items-center gap-2 rounded-2xl bg-white/20 px-4 py-2.5 shadow-sm ring-1 ring-white/40 backdrop-blur-md">
+        <span class="text-xl" aria-hidden="true">🛡️</span>
+        <span class="text-sm font-bold">H・I・J スタン完全特化</span>
+      </li>
+      <li class="flex items-center gap-2 rounded-2xl bg-white/20 px-4 py-2.5 shadow-sm ring-1 ring-white/40 backdrop-blur-md">
         <span class="text-xl" aria-hidden="true">⚡</span>
-        <span class="text-sm font-bold">掲載カード <span class="text-xl font-black tabular-nums">{cards.length}</span>種</span>
+        <span class="text-sm font-bold">掲載パーツ <span class="text-xl font-black tabular-nums">{cards.length}</span>種</span>
       </li>
       <li class="flex items-center gap-2 rounded-2xl bg-white/20 px-4 py-2.5 shadow-sm ring-1 ring-white/40 backdrop-blur-md">
         <span class="text-xl" aria-hidden="true">📦</span>
-        <span class="text-sm font-bold">楽天 &amp; Yahoo! 横断比較</span>
-      </li>
-      <li class="flex items-center gap-2 rounded-2xl bg-white/20 px-4 py-2.5 shadow-sm ring-1 ring-white/40 backdrop-blur-md">
-        <span class="text-xl" aria-hidden="true">🛡️</span>
-        <span class="text-sm font-bold">H・I・J スタン対応</span>
+        <span class="text-sm font-bold">楽天 &amp; Yahoo! 最安比較</span>
       </li>
     </ul>
     <p class="relative mt-4 text-xs text-blue-100">最終更新: {updated ? formatDateTime(updated) : '-'}</p>

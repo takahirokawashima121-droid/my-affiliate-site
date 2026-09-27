@@ -14,7 +14,7 @@
 
 import { spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../src/consts.ts';
 import { deckCards, norm, OFFICIAL, samePrintings, seedFromPrintings } from './lib/official.js';
 
@@ -53,21 +53,38 @@ function registeredMatch(cards, name, same) {
     .sort((a, b) => order.indexOf(model(a.expansionCode, a.cardNumber)) - order.indexOf(model(b.expansionCode, b.cardNumber)) || priceOf(a) - priceOf(b))[0];
 }
 
-async function main() {
-  const { decks, dryRun } = parseArgs(process.argv.slice(2));
+/**
+ * 公式デッキを取り込む（未登録カードの追加・価格取得・レシピ保存）。
+ * skipInvalid: true なら、60枚でない・現行スタンダードの版がないカードを含むデッキは例外にせず飛ばす（自動取り込み用）
+ * 返り値: 取り込めたデッキのキーと、追加したカードの id
+ */
+export async function importDecks(decks, { dryRun = false, skipInvalid = false } = {}) {
   let cards = JSON.parse(await readFile(CARDS_PATH, 'utf8'));
+  const fail = (message) => {
+    if (!skipInvalid) throw new Error(message);
+    console.log(`  ✗ ${message} → このデッキは取り込みません`);
+  };
 
   // 1〜2. デッキを読み取り、カードごとに効果が同じ版を調べる
   const printingsById = new Map(); // 公式カードID → samePrintings の結果
   const loaded = [];
-  for (const { slug, deckId } of decks) {
+  deckLoop: for (const { slug, deckId } of decks) {
     const list = await deckCards(deckId);
     const total = list.reduce((s, c) => s + c.count, 0);
     console.log(`■ ${slug}（${deckId}）${list.length}種 ${total}枚`);
-    if (total !== 60) throw new Error(`${slug} の合計が ${total} 枚です（60枚である必要があります）`);
+    if (total !== 60) {
+      fail(`${slug} の合計が ${total} 枚です（60枚である必要があります）`);
+      continue;
+    }
     for (const c of list) {
       if (SKIP_NAME.test(c.name) || printingsById.has(c.cardId)) continue;
       printingsById.set(c.cardId, await samePrintings(c.name, [c.cardId]));
+    }
+    for (const c of list) {
+      if (!SKIP_NAME.test(c.name) && !printingsById.get(c.cardId).any) {
+        fail(`${c.name}（公式カードID ${c.cardId}）は現行スタンダードの版がありません`);
+        continue deckLoop;
+      }
     }
     loaded.push({ slug, deckId, list });
   }
@@ -76,8 +93,7 @@ async function main() {
   for (const { slug, list } of loaded) {
     for (const c of list) {
       if (SKIP_NAME.test(c.name)) continue;
-      const { any, same } = printingsById.get(c.cardId);
-      if (!any) throw new Error(`${c.name}（公式カードID ${c.cardId}）は現行スタンダードの版がありません`);
+      const { same } = printingsById.get(c.cardId);
       // 最低レアリティと同じレアリティの版が登録済みなら追加しない（SAR などの高レアだけが登録済みなら、最低レアリティの版を追加する）
       const r = seedFromPrintings(c.name, same, { deck: slug, role: `${c.category}` });
       const registered = registeredMatch(cards, c.name, same);
@@ -92,20 +108,24 @@ async function main() {
   console.log(`\n未登録カード: ${seeds.length}枚`);
   for (const s of seeds) console.log(`  + ${s.name} ${s.rarity} [${s.expansionCode} ${s.cardNumber}] ${s.regulationMark}`);
 
-  if (dryRun) return console.log('\n（dry-run: カードの追加・レシピの保存は行いません）');
+  if (dryRun) {
+    console.log('\n（dry-run: カードの追加・レシピの保存は行いません）');
+    return { decks: loaded.map((d) => d.slug), added: [], printingsById, loaded };
+  }
 
   // 3. add-cards → update-prices
+  let added = [];
   if (seeds.length > 0) {
     await writeFile(path(SEED), `${JSON.stringify({ _comment: ['npm run import-decks が公式デッキコードから自動生成。'], cards: seeds }, null, 2)}\n`, 'utf8');
     const before = new Set(cards.map((c) => c.id));
     const run = (args) => spawnSync(process.execPath, args, { cwd: path('.'), stdio: 'inherit' }).status;
     console.log('\n■ add-cards');
-    if (run(['scripts/add-cards.js', `--seed=${SEED}`]) !== 0) process.exit(1);
+    if (run(['scripts/add-cards.js', `--seed=${SEED}`]) !== 0) throw new Error('add-cards が失敗しました');
     cards = JSON.parse(await readFile(CARDS_PATH, 'utf8'));
-    const added = cards.map((c) => c.id).filter((id) => !before.has(id));
+    added = cards.map((c) => c.id).filter((id) => !before.has(id));
     if (added.length > 0) {
       console.log('\n■ update-prices');
-      if (run(['scripts/update-prices.js', `--ids=${added.join(',')}`]) !== 0) process.exit(1);
+      if (run(['scripts/update-prices.js', `--ids=${added.join(',')}`]) !== 0) throw new Error('update-prices が失敗しました');
       cards = JSON.parse(await readFile(CARDS_PATH, 'utf8'));
     }
   }
@@ -137,9 +157,14 @@ async function main() {
   }
   await writeFile(DECKS_PATH, `${JSON.stringify(saved, null, 2)}\n`, 'utf8');
   console.log(`保存しました: src/data/official-decks.json`);
+  return { decks: loaded.map((d) => d.slug), added, printingsById, loaded };
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+// コマンドとして実行されたときだけ動く（auto-deck-updater.js から import されたときは動かない）
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const { decks, dryRun } = parseArgs(process.argv.slice(2));
+  importDecks(decks, { dryRun }).catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

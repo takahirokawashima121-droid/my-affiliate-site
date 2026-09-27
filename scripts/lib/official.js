@@ -66,12 +66,13 @@ export async function deckCards(deckId) {
   const html = await fetchText(`${OFFICIAL}/deck/result.html/deckID/${deckId}/`, { cache: true });
   // 「ニュートラルセンター(ACE SPEC)」のような付記は、カード名（cards.json・公式検索）に合わせて外す
   const names = new Map([...html.matchAll(/searchItemNameAlt\[(\d+)\]='([^']*)'/g)].map((m) => [m[1], m[2].replace(/\s*\(ACE SPEC\)$/, '')]));
+  const picts = new Map([...html.matchAll(/searchItemCardPict\[(\d+)\]='([^']*)'/g)].map((m) => [m[1], m[2]]));
   const aceSpec = new Set([...html.matchAll(/searchItemNameAlt\[(\d+)\]='[^']*\(ACE SPEC\)'/g)].map((m) => m[1]));
   const cards = [];
   for (const [, key, value] of html.matchAll(/name="deck_([a-z]+)"[^>]*value="([^"]*)"/g)) {
     for (const part of value.split('-').filter(Boolean)) {
       const [cardId, count] = part.split('_');
-      if (names.has(cardId)) cards.push({ cardId, name: names.get(cardId), count: Number(count), category: DECK_CATEGORIES[key] ?? 'グッズ', aceSpec: aceSpec.has(cardId) });
+      if (names.has(cardId)) cards.push({ cardId, name: names.get(cardId), count: Number(count), category: DECK_CATEGORIES[key] ?? 'グッズ', aceSpec: aceSpec.has(cardId), thumb: picts.get(cardId) ?? '' });
     }
   }
   return cards;
@@ -112,8 +113,53 @@ export async function cardDetail(cardId) {
   };
 }
 
+/** 公式サイトのエネルギーアイコン（icon-xxx）→ 表記 */
+const ENERGY = { grass: '草', fire: '炎', water: '水', electric: '雷', psychic: '超', fighting: '闘', dark: '悪', steel: '鋼', dragon: '竜', none: '無', fairy: 'フェアリー' };
+
+/**
+ * 公式カード詳細の効果を、特性・ワザ・トレーナーズの効果ごとに取り出す（自動生成する記事の本文用）。
+ * 例: [{ kind: '特性', name: 'にげあしドロー', cost: '', damage: '', text: '自分の番に1回使える。…' },
+ *      { kind: 'ワザ', name: 'ランドクラッシュ', cost: '無無無', damage: '90', text: '' }]
+ */
+export async function cardEffects(cardId) {
+  const html = await fetchText(`${OFFICIAL}/card-search/details.php/card/${cardId}/regu/XY`, { cache: true });
+  const $ = cheerio.load(html);
+  const inner = $('.RightBox-inner').first();
+  const icon = (el) => ENERGY[($(el).attr('class') ?? '').match(/icon-([a-z]+)/)?.[1]] ?? '';
+  // 文中のエネルギーアイコン（「基本[超]エネルギー」など）を文字にする
+  const textOf = (el) => {
+    const c = $(el).clone();
+    c.find('span.icon').each((_, s) => { $(s).replaceWith(icon(s)); });
+    c.find('br').replaceWith('\n');
+    return c.text().replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n').trim();
+  };
+  const entries = [];
+  let kind = '';
+  inner.find('h2, h4, p').each((_, el) => {
+    if (el.tagName === 'h2') {
+      kind = $(el).text().trim();
+      return;
+    }
+    if (kind === '進化' || kind === '特別なルール') return;
+    if (el.tagName === 'h4') {
+      const h = $(el).clone();
+      const damage = h.find('.f_right').text().trim();
+      const cost = h.find('span.icon').map((_, s) => icon(s)).get().join('');
+      h.find('span').remove();
+      entries.push({ kind, name: h.text().trim(), cost, damage, text: '' });
+      return;
+    }
+    const text = textOf(el);
+    if (!text || /は、自分の番に(何枚でも|1枚しか)|自分のポケモンにつけられる|バトル場の横に出せる/.test(text)) return; // 種類ごとの共通ルールは省く
+    const last = entries[entries.length - 1];
+    if (last && last.kind === kind && !last.text) last.text = text;
+    else entries.push({ kind, name: '', cost: '', damage: '', text });
+  });
+  return entries;
+}
+
 /** 公式画像のファイル名（045203_P_NOKOKOTCHI.jpg）から id 用のローマ字を取り出す */
-const romaji = (thumb) => (thumb.split('/').pop().match(/^\d+_[A-Z]_(.+)\.\w+$/)?.[1] ?? 'card').toLowerCase().replace(/[^a-z0-9]/g, '');
+export const romaji = (thumb) => (thumb.split('/').pop().match(/^\d+_[A-Z]_(.+)\.\w+$/)?.[1] ?? 'card').toLowerCase().replace(/[^a-z0-9]/g, '');
 const setCode = (thumb) => thumb.split('/').slice(-2, -1)[0];
 const rank = (r) => (RARITY_RANK.includes(r) ? RARITY_RANK.indexOf(r) : RARITY_RANK.length);
 

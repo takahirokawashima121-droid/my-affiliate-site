@@ -1,0 +1,83 @@
+# ポケカブックのデッキレシピRSSから新着のジムバトル優勝デッキを検知し、カード追加・デッキ解説コラムの自動生成を行って
+# Pull Request を作成する（npm run auto-decks。記事は PR で「回し方」等を追記してからマージする）
+#
+# 事前設定:
+#   - Secrets は update-prices.yml と共通（RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY / YAHOO_APP_ID）
+#   - Settings → Actions → General → Workflow permissions で
+#     「Allow GitHub Actions to create and approve pull requests」を有効にする（PR の作成に必要）
+name: Auto deck sync
+
+on:
+  schedule:
+    # 1日2回。正時を避け、価格更新（19:07 UTC）・sync-trending（日曜 20:23 UTC）とも重ならない時刻にする
+    - cron: '6 9,21 * * *' # 09:06 / 21:06 UTC = 日本時間 18:06 / 翌 06:06
+  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
+    inputs:
+      max_columns:
+        description: '1回に生成する記事数の上限'
+        required: false
+        default: '4'
+
+permissions:
+  contents: write # PR 用ブランチへのプッシュ
+  pull-requests: write # PR の作成・更新
+
+# 価格更新・sync-trending と同じグループにして、楽天・Yahoo! API へのアクセスを重ねない
+concurrency:
+  group: update-prices
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # scripts/*.js は .ts を直接 import するため Node 22.18 以降が必要
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 公式のデッキページ・カード詳細（内容が変わらないもの）を実行間で使い回し、相手サイトへのリクエストを減らす
+      - name: Restore page cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/trending
+          key: trending-${{ github.run_id }}
+          restore-keys: trending-
+
+      - name: Detect new decks and generate columns
+        run: npm run auto-decks -- --max-columns=${{ github.event.inputs.max_columns || '4' }}
+        env:
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+          YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
+
+      # 生成した記事・追加したカードでサイトが壊れないことを確認してから PR にする
+      - name: Build check
+        run: npm run build
+
+      # 差分があるときだけ PR を作成（同じブランチの PR があれば更新）。差分がなければ何もしない
+      - name: Create pull request
+        if: hashFiles('.cache/auto-deck-pr.md') != '' # 新着がなかった回は PR 本文が作られないので何もしない
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: auto/deck-sync
+          delete-branch: true
+          title: 'feat: 新着優勝デッキ記事の自動生成'
+          commit-message: 'feat: 新着優勝デッキ記事の自動生成'
+          body-path: .cache/auto-deck-pr.md
+          labels: auto-deck
+          add-paths: |
+            src/data/cards.json
+            src/data/official-decks.json
+            src/data/deck-columns.json
+            src/pages/columns/*.astro
+            scripts/cache/processed-decks.json
+            scripts/seed/official-decks.json

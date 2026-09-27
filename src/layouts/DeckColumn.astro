@@ -40,7 +40,10 @@ const mallGaps = deckCards
   .filter((x) => x.gap > 0)
   .sort((a, b) => b.gap - a.gap)
   .slice(0, 3);
-const others = DECK_COLUMNS.filter((c) => c.slug !== slug);
+// 相互リンクは3本まで（同じ大会の記事を優先し、次に新しい順）
+const others = DECK_COLUMNS.filter((c) => c.slug !== slug)
+  .sort((a, b) => Number(b.result === column.result) - Number(a.result === column.result) || b.pubDate.localeCompare(a.pubDate))
+  .slice(0, 3);
 const furuichi = SHOPS.furuichi;
 const pubDate = new Date(column.pubDate);
 

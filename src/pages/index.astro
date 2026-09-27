@@ -188,6 +188,11 @@ const chip =
 <script>
   const grid = document.getElementById('card-grid')!;
   const input = document.getElementById('card-search') as HTMLInputElement;
+  // ほかのページのボトムナビ「カード検索」（/#card-search）から来たときは検索欄を画面中央に出してフォーカス
+  if (location.hash === '#card-search') {
+    input.scrollIntoView({ block: 'center' });
+    input.focus({ preventScroll: true });
+  }
   const sortSelect = document.getElementById('card-sort') as HTMLSelectElement;
   const countEl = document.getElementById('card-count')!;
   const emptyEl = document.getElementById('card-empty')!;

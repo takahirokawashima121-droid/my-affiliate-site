@@ -1,0 +1,56 @@
+---
+// スマホ専用の固定ボトムナビ（md 未満のみ表示）。BaseLayout の body に同じ高さの下余白を付けて、最下部のコンテンツが隠れないようにする
+// 「カード検索」はトップページなら検索欄へスクロールしてフォーカス、ほかのページからは /#card-search へ移動する
+const path = Astro.url.pathname;
+const items = [
+  { key: 'home', label: 'ホーム', href: '/', active: path === '/', icon: 'M3 11.5 12 4l9 7.5M5.5 10v9.5h13V10' },
+  { key: 'search', label: 'カード検索', href: '/#card-search', active: false, icon: 'M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13Zm4.6-1.9L20 20' },
+  { key: 'decks', label: '優勝デッキ', href: '/columns/', active: path.startsWith('/columns'), icon: 'M7 4h10v3a5 5 0 0 1-10 0V4Zm0 1H4v1a3 3 0 0 0 3 3m10-4h3v1a3 3 0 0 1-3 3M12 12v4m-4 4h8m-6-4h4' },
+];
+---
+
+<nav
+  aria-label="スマホ用メニュー"
+  class="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-slate-900/80 pb-[env(safe-area-inset-bottom)] text-slate-300 backdrop-blur-md md:hidden"
+>
+  <ul class="grid h-16 grid-cols-4">
+    {items.map((item) => (
+      <li>
+        <a
+          href={item.href}
+          data-bottom-nav={item.key}
+          aria-current={item.active ? 'page' : undefined}
+          class:list={['flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold transition active:scale-95', item.active ? 'text-amber-300' : 'hover:text-white']}
+        >
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+            <path d={item.icon}></path>
+          </svg>
+          {item.label}
+        </a>
+      </li>
+    ))}
+    <li>
+      <button type="button" data-bottom-nav="top" class="flex h-full w-full flex-col items-center justify-center gap-1 text-[11px] font-bold transition hover:text-white active:scale-95">
+        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 19V6m-6 6 6-6 6 6M5 3h14"></path>
+        </svg>
+        トップへ
+      </button>
+    </li>
+  </ul>
+</nav>
+
+<script>
+  // トップへ: なめらかにスクロール
+  document.querySelector('[data-bottom-nav="top"]')?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  // カード検索: トップページなら検索欄へスクロールしてフォーカス（ほかのページではリンクどおり /#card-search へ）
+  document.querySelector('[data-bottom-nav="search"]')?.addEventListener('click', (event) => {
+    const input = document.getElementById('card-search');
+    if (!input) return;
+    event.preventDefault();
+    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    input.focus({ preventScroll: true });
+    history.replaceState(null, '', '#card-search');
+  });
+</script>

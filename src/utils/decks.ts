@@ -1,6 +1,7 @@
 // デッキ解説コラムのレシピ（src/data/official-decks.json）と cards.json の価格を組み合わせる処理
 import officialDecks from '../data/official-decks.json';
 import { bestOffer, type Card } from './cards';
+import { DECK_COLUMNS, type DeckColumn } from '../data/deck-columns';
 
 export type RecipeEntry = { name: string; qty: number; category: string; cardId?: string; note?: string; officialCardId: string };
 export type OfficialDeck = { deckId: string; url: string; cards: RecipeEntry[] };
@@ -67,4 +68,19 @@ export function deckBadgeClass(badge: string): string {
       低予算: 'bg-emerald-100 text-emerald-800',
     }[badge] ?? 'bg-slate-200 text-slate-700'
   );
+}
+
+/**
+ * このカード（cards.json の id）を採用しているデッキ解説と採用枚数（新しい記事順）。
+ * レシピがリンクしている版と同じ id だけを数える（同名でも効果の違うカードがあるため、名前では照合しない）
+ */
+export function decksUsingCard(cardId: string): { column: DeckColumn; qty: number }[] {
+  return DECK_COLUMNS.map((column, order) => ({
+    column,
+    order,
+    qty: getRecipe(column.deckKey).cards.filter((e) => e.cardId === cardId).reduce((sum, e) => sum + e.qty, 0),
+  }))
+    .filter((x) => x.qty > 0)
+    .sort((a, b) => b.column.pubDate.localeCompare(a.column.pubDate) || a.order - b.order)
+    .map(({ column, qty }) => ({ column, qty }));
 }

@@ -73,7 +73,8 @@ export function priceGap(card: Card): { valid: boolean; spread: number; rate: nu
  * 根拠のない数値になる。その場合は金額を出さず「要査定」と表示する。
  */
 export function showsBuybackPrice(card: Card): boolean {
-  return hasSaleStock(card);
+  // 目安が未設定・0円（販売価格が数円のカードで算出すると 0 になる）の場合も「要査定」
+  return hasSaleStock(card) && card.data.buybackPrice > 0;
 }
 
 /** 公式の例外リストにより、レギュレーションマークに関わらずスタンダードで使えるカードか */

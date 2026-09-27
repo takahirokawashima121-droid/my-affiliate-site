@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "H レギュレーションの環境上位必須カード（最低レアリティ・初収録の版）。npm run add-cards -- --seed=scripts/seed/meta-cards-part2.json で追加する。",
+    "マークを確実にするため、各カードが初めて収録された H の弾（SV5K〜SV7a・SV8）の版を採用（再録版は元のマークのままの場合があるため使わない）。",
+    "型番は楽天の出品タイトルで確認済み。依頼リストの番号・レアリティのうち誤っていたものは修正済み（例: キチキギスex 039→038、ブリジュラスex SV8 076→SV7a 037、緊急ボード SV5M 060→SV5K 064、ニュートラルセンター SV7a→SV6a 063、タロ 097→098、シャリタツ R→U、サマヨール U→C）。",
+    "ソウブレイズex（初収録が G の可能性が高く、H/I/J の版を確認できない）とスボミー（SV8a が初収録か再録か確認できない）はマーク未確定のため除外。"
+  ],
+  "cards": [
+    { "id": "fezandipiti-ex-rr-sv6a-038", "name": "キチキギスex", "rarity": "RR", "cardNumber": "038/064", "expansionCode": "SV6a", "regulationMark": "H", "deck": "汎用", "role": "システムポケモン" },
+    { "id": "bloodmoon-ursaluna-ex-rr-sv5a-052", "name": "ガチグマ アカツキex", "rarity": "RR", "cardNumber": "052/066", "expansionCode": "SV5a", "regulationMark": "H", "deck": "汎用", "role": "アタッカー" },
+    { "id": "latias-ex-rr-sv7a-019", "name": "ラティアスex", "rarity": "RR", "cardNumber": "019/064", "expansionCode": "SV7a", "regulationMark": "H", "deck": "汎用", "role": "システムポケモン" },
+    { "id": "duskull-c-sv6a-018", "name": "ヨマワル", "rarity": "C", "cardNumber": "018/064", "expansionCode": "SV6a", "regulationMark": "H", "deck": "ヨノワール", "role": "たねポケモン" },
+    { "id": "dusclops-c-sv6a-019", "name": "サマヨール", "rarity": "C", "cardNumber": "019/064", "expansionCode": "SV6a", "regulationMark": "H", "deck": "ヨノワール", "role": "1進化" },
+    { "id": "dusknoir-r-sv6a-020", "name": "ヨノワール", "rarity": "R", "cardNumber": "020/064", "expansionCode": "SV6a", "regulationMark": "H", "deck": "ヨノワール", "role": "2進化" },
+    { "id": "hoothoot-c-sv7-076", "name": "ホーホー", "rarity": "C", "cardNumber": "076/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "ヨルノズク", "role": "たねポケモン" },
+    { "id": "noctowl-r-sv7-077", "name": "ヨルノズク", "rarity": "R", "cardNumber": "077/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "ヨルノズク", "role": "1進化" },
+    { "id": "tatsugiri-u-sv6-082", "name": "シャリタツ", "rarity": "U", "cardNumber": "082/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "汎用", "role": "システムポケモン" },
+    { "id": "archaludon-ex-rr-sv7a-037", "name": "ブリジュラスex", "rarity": "RR", "cardNumber": "037/064", "expansionCode": "SV7a", "regulationMark": "H", "deck": "ブリジュラスex", "role": "アタッカー" },
+    { "id": "pikachu-ex-rr-sv8-033", "name": "ピカチュウex", "rarity": "RR", "cardNumber": "033/106", "expansionCode": "SV8", "regulationMark": "H", "deck": "ピカチュウex", "role": "アタッカー" },
+    { "id": "crispin-u-sv7-097", "name": "アカマツ", "rarity": "U", "cardNumber": "097/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "汎用", "role": "サポート" },
+    { "id": "colresss-tenacity-u-sv6a-059", "name": "アクロマの執念", "rarity": "U", "cardNumber": "059/064", "expansionCode": "SV6a", "regulationMark": "H", "deck": "汎用", "role": "サポート" },
+    { "id": "ciphermaniacs-codebreaking-u-sv5m-067", "name": "暗号マニアの解読", "rarity": "U", "cardNumber": "067/071", "expansionCode": "SV5M", "regulationMark": "H", "deck": "汎用", "role": "サポート" },
+    { "id": "briar-u-sv7-100", "name": "ブライア", "rarity": "U", "cardNumber": "100/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "汎用", "role": "サポート" },
+    { "id": "lacey-u-sv7-098", "name": "タロ", "rarity": "U", "cardNumber": "098/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "汎用", "role": "サポート" },
+    { "id": "lisias-appeal-u-sv7a-063", "name": "ルチアのアピール", "rarity": "U", "cardNumber": "063/064", "expansionCode": "SV7a", "regulationMark": "H", "deck": "汎用", "role": "サポート" },
+    { "id": "secret-box-ace-sv6-092", "name": "シークレットボックス", "rarity": "ACE", "cardNumber": "092/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "汎用", "role": "ACE SPEC" },
+    { "id": "neutral-center-ace-sv6a-063", "name": "ニュートラルセンター", "rarity": "ACE", "cardNumber": "063/064", "expansionCode": "SV6a", "regulationMark": "H", "deck": "汎用", "role": "ACE SPEC（スタジアム）" },
+    { "id": "area-zero-underdepths-u-sv7-102", "name": "ゼロの大空洞", "rarity": "U", "cardNumber": "102/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "汎用", "role": "スタジアム" },
+    { "id": "jamming-tower-u-sv6-100", "name": "ジャミングタワー", "rarity": "U", "cardNumber": "100/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "汎用", "role": "スタジアム" },
+    { "id": "bug-catching-set-u-sv6-094", "name": "むしとりセット", "rarity": "U", "cardNumber": "094/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "汎用", "role": "グッズ" },
+    { "id": "rescue-board-u-sv5k-064", "name": "緊急ボード", "rarity": "U", "cardNumber": "064/071", "expansionCode": "SV5K", "regulationMark": "H", "deck": "汎用", "role": "ポケモンのどうぐ" }
+  ]
+}

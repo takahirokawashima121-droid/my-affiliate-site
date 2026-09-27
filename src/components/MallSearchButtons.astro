@@ -1,12 +1,13 @@
 ---
-// 購入先の比較ボタン：楽天市場・Yahoo!ショッピング（もしもアフィリエイト経由の検索結果）と Bee本舗通販店（A8.net）
+// 購入先の比較ボタン：楽天市場・Yahoo!ショッピング（もしもアフィリエイト経由の検索結果）とメルカリ（メルカリアンバサダーの afid 付き検索結果）
+// ※Bee本舗通販店（A8.net）は下段の CompareShopLinks に表示する
 import { MALLS, moshimoClickUrl, moshimoImpressionUrl, type MallKey } from '../utils/moshimo';
-import { SHOPS, beeHonpoLink } from '../config/affiliate';
+import { mercariSearchUrl } from '../config/affiliate';
 
 interface Props {
   /** 検索キーワード（cardSearchKeyword() の結果。例: 「ナンジャモ SAR 096/071 ポケカ」） */
   keyword: string;
-  /** Bee本舗のサイト内検索用キーワード（例: 「ナンジャモ 096/071」） */
+  /** メルカリの検索キーワード（例: 「ナンジャモ 096/071」） */
   shopKeyword: string;
 }
 
@@ -16,9 +17,6 @@ const malls: { mall: MallKey; color: string }[] = [
   { mall: 'rakuten', color: 'bg-[#bf0000] hover:bg-[#990000] focus-visible:outline-[#bf0000]' },
   { mall: 'yahoo', color: 'bg-[#ff0033] hover:bg-[#d6002b] focus-visible:outline-[#ff0033]' },
 ];
-
-// ディープリンクが使えない場合は通販店トップへ遷移するため、「探す」ではなく「通販へ」と表示する
-const bee = beeHonpoLink(shopKeyword);
 
 const buttons = [
   ...malls.map(({ mall, color }) => ({
@@ -31,22 +29,22 @@ const buttons = [
     color,
   })),
   {
-    href: bee.href,
-    label: bee.searchable ? `${SHOPS.beehonpo.name}で探す（シングル）` : `${SHOPS.beehonpo.name}通販へ`,
-    icon: '🐝',
-    network: SHOPS.beehonpo.network,
-    shop: SHOPS.beehonpo.name,
-    type: bee.searchable ? 'sale_specialty_search' : 'sale_specialty',
-    // Bee本舗のイメージカラー（はちみつ色）。白文字が読めるよう濃いめのオレンジに
-    color: 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 focus-visible:outline-orange-600',
+    href: mercariSearchUrl(shopKeyword),
+    label: 'メルカリで探す',
+    icon: '',
+    network: 'mercari',
+    shop: 'メルカリ',
+    type: 'mall_search',
+    // メルカリのブランドカラー（赤）。白文字が読めるよう red-600 以上の濃さにする
+    color: 'bg-red-600 hover:bg-red-700 focus-visible:outline-red-600',
   },
 ];
 ---
 
 <section aria-labelledby="mall-search" class="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-  <h3 id="mall-search" class="text-base font-bold text-slate-900">モール・専門店で在庫・価格を探す</h3>
+  <h3 id="mall-search" class="text-base font-bold text-slate-900">モール・フリマで在庫・価格を探す</h3>
   <p class="mt-1 text-xs text-slate-500">
-    楽天市場・Yahoo!ショッピングは「{keyword}」の検索結果を開きます。{bee.searchable ? `${SHOPS.beehonpo.name}は「${shopKeyword}」で検索します。` : `${SHOPS.beehonpo.name}はトレカ専門店の通販サイトを開きます。`}
+    楽天市場・Yahoo!ショッピング・メルカリは「{shopKeyword}」の検索結果を開きます（楽天市場・Yahoo!ショッピングはレアリティも含めて検索）。
   </p>
   <div class="mt-4 grid gap-3 sm:grid-cols-3">
     {buttons.map((b) => (
@@ -71,7 +69,7 @@ const buttons = [
       </a>
     ))}
   </div>
-  <!-- もしもアフィリエイトのインプレッション計測（Bee本舗の A8 計測画像はページ共通の AffiliatePixels で読み込む） -->
+  <!-- もしもアフィリエイトのインプレッション計測（メルカリには計測画像なし。Bee本舗の A8 計測画像はページ共通の AffiliatePixels で読み込む） -->
   {malls.map(({ mall }) => (
     <img src={moshimoImpressionUrl(mall)} width="1" height="1" alt="" loading="eager" style="border:none;position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;" />
   ))}

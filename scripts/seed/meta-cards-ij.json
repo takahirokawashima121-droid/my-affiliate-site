@@ -1,0 +1,19 @@
+{
+  "_comment": [
+    "I・J レギュレーションの環境上位カード（最低レアリティ）。npm run add-cards -- --seed=scripts/seed/meta-cards-ij.json で追加する。",
+    "型番は楽天の出品タイトルで確認済み（依頼リストから修正: リーリエのピッピex 036→033、Nの城 092→097、M1L は全63種のため /080 ではなく /063）。",
+    "メガレックウザex [M6] は J レギュレーション（M6 ストームエメラルダは J の弾）。",
+    "ホップのザマゼンタex・リーリエの真珠・メガストーン・ともだちてちょう[SV9] は H/I/J の出品が確認できないため未掲載。"
+  ],
+  "cards": [
+    { "id": "ns-zoroark-ex-rr-sv9-061", "name": "Nのゾロアークex", "rarity": "RR", "cardNumber": "061/100", "expansionCode": "SV9", "regulationMark": "I", "deck": "Nのゾロアークex", "role": "アタッカー" },
+    { "id": "ns-zorua-c-sv9-060", "name": "Nのゾロア", "rarity": "C", "cardNumber": "060/100", "expansionCode": "SV9", "regulationMark": "I", "deck": "Nのゾロアークex", "role": "たねポケモン" },
+    { "id": "lillies-clefairy-ex-rr-sv9-033", "name": "リーリエのピッピex", "rarity": "RR", "cardNumber": "033/100", "expansionCode": "SV9", "regulationMark": "I", "deck": "汎用", "role": "システムポケモン" },
+    { "id": "iono-bellibolt-ex-rr-sv9-030", "name": "ナンジャモのハラバリーex", "rarity": "RR", "cardNumber": "030/100", "expansionCode": "SV9", "regulationMark": "I", "deck": "ナンジャモのハラバリーex", "role": "アタッカー" },
+    { "id": "mega-lucario-ex-rr-m1l-029", "name": "メガルカリオex", "rarity": "RR", "cardNumber": "029/063", "expansionCode": "M1L", "regulationMark": "I", "deck": "メガルカリオex", "role": "アタッカー" },
+    { "id": "riolu-c-m1l-028", "name": "リオル", "rarity": "C", "cardNumber": "028/063", "expansionCode": "M1L", "regulationMark": "I", "deck": "メガルカリオex", "role": "たねポケモン" },
+    { "id": "mega-rayquaza-ex-rr-m6-058", "name": "メガレックウザex", "rarity": "RR", "cardNumber": "058/076", "expansionCode": "M6", "regulationMark": "J", "deck": "メガレックウザex", "role": "アタッカー" },
+    { "id": "pokegear-3-u-sv11b-081", "name": "ポケギア3.0", "rarity": "U", "cardNumber": "081/086", "expansionCode": "SV11B", "deck": "汎用", "role": "グッズ（公式の例外リストにより版を問わずスタンダード使用可）" },
+    { "id": "ns-castle-u-sv9-097", "name": "Nの城", "rarity": "U", "cardNumber": "097/100", "expansionCode": "SV9", "regulationMark": "I", "deck": "汎用", "role": "スタジアム" }
+  ]
+}

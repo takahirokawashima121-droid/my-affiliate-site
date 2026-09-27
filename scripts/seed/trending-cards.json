@@ -1,158 +1,158 @@
 {
   "_comment": [
-    "npm run sync-trending が 2026-09-27 11:11（JST）に自動生成。",
+    "npm run sync-trending が 2026-09-27 11:25（JST）に自動生成。",
     "出典: https://pokecabook.com/archives/category/deck-recipe（2ページ、現環境「30th CELEBRATION環境」200デッキ）の公式デッキコードを集計。版は公式カード検索のスタンダード絞り込みで選択。"
   ],
   "cards": [
     {
-      "id": "nixyasuex-rr-m3-061",
-      "name": "ニャースex",
-      "rarity": "RR",
-      "cardNumber": "061/080",
-      "expansionCode": "M3",
-      "regulationMark": "J",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 175デッキ（公式カードID 49694）"
-    },
-    {
-      "id": "mashimashira-r-sv6-055",
-      "name": "マシマシラ",
+      "id": "habatakukami-r-sv5k-033",
+      "name": "ハバタクカミ",
       "rarity": "R",
-      "cardNumber": "055/101",
-      "expansionCode": "SV6",
+      "cardNumber": "033/071",
+      "expansionCode": "SV5K",
       "regulationMark": "H",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 148デッキ（公式カードID 45746）"
+      "deck": "ファイアローex＋ヨノワール",
+      "role": "採用 13デッキ（公式カードID 45179）"
     },
     {
-      "id": "nokokotchiex-rr-sv9-079",
-      "name": "ノココッチex",
-      "rarity": "RR",
-      "cardNumber": "079/100",
-      "expansionCode": "SV9",
-      "regulationMark": "I",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 141デッキ（公式カードID 47087）"
-    },
-    {
-      "id": "abunaihaikixyo-u-m1l-063",
-      "name": "危ない廃墟",
-      "rarity": "U",
-      "cardNumber": "063/063",
-      "expansionCode": "M1L",
-      "regulationMark": "I",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 131デッキ（公式カードID 47796）"
-    },
-    {
-      "id": "jixyajjiman-u-sv9a-062",
-      "name": "ジャッジマン",
-      "rarity": "U",
-      "cardNumber": "062/063",
-      "expansionCode": "SV9a",
-      "regulationMark": "I",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 79デッキ（公式カードID 47357）"
-    },
-    {
-      "id": "fushiginaame-u-sv3a-053",
-      "name": "ふしぎなアメ",
-      "rarity": "U",
-      "cardNumber": "053/062",
-      "expansionCode": "SV3a",
-      "regulationMark": "G",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 70デッキ（公式カードID 44125）"
-    },
-    {
-      "id": "hikari-u-m2-077",
-      "name": "ヒカリ",
-      "rarity": "U",
-      "cardNumber": "077/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 69デッキ（公式カードID 48417）"
-    },
-    {
-      "id": "fuaiya-u-m2-014",
-      "name": "ファイヤー",
-      "rarity": "U",
-      "cardNumber": "014/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 66デッキ（公式カードID 48354）"
-    },
-    {
-      "id": "kurasshixyuhanma-mc-644",
-      "name": "クラッシュハンマー",
+      "id": "neoappaenerugi-sv5k-071",
+      "name": "ネオアッパーエネルギー",
       "rarity": "-",
-      "cardNumber": "644/742",
-      "expansionCode": "MC",
-      "regulationMark": "I",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 53デッキ（公式カードID 49360・再録弾のためマークは推定）"
+      "cardNumber": "071/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "ファイアローex＋ヨノワール",
+      "role": "採用 12デッキ（公式カードID 45217）"
     },
     {
-      "id": "rokettodannokanshitou-u-sv10-096",
-      "name": "ロケット団の監視塔",
+      "id": "idainataijixyu-sv7-101",
+      "name": "偉大な大樹",
+      "rarity": "-",
+      "cardNumber": "101/102",
+      "expansionCode": "SV7",
+      "regulationMark": "H",
+      "deck": "ファイアローex＋ヨノワール",
+      "role": "採用 11デッキ（公式カードID 46040）"
+    },
+    {
+      "id": "mshigunaru-u-m1s-058",
+      "name": "メガシグナル",
       "rarity": "U",
-      "cardNumber": "096/098",
+      "cardNumber": "058/063",
+      "expansionCode": "M1S",
+      "regulationMark": "I",
+      "deck": "ファイアローex＋ヨノワール",
+      "role": "採用 11デッキ（公式カードID 47854）"
+    },
+    {
+      "id": "rokettodannoramuda-u-sv10-094",
+      "name": "ロケット団のラムダ",
+      "rarity": "U",
+      "cardNumber": "094/098",
       "expansionCode": "SV10",
       "regulationMark": "I",
       "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 52デッキ（公式カードID 47489）"
+      "role": "採用 8デッキ（公式カードID 47487）"
     },
     {
-      "id": "hiromanto-sv5m-064",
-      "name": "ヒーローマント",
+      "id": "fuusen-u-sv11b-082",
+      "name": "ふうせん",
+      "rarity": "U",
+      "cardNumber": "082/086",
+      "expansionCode": "SV11B",
+      "regulationMark": "I",
+      "deck": "メガゲッコウガex",
+      "role": "採用 8デッキ（公式カードID 47618）"
+    },
+    {
+      "id": "gosu-c-m3-047",
+      "name": "ゴース",
+      "rarity": "C",
+      "cardNumber": "047/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "ゲンガーex",
+      "role": "採用 7デッキ（公式カードID 49680）"
+    },
+    {
+      "id": "gosuto-mc-444",
+      "name": "ゴースト",
       "rarity": "-",
-      "cardNumber": "064/071",
-      "expansionCode": "SV5M",
+      "cardNumber": "444/742",
+      "expansionCode": "MC",
+      "regulationMark": "I",
+      "deck": "ゲンガーex",
+      "role": "採用 7デッキ（公式カードID 49160・再録弾のためマークは推定）"
+    },
+    {
+      "id": "minezumi-c-m4-068",
+      "name": "ミネズミ",
+      "rarity": "C",
+      "cardNumber": "068/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "ドラパルトex＋ノココッチex",
+      "role": "採用 7デッキ（公式カードID 50152）"
+    },
+    {
+      "id": "momowarouex-rr-sv6a-039",
+      "name": "モモワロウex",
+      "rarity": "RR",
+      "cardNumber": "039/064",
+      "expansionCode": "SV6a",
+      "regulationMark": "H",
+      "deck": "ゲンガーex",
+      "role": "採用 7デッキ（公式カードID 45914）"
+    },
+    {
+      "id": "kuseroshikinotakurami-u-sv6a-062",
+      "name": "クセロシキのたくらみ",
+      "rarity": "U",
+      "cardNumber": "062/064",
+      "expansionCode": "SV6a",
       "regulationMark": "H",
       "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 33デッキ（公式カードID 45281）"
+      "role": "採用 6デッキ（公式カードID 45937）"
     },
     {
-      "id": "shieimi-u-sv9a-006",
-      "name": "シェイミ",
-      "rarity": "U",
-      "cardNumber": "006/063",
-      "expansionCode": "SV9a",
-      "regulationMark": "I",
-      "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 25デッキ（公式カードID 47301）"
-    },
-    {
-      "id": "igunisshixyonenerugi-u-sv11w-086",
-      "name": "イグニッションエネルギー",
+      "id": "purizumuenerugi-u-sv11b-086",
+      "name": "プリズムエネルギー",
       "rarity": "U",
       "cardNumber": "086/086",
-      "expansionCode": "SV11W",
-      "regulationMark": "I",
-      "deck": "ファイアローex＋ヨノワール",
-      "role": "採用 24デッキ（公式カードID 47708）"
-    },
-    {
-      "id": "iberutaru-r-m1l-040",
-      "name": "イベルタル",
-      "rarity": "R",
-      "cardNumber": "040/063",
-      "expansionCode": "M1L",
+      "expansionCode": "SV11B",
       "regulationMark": "I",
       "deck": "ドラパルトex＋ノココッチex",
-      "role": "採用 21デッキ（公式カードID 47773）"
+      "role": "採用 6デッキ（公式カードID 47622）"
     },
     {
-      "id": "shiano-u-sv8-102",
-      "name": "シアノ",
+      "id": "anzunohigi-u-sv6a-060",
+      "name": "アンズの秘技",
       "rarity": "U",
-      "cardNumber": "102/106",
-      "expansionCode": "SV8",
+      "cardNumber": "060/064",
+      "expansionCode": "SV6a",
       "regulationMark": "H",
+      "deck": "ゲンガーex",
+      "role": "採用 6デッキ（公式カードID 45935）"
+    },
+    {
+      "id": "genga-u-m3-049",
+      "name": "ゲンガー",
+      "rarity": "U",
+      "cardNumber": "049/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "ゲンガーex",
+      "role": "採用 5デッキ（公式カードID 49682）"
+    },
+    {
+      "id": "karateounokeiko-mc-704",
+      "name": "からておうの稽古",
+      "rarity": "-",
+      "cardNumber": "704/742",
+      "expansionCode": "MC",
+      "regulationMark": "I",
       "deck": "ファイアローex＋ヨノワール",
-      "role": "採用 19デッキ（公式カードID 46442）"
+      "role": "採用 5デッキ（公式カードID 49420・再録弾のためマークは推定）"
     }
   ]
 }

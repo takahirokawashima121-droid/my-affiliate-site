@@ -14,7 +14,9 @@ import { bestOffer, cardPath, formatYen, getCards, mallOffers, type Card } from 
 import { nameWithRarity } from '../utils/cardFormat';
 import { formatDate } from '../utils/posts';
 import { deckEstimate, getRecipe } from '../utils/decks';
-import { buildXPosts, xWeightedLength, PARENT_POST_LIMIT } from '../utils/shareText';
+import XShareBox from '../components/XShareBox.astro';
+import { buildXPosts } from '../utils/shareText';
+import { tierOf } from '../data/tier';
 
 interface Props {
   slug: string;
@@ -24,6 +26,7 @@ const { slug } = Astro.props;
 const column = DECK_COLUMNS.find((c) => c.slug === slug);
 if (!column) throw new Error(`src/data/deck-columns.ts に「${slug}」がありません`);
 const recipe = getRecipe(column.deckKey);
+const tier = tierOf(slug);
 
 const deck = recipe.cards.map(({ name, qty, category, cardId, note }) => ({ name, qty, category, cardId, note })) as Parameters<typeof DeckRecipe>[0]['deck'];
 const cards = await getCards();
@@ -51,7 +54,6 @@ const pubDate = new Date(column.pubDate);
 const url = new URL(Astro.url.pathname, Astro.site).toString();
 // X 告知用の投稿文（記事末尾の折りたたみ。scripts/auto-deck-updater.js の PR 本文と同じ文面）
 const xPosts = buildXPosts({ deckName: column.deckName, result: column.result, highlight: column.highlight, estimate: deckEstimate(column.deckKey, cards), url });
-const xIntent = `https://x.com/intent/post?text=${encodeURIComponent(xPosts.parent)}`;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
@@ -73,6 +75,11 @@ const jsonLd = {
       <header class="mb-8">
         <p class="mb-3 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">PR・本記事はアフィリエイト広告を含みます</p>
         <p class="text-sm font-bold text-rose-600">🏆 {column.result}</p>
+        {tier && (
+          <a href={`/tier/#${slug}`} class="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-bold text-slate-800 hover:bg-amber-100">
+            📊 環境Tier表で<span class="text-red-600">{tier.label}</span>に掲載中 →
+          </a>
+        )}
         <h1 class="mt-1 text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{column.title}</h1>
         <p class="mt-3 text-sm text-gray-500">公開: <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></p>
         <p class="mt-2 text-xs text-gray-500">
@@ -158,7 +165,7 @@ const jsonLd = {
     </article>
 
     <aside class="mt-16" aria-labelledby="other-decks">
-      <h2 id="other-decks" class="mb-4 text-xl font-bold text-gray-900">ほかのジムバトル優勝デッキ解説</h2>
+      <h2 id="other-decks" class="mb-4 text-xl font-bold text-gray-900">ほかのデッキ解説</h2>
       <ul class="grid gap-4 sm:grid-cols-3">
         {others.map((c) => (
           <li>
@@ -170,45 +177,11 @@ const jsonLd = {
           </li>
         ))}
       </ul>
-      <p class="mt-4 text-sm"><a href="/columns/" class="text-brand-600 underline">デッキ解説の一覧へ</a></p>
+      <p class="mt-4 flex flex-wrap gap-4 text-sm"><a href="/columns/" class="text-brand-600 underline">デッキ解説の一覧へ</a><a href="/tier/" class="text-brand-600 underline">最新環境Tier表へ</a></p>
     </aside>
 
-    <!-- 運営者向け: X 告知用のコピペ文（本番でもスマホからコピーできるよう、折りたたんで目立たない形で置く） -->
-    <details class="mt-12 rounded-xl border border-slate-200 bg-white text-sm text-slate-600" data-nosnippet>
-      <summary class="cursor-pointer select-none px-4 py-3 text-xs font-bold text-slate-500">📱 Xシェア用テキスト（運営者向け・ワンクリックコピー）</summary>
-      <div class="space-y-4 border-t border-slate-100 px-4 py-4">
-        {[
-          { id: 'x-parent', label: `1ポスト目（親・URLなし）: ${xWeightedLength(xPosts.parent)}/${PARENT_POST_LIMIT}（全角1文字＝2）`, text: xPosts.parent, rows: 5 },
-          { id: 'x-reply', label: '2ポスト目（リプライ用）', text: xPosts.reply, rows: 3 },
-        ].map((p) => (
-          <div>
-            <label for={p.id} class="block text-xs font-bold text-slate-500">{p.label}</label>
-            <textarea id={p.id} readonly rows={p.rows} class="mt-1 w-full resize-none rounded-lg border border-slate-200 bg-slate-50 p-2 text-sm leading-relaxed text-slate-800">{p.text}</textarea>
-            <button type="button" data-copy={p.id} class="mt-1 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-bold text-white hover:bg-slate-700">コピー</button>
-          </div>
-        ))}
-        <a href={xIntent} target="_blank" rel="noopener noreferrer" class="inline-block text-xs font-bold text-blue-600 underline">1ポスト目を X の投稿画面で開く</a>
-      </div>
-    </details>
+    <XShareBox posts={xPosts} />
 
     <AffiliatePixels cards={deckCards} shops={['furuichi']} />
   </div>
 </BaseLayout>
-
-<script>
-  // Xシェア用テキストのコピー（クリップボード API が使えない環境では選択状態にする）
-  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-copy]')) {
-    button.addEventListener('click', async () => {
-      const area = document.getElementById(button.dataset.copy ?? '') as HTMLTextAreaElement | null;
-      if (!area) return;
-      try {
-        await navigator.clipboard.writeText(area.value);
-        button.textContent = 'コピーしました';
-      } catch {
-        area.select();
-        button.textContent = '選択しました（長押しでコピー）';
-      }
-      setTimeout(() => (button.textContent = 'コピー'), 2000);
-    });
-  }
-</script>

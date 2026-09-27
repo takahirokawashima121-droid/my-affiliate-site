@@ -22,13 +22,13 @@ const WAIT_MS = 1500;
 export const SET_MARKS = {
   // G の弾は、公式の例外リストのカード（クラッシュハンマー等）の版を選ぶためにだけ使う
   SV1S: 'G', SV1V: 'G', SV1a: 'G', SV2P: 'G', SV2D: 'G', SV2a: 'G', SV3: 'G', SV3a: 'G', SV4K: 'G', SV4M: 'G', SV4a: 'G',
-  // 構築済みデッキ等（カード画像で確認）: SVN = H、MC（スタートデッキ100 バトルコレクション）・MBG・MBD・SVOD = I、MEM（スターターセットex）= J
-  SVN: 'H', MC: 'I', MBG: 'I', MBD: 'I', SVOD: 'I', MEM: 'J',
+  // 構築済みデッキ等（カード画像で確認）: SVN・SVM（スタートデッキGenerations）= H、MC（スタートデッキ100 バトルコレクション）・MBG・MBD・SVOD = I、MEM（スターターセットex）= J
+  SVN: 'H', SVM: 'H', MC: 'I', MBG: 'I', MBD: 'I', SVOD: 'I', MEM: 'J',
   SV5K: 'H', SV5M: 'H', SV5a: 'H', SV6: 'H', SV6a: 'H', SV7: 'H', SV7a: 'H', SV8: 'H', SV8a: 'H',
   SV9: 'I', SV9a: 'I', SV10: 'I', SV11B: 'I', SV11W: 'I', M1L: 'I', M1S: 'I', M2: 'I', M2a: 'I',
   M3: 'J', M4: 'J', M5: 'J', M6: 'J', M6a: 'J',
 };
-export const REPRINT_SETS = new Set(['SV4a', 'SV8a', 'M2a', 'M6a', 'MC', 'SVN', 'MBG', 'MBD', 'SVOD', 'MEM']);
+export const REPRINT_SETS = new Set(['SV4a', 'SV8a', 'M2a', 'M6a', 'MC', 'SVN', 'SVM', 'MBG', 'MBD', 'SVOD', 'MEM']);
 /**
  * 最低レアリティを選ぶときの順。「-」はレアリティ表記のない版（MC・M2a などデッキ・ハイクラスパックの再録）で、
  * 拡張パックの通常レアリティ（C〜RR）の版がない場合に使う

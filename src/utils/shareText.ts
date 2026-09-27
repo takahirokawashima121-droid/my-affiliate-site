@@ -32,22 +32,47 @@ export type SharePostInput = {
   url: string;
 };
 
+/** 親ポストが上限を超える場合は、可変の行（見どころ等）を末尾から「…」で詰める */
+function fitParent(compose: (text: string) => string, text: string): string {
+  let t = text;
+  while (t.length > 1 && xWeightedLength(compose(t)) > PARENT_POST_LIMIT) t = `${t.slice(0, -2)}…`;
+  return compose(t);
+}
+
 /**
  * 親ポスト（URLなし・全角130文字前後）と、リプライ用の子ポスト（記事URL）を作る。
- * 親ポストが上限を超える場合は、見どころの行を末尾から「…」で詰める
+ * 親ポストが上限を超える場合は、見どころの行を末尾から「…」で詰める。
+ * ジムバトル以外の結果（「環境Tier1・大会優勝構築」など）は、結果をそのまま見出しに使う
  */
 export function buildXPosts({ deckName, result, highlight, estimate, url }: SharePostInput): { parent: string; reply: string } {
+  const gym = /ジムバトル優勝/.test(result);
   const date = result.match(/\d{1,2}\/\d{1,2}/)?.[0];
-  const head = `🏆【${deckName}】がジムバトル優勝！${date ? `（${date}）` : ''}`;
+  const head = gym ? `🏆【${deckName}】がジムバトル優勝！${date ? `（${date}）` : ''}` : `🏆【${deckName}】${result}のレシピを解説！`;
   const price = estimate > 0 ? `・60枚の最安パーツ概算 約${estimate.toLocaleString('ja-JP')}円` : '';
-  const tags = '#ポケカ #ジムバトル優勝 #ポケトリー';
-  const compose = (h: string) => [head, `・${h}`, price, tags].filter(Boolean).join('\n');
-
-  let summary = highlight;
-  while (summary.length > 1 && xWeightedLength(compose(summary)) > PARENT_POST_LIMIT) summary = `${summary.slice(0, -2)}…`;
+  const tags = gym ? '#ポケカ #ジムバトル優勝 #ポケトリー' : '#ポケカ #ポケカ環境 #ポケトリー';
   return {
-    parent: compose(summary),
+    parent: fitParent((h) => [head, `・${h}`, price, tags].filter(Boolean).join('\n'), highlight),
     reply: `確定レシピ・最安パーツ内訳・回し方は「ポケカファクトリー（ポケトリー）」でチェック👇\n${url}`,
+  };
+}
+
+export type TierPostInput = {
+  /** 更新日（「9/27」） */
+  date: string;
+  /** Tier ごとのデッキ名（上位の Tier から） */
+  tiers: { label: string; decks: string[] }[];
+  /** Tier表のURL */
+  url: string;
+};
+
+/** 環境Tier表の告知用（親ポストは Tier1・Tier2 を並べ、入りきらない分は「…」で詰める） */
+export function buildTierPosts({ date, tiers, url }: TierPostInput): { parent: string; reply: string } {
+  const head = `📊【${date}更新】ポケカ環境Tier表（H・I・J）`;
+  const tags = '#ポケカ #ポケカ環境 #ポケトリー';
+  const lines = tiers.slice(0, 2).map((t) => `${t.label}：${t.decks.join('／')}`).join('\n');
+  return {
+    parent: fitParent((body) => [head, body, tags].join('\n'), lines),
+    reply: `Tier1〜3の全デッキの60枚レシピ・回し方・最安パーツ概算は「ポケカファクトリー（ポケトリー）」でチェック👇\n${url}`,
   };
 }
 

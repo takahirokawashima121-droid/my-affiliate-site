@@ -45,6 +45,7 @@ export const STANDARD_EXEMPT_NAMES: readonly string[] = [
 
 export const NAV = [
   { href: '/', label: 'パーツ検索' },
+  { href: '/tier/', label: '環境Tier表' },
   { href: '/columns/', label: 'デッキ解説' },
   { href: '/blog/', label: 'コラム一覧' },
   { href: '/about/', label: '運営者情報' },

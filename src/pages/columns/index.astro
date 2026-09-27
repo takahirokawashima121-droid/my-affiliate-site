@@ -1,0 +1,60 @@
+---
+// デッキ解説コラムの一覧（src/data/deck-columns.ts の記事を新しい順に表示）
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import CardImage from '../../components/CardImage.astro';
+import { DECK_COLUMNS, columnPath } from '../../data/deck-columns';
+import officialDecks from '../../data/official-decks.json';
+import { bestOffer, formatYen, getCards } from '../../utils/cards';
+import { formatDate } from '../../utils/posts';
+
+const cards = await getCards();
+const byId = new Map(cards.map((c) => [c.id, c]));
+const decks = officialDecks as Record<string, { cards: { name: string; qty: number; cardId?: string }[] }>;
+
+const columns = [...DECK_COLUMNS]
+  .sort((a, b) => b.pubDate.localeCompare(a.pubDate))
+  .map((c) => {
+    const recipe = decks[c.deckKey].cards;
+    const main = recipe.find((e) => e.name === c.keyCards[0] && e.cardId);
+    // 掲載カード分の概算（在庫のあるカードの最安値 × 枚数）
+    const estimate = recipe.reduce((sum, e) => {
+      const offer = e.cardId ? bestOffer(byId.get(e.cardId)!) : null;
+      return sum + (offer ? offer.price * e.qty : 0);
+    }, 0);
+    return { ...c, mainCard: main ? byId.get(main.cardId!) : undefined, estimate };
+  });
+
+const title = 'デッキ解説コラム一覧';
+const description = 'ジムバトルなどで結果を残した現行スタンダードのデッキを、60枚レシピ・回し方・採用カードの最安値つきで解説するコラムの一覧です。';
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="mx-auto max-w-4xl">
+    <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: 'デッキ解説', href: '/columns/' }]} />
+    <h1 class="text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
+    <p class="mt-2 text-sm text-gray-600">{description}</p>
+
+    <ul class="mt-8 grid gap-6 sm:grid-cols-2">
+      {columns.map((c) => (
+        <li>
+          <a href={columnPath(c)} class="group flex h-full gap-4 rounded-2xl border border-gray-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-md">
+            {c.mainCard && <span class="block w-24 shrink-0"><CardImage card={c.mainCard} sizes="96px" /></span>}
+            <span class="flex min-w-0 flex-col">
+              <span class="text-xs font-bold text-rose-600">🏆 {c.result}</span>
+              <span class="mt-1 font-bold leading-snug text-gray-900 group-hover:text-blue-600">{c.title}</span>
+              <span class="mt-2 text-xs text-gray-500">
+                <time datetime={c.pubDate}>{formatDate(new Date(c.pubDate))}</time>
+                {c.estimate > 0 && <Fragment> ・ 60枚の概算 <span class="font-bold tabular-nums text-rose-600">{formatYen(c.estimate)}</span></Fragment>}
+              </span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <p class="mt-10 text-sm text-gray-600">
+      カードの買い方・売り方のコラムは <a href="/blog/" class="text-brand-600 underline">コラム一覧</a> をご覧ください。
+    </p>
+  </div>
+</BaseLayout>

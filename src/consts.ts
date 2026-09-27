@@ -43,6 +43,7 @@ export const STANDARD_EXEMPT_NAMES: readonly string[] = [
 
 export const NAV = [
   { href: '/', label: '相場比較' },
+  { href: '/columns/', label: 'デッキ解説' },
   { href: '/blog/', label: 'コラム一覧' },
   { href: '/about/', label: '運営者情報' },
 ];

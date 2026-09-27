@@ -1,0 +1,172 @@
+---
+// デッキ解説コラムの共通レイアウト
+// 記事ごとの本文（デッキの特徴・回し方）は既定のスロット、代替カード・カスタマイズ提案は slot="custom" で渡す。
+// 主力パーツの最安値・60枚レシピ・最安パーツ収集テクニック・他のデッキ記事への相互リンクはここで共通に表示する
+import BaseLayout from './BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import DeckRecipe from '../components/DeckRecipe.astro';
+import CardImage from '../components/CardImage.astro';
+import AffiliatePixels from '../components/AffiliatePixels.astro';
+import { SITE } from '../consts';
+import { SHOPS } from '../config/affiliate';
+import { DECK_COLUMNS, columnPath } from '../data/deck-columns';
+import officialDecks from '../data/official-decks.json';
+import { bestOffer, cardPath, formatYen, getCards, mallOffers, type Card } from '../utils/cards';
+import { nameWithRarity } from '../utils/cardFormat';
+import { formatDate } from '../utils/posts';
+
+interface Props {
+  slug: string;
+}
+
+const { slug } = Astro.props;
+const column = DECK_COLUMNS.find((c) => c.slug === slug);
+if (!column) throw new Error(`src/data/deck-columns.ts に「${slug}」がありません`);
+const recipe = (officialDecks as Record<string, { url: string; cards: { name: string; qty: number; category: string; cardId?: string; note?: string }[] }>)[column.deckKey];
+if (!recipe) throw new Error(`src/data/official-decks.json に「${column.deckKey}」がありません（npm run import-decks で取り込む）`);
+
+const deck = recipe.cards.map(({ name, qty, category, cardId, note }) => ({ name, qty, category, cardId, note })) as Parameters<typeof DeckRecipe>[0]['deck'];
+const cards = await getCards();
+const byId = new Map(cards.map((c) => [c.id, c]));
+const keyCards = column.keyCards
+  .map((name) => recipe.cards.find((e) => e.name === name && e.cardId))
+  .filter((e) => e !== undefined)
+  .map((e) => ({ card: byId.get(e.cardId!)!, qty: e.qty }));
+const deckCards = [...new Set(recipe.cards.flatMap((e) => (e.cardId ? [e.cardId] : [])))].map((id) => byId.get(id)!);
+// 楽天とYahoo!の両方に在庫があり、価格差が大きいカード（モール比較の実例として表示）
+const mallGaps = deckCards
+  .map((card) => ({ card, ...mallOffers(card) }))
+  .filter((x): x is { card: Card; rakuten: NonNullable<typeof x.rakuten>; yahoo: NonNullable<typeof x.yahoo> } => x.rakuten !== null && x.yahoo !== null)
+  .map((x) => ({ ...x, gap: Math.abs(x.rakuten.price - x.yahoo.price) }))
+  .filter((x) => x.gap > 0)
+  .sort((a, b) => b.gap - a.gap)
+  .slice(0, 3);
+const others = DECK_COLUMNS.filter((c) => c.slug !== slug);
+const furuichi = SHOPS.furuichi;
+const pubDate = new Date(column.pubDate);
+
+const url = new URL(Astro.url.pathname, Astro.site).toString();
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: column.title,
+  description: column.description,
+  datePublished: pubDate.toISOString(),
+  mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+  image: new URL(keyCards[0]?.card.data.imageUrl || SITE.ogImage, Astro.site).toString(),
+  author: { '@type': 'Organization', name: SITE.author, url: new URL('/about/', Astro.site).toString() },
+  publisher: { '@type': 'Organization', name: SITE.title },
+};
+---
+
+<BaseLayout title={column.title} description={column.description} type="article" pubDate={pubDate} jsonLd={jsonLd}>
+  <div class="mx-auto max-w-3xl">
+    <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: 'デッキ解説', href: '/columns/' }, { name: column.deckName, href: Astro.url.pathname }]} />
+
+    <article>
+      <header class="mb-8">
+        <p class="mb-3 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">PR・本記事はアフィリエイト広告を含みます</p>
+        <p class="text-sm font-bold text-rose-600">🏆 {column.result}</p>
+        <h1 class="mt-1 text-2xl font-bold leading-tight text-gray-900 sm:text-3xl">{column.title}</h1>
+        <p class="mt-3 text-sm text-gray-500">公開: <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></p>
+        <p class="mt-2 text-xs text-gray-500">
+          レシピの出典: <a href={recipe.url} target="_blank" rel="noopener" class="text-brand-600 underline">ポケモンカード公式 デッキ構築（デッキコード）</a>。カード価格は楽天市場・Yahoo!ショッピングの最安値で、毎日自動更新しています。
+        </p>
+      </header>
+
+      <section aria-labelledby="key-cards" class="not-prose mb-10 rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-5">
+        <h2 id="key-cards" class="text-lg font-black text-slate-900">💰 主力パーツの最安値</h2>
+        <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {keyCards.map(({ card, qty }) => {
+            const offer = bestOffer(card);
+            return (
+              <li>
+                <a href={cardPath(card)} class="flex h-full gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-blue-300 hover:shadow-sm">
+                  <span class="block w-16 shrink-0"><CardImage card={card} sizes="64px" /></span>
+                  <span class="min-w-0">
+                    <span class="block text-sm font-bold leading-snug text-blue-600">{nameWithRarity(card.data)}</span>
+                    <span class="block text-[11px] text-slate-500">採用 {qty}枚</span>
+                    <span class="mt-1 block font-black tabular-nums text-rose-600">{offer ? formatYen(offer.price) : '在庫なし'}</span>
+                    {offer && <span class="block text-[10px] text-slate-500">{offer.shop}</span>}
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <div class="prose prose-gray max-w-none prose-headings:scroll-mt-20 prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2 prose-a:text-brand-600">
+        <slot />
+      </div>
+
+      <DeckRecipe deck={deck} title={`${column.deckName}デッキレシピ（60枚）`} />
+
+      <div class="prose prose-gray mt-12 max-w-none prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-2 prose-a:text-brand-600">
+        <h2>代替カード・カスタマイズ提案</h2>
+        <slot name="custom" />
+
+        <h2>最安パーツ収集テクニック</h2>
+        <h3>1. 楽天市場とYahoo!ショッピングを必ず見比べる</h3>
+        <p>
+          同じカードでも、モールによって最安値が大きく違うことがあります。このデッキの採用カードでも、次のような差が出ています（毎日自動更新）。カード名をタップすると、両モールの価格を並べて比較できます。
+        </p>
+      </div>
+      {mallGaps.length > 0 && (
+        <ul class="not-prose mt-4 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
+          {mallGaps.map(({ card, rakuten, yahoo }) => (
+            <li class="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
+              <a href={cardPath(card)} class="font-bold text-blue-600 hover:underline">{nameWithRarity(card.data)}</a>
+              <span class="tabular-nums text-slate-600">
+                楽天 <span class:list={['font-bold', rakuten.price <= yahoo.price ? 'text-rose-600' : 'text-slate-700']}>{formatYen(rakuten.price)}</span>
+                ／ Yahoo! <span class:list={['font-bold', yahoo.price < rakuten.price ? 'text-rose-600' : 'text-slate-700']}>{formatYen(yahoo.price)}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div class="prose prose-gray mt-6 max-w-none prose-a:text-brand-600">
+        <h3>2. 1枚数十円のカードは送料込みで考える</h3>
+        <p>
+          C・U のカードは1枚数十円でも、ショップごとに送料がかかります。まとめ買いで送料無料になるショップで必要な枚数をそろえ、高額な ex だけを最安のショップで買うと、合計を抑えやすくなります。
+        </p>
+        <h3>3. 使わなくなったカードを買取に出して資金にする</h3>
+        <p>
+          環境の変化で使わなくなったデッキやダブったカードは、早めに売ると値下がり前の価格で手放せます。
+        </p>
+      </div>
+      <a
+        href={furuichi.url}
+        target="_blank"
+        rel="sponsored nofollow noopener noreferrer"
+        data-aff-network={furuichi.network}
+        data-aff-shop={furuichi.name}
+        data-aff-type="buyback_bulk"
+        data-aff-item={`${column.deckName}デッキ解説`}
+        class="not-prose mt-4 flex flex-col rounded-xl border-2 border-amber-300 bg-amber-50 p-4 transition hover:border-amber-400 hover:bg-amber-100"
+      >
+        <span class="text-base font-bold text-slate-900"><span aria-hidden="true">📦</span> 使わないカードはスリーブのまま宅配買取へ</span>
+        <span class="mt-1 text-xs leading-relaxed text-slate-600">スリーブ・ローダー・ファイルのまま箱に入れて送れる宅配買取（無料宅配キットあり）。デッキを組み替えるときの資金づくりに。</span>
+        <span class="mt-3 text-sm font-bold text-blue-600">{furuichi.name}で査定を申し込む →</span>
+      </a>
+    </article>
+
+    <aside class="mt-16" aria-labelledby="other-decks">
+      <h2 id="other-decks" class="mb-4 text-xl font-bold text-gray-900">ほかのジムバトル優勝デッキ解説</h2>
+      <ul class="grid gap-4 sm:grid-cols-3">
+        {others.map((c) => (
+          <li>
+            <a href={columnPath(c)} class="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-4 transition hover:border-blue-300 hover:shadow-md">
+              <span class="text-xs font-bold text-rose-600">🏆 {c.result}</span>
+              <span class="mt-1 font-bold text-gray-900">{c.deckName}デッキ</span>
+              <span class="mt-2 text-sm font-bold text-blue-600">レシピと回し方を見る →</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="mt-4 text-sm"><a href="/columns/" class="text-brand-600 underline">デッキ解説の一覧へ</a></p>
+    </aside>
+
+    <AffiliatePixels cards={deckCards} shops={['furuichi']} />
+  </div>
+</BaseLayout>

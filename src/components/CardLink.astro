@@ -1,0 +1,16 @@
+---
+// 記事本文から cards.json のカード詳細ページへリンクする（存在しない id はビルド時にエラー）
+import { cardPath, getCards } from '../utils/cards';
+
+interface Props {
+  id: string;
+  /** リンク文字列（省略時はカード名） */
+  label?: string;
+}
+
+const { id, label } = Astro.props;
+const card = (await getCards()).find((c) => c.id === id);
+if (!card) throw new Error(`CardLink: cards.json に「${id}」がありません`);
+---
+
+<a href={cardPath(card)}>{label ?? card.data.name}</a>

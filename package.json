@@ -10,7 +10,8 @@
     "astro": "astro",
     "update-prices": "node scripts/update-prices.js",
     "add-cards": "node scripts/add-cards.js",
-    "sync-trending": "node scripts/sync-trending-decks.js"
+    "sync-trending": "node scripts/sync-trending-decks.js",
+    "import-decks": "node scripts/import-official-decks.js"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",

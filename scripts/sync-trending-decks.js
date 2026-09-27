@@ -17,55 +17,25 @@
 //    （G以前の版はここで除外される）。デッキで使われた版と効果テキストが同じ版のうち、最低レアリティの版を選ぶ
 // 4. scripts/seed/trending-cards.json を書き出し、add-cards（楽天の出品で型番を確認）→ update-prices の順に実行する
 //
-// マナー: 同じサイトへのリクエストは1秒以上あけ、デッキページ・カード詳細（内容が変わらないもの）は .cache/ に保存して再取得しない
+// マナー: 同じサイトへのリクエストは1秒以上あけ、デッキページ・カード詳細は .cache/ に保存して再取得しない（scripts/lib/official.js）
 
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import * as cheerio from 'cheerio';
-import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../src/consts.ts';
+import { deckCards, fetchText, norm, samePrintings, seedFromPrintings } from './lib/official.js';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
 const CARDS_PATH = path('src/data/cards.json');
 const SEED = 'scripts/seed/trending-cards.json';
-const CACHE_DIR = path('.cache/trending/');
 
 const LIST_URL = 'https://pokecabook.com/archives/category/deck-recipe';
-const OFFICIAL = 'https://www.pokemon-card.com';
-const USER_AGENT = 'Mozilla/5.0 (compatible; pokeca-price-navi/1.0; +https://my-affiliate-site-phi.vercel.app/)';
-const WAIT_MS = 1000;
 
 /** 記事タイトルにこの語を含むデッキのパーツは、採用数に関係なく追加候補にする（直近の話題デッキ） */
 const PRIORITY_DECKS = ['ぷにぷにサークル', 'メガミミロップ'];
 /** 価格比較の対象にしないカード（基本エネルギー） */
 const SKIP_NAME = /^基本.+エネルギー$/;
-
-/**
- * 弾ごとのレギュレーションマーク（公式の検索結果にはマークがないため、弾から決める）。
- * 再録を含む弾（REPRINT_SETS）は元のマークのままのカードがあるため、同じ効果の版があれば通常の弾を優先する
- */
-const SET_MARKS = {
-  // G の弾は、公式の例外リストのカード（クラッシュハンマー等）の版を選ぶためにだけ使う
-  SV1S: 'G', SV1V: 'G', SV1a: 'G', SV2P: 'G', SV2D: 'G', SV2a: 'G', SV3: 'G', SV3a: 'G', SV4K: 'G', SV4M: 'G', SV4a: 'G',
-  // MC（スタートデッキ100 バトルコレクション）は I、MEM（スターターセットex）は J（カード画像で確認）
-  MC: 'I', MEM: 'J',
-  SV5K: 'H', SV5M: 'H', SV5a: 'H', SV6: 'H', SV6a: 'H', SV7: 'H', SV7a: 'H', SV8: 'H', SV8a: 'H',
-  SV9: 'I', SV9a: 'I', SV10: 'I', SV11B: 'I', SV11W: 'I', M1L: 'I', M1S: 'I', M2: 'I', M2a: 'I',
-  M3: 'J', M4: 'J', M5: 'J', M6: 'J', M6a: 'J',
-};
-const REPRINT_SETS = new Set(['SV4a', 'SV8a', 'M2a', 'M6a', 'MC']);
-/**
- * 最低レアリティを選ぶときの順。「-」はレアリティ表記のない版（MC・M2a などデッキ・ハイクラスパックの再録）で、
- * 拡張パックの通常レアリティ（C〜RR）の版がない場合に使う
- */
-const RARITY_RANK = ['C', 'U', 'R', 'RR', '-', 'ACE', 'AR', 'RRR', 'CHR', 'SR', 'SA', 'HR', 'SAR', 'SSR', 'UR', 'FUR', 'MUR'];
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const norm = (s) => s.normalize('NFKC').replace(/\s+/g, '');
-const isStandardLegal = (name, mark) => STANDARD_REGULATIONS.includes(mark) || STANDARD_EXEMPT_NAMES.includes(name);
 
 function parseArgs(argv) {
   const get = (name, def) => Number(argv.find((a) => a.startsWith(`--${name}=`))?.split('=')[1] ?? def);
@@ -76,26 +46,6 @@ function parseArgs(argv) {
     minDecks: get('min-decks', 3),
     dryRun: argv.includes('--dry-run'),
   };
-}
-
-// ---- 取得（ホストごとに間隔をあける・キャッシュ） ----
-
-const lastRequest = new Map();
-async function fetchText(url, { cache = false } = {}) {
-  const file = `${CACHE_DIR}${createHash('sha1').update(url).digest('hex')}.html`;
-  if (cache && existsSync(file)) return readFile(file, 'utf8');
-  const host = new URL(url).host;
-  const wait = (lastRequest.get(host) ?? 0) + WAIT_MS - Date.now();
-  if (wait > 0) await sleep(wait);
-  lastRequest.set(host, Date.now());
-  const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
-  const text = await res.text();
-  if (cache) {
-    mkdirSync(CACHE_DIR, { recursive: true });
-    await writeFile(file, text, 'utf8');
-  }
-  return text;
 }
 
 // ---- 1. ポケカブック: 記事一覧 → デッキコード ----
@@ -140,88 +90,12 @@ async function articleDecks(url) {
   return { url, title, decks };
 }
 
-// ---- 2. 公式デッキページ → カード ----
-
-async function deckCards(deckId) {
-  const html = await fetchText(`${OFFICIAL}/deck/result.html/deckID/${deckId}/`, { cache: true });
-  // 「ニュートラルセンター(ACE SPEC)」のような付記は、カード名（cards.json・公式検索）に合わせて外す
-  const names = new Map([...html.matchAll(/searchItemNameAlt\[(\d+)\]='([^']*)'/g)].map((m) => [m[1], m[2].replace(/\s*\(ACE SPEC\)$/, '')]));
-  const cards = [];
-  for (const [, value] of html.matchAll(/name="deck_[a-z]+"[^>]*value="([^"]*)"/g)) {
-    for (const part of value.split('-').filter(Boolean)) {
-      const [cardId, count] = part.split('_');
-      if (names.has(cardId)) cards.push({ cardId, name: names.get(cardId), count: Number(count) });
-    }
-  }
-  return cards;
-}
-
-// ---- 3. 公式カード検索（スタンダードのみ）・カード詳細 ----
-
-async function standardPrintings(name) {
-  const found = [];
-  for (let page = 1; page <= 5; page++) {
-    const params = new URLSearchParams({ keyword: name, se_ta: '', regulation_sidebar_form: 'XY', pg: '', illust: '', sm_and_keyword: 'true', page: String(page) });
-    const json = JSON.parse(await fetchText(`${OFFICIAL}/card-search/resultAPI.php?${params}`));
-    for (const c of json.cardList ?? []) {
-      if (norm(c.cardNameAltText) === norm(name)) found.push({ cardId: c.cardID, thumb: c.cardThumbFile });
-    }
-    if (page >= (json.maxPage ?? 1)) break;
-  }
-  return found;
-}
-
-async function cardDetail(cardId) {
-  const html = await fetchText(`${OFFICIAL}/card-search/details.php/card/${cardId}/regu/XY`, { cache: true });
-  const $ = cheerio.load(html);
-  const subtext = $('.LeftBox .subtext').first();
-  const number = subtext.text().normalize('NFKC').match(/(\d{3})\s*\/\s*(\d{3})/);
-  const rarityIcon = subtext.find('img[src*="ic_rare_"]').attr('src')?.match(/ic_rare_([a-z0-9]+?)(?:_c)?\.gif/)?.[1];
-  // 効果テキスト（エネルギーのアイコンも含める）。同名で効果の違うカードを区別するのに使う
-  const inner = $('.RightBox-inner').first().clone();
-  inner.find('span.icon').each((_, el) => { $(el).replaceWith(`[${($(el).attr('class') ?? '').replace(/\bicon\b/g, '').trim()}]`); });
-  const text = inner.html()?.split(/<h2[^>]*>\s*進化/)[0] ?? '';
-  return {
-    cardNumber: number ? `${number[1]}/${number[2]}` : null,
-    rarity: rarityIcon ? rarityIcon.toUpperCase() : '-',
-    signature: cheerio.load(text).text().replace(/\s+/g, ''),
-  };
-}
-
-/** 公式画像のファイル名（045203_P_NOKOKOTCHI.jpg）から id 用のローマ字を取り出す */
-const romaji = (thumb) => (thumb.split('/').pop().match(/^\d+_[A-Z]_(.+)\.\w+$/)?.[1] ?? 'card').toLowerCase().replace(/[^a-z0-9]/g, '');
-const setCode = (thumb) => thumb.split('/').slice(-2, -1)[0];
-
 /** デッキで使われた版と効果が同じ、現行スタンダードの最低レアリティの版を選ぶ */
 async function resolvePrinting(entry) {
-  const printings = (await standardPrintings(entry.name)).filter((p) => !/-P$/i.test(setCode(p.thumb))); // プロモは除く
-  if (printings.length === 0) return { skip: '現行スタンダードの版なし（G以前のみ）' };
   const usedIds = [...entry.printings.entries()].sort((a, b) => b[1] - a[1]).map(([id]) => id);
-  const details = new Map();
-  for (const p of printings) details.set(p.cardId, { ...p, ...(await cardDetail(p.cardId)) });
-  const reference = usedIds.map((id) => details.get(id)).find(Boolean) ?? (await cardDetail(usedIds[0]));
-  const rank = (r) => (RARITY_RANK.includes(r) ? RARITY_RANK.indexOf(r) : RARITY_RANK.length);
-  const candidates = [...details.values()]
-    .filter((d) => d.signature === reference.signature && d.cardNumber && SET_MARKS[setCode(d.thumb)])
-    .sort((a, b) => rank(a.rarity) - rank(b.rarity) || REPRINT_SETS.has(setCode(a.thumb)) - REPRINT_SETS.has(setCode(b.thumb)));
-  const best = candidates[0];
-  if (!best) return { skip: '型番・マークを特定できる版なし（プロモ・MC のみ等）' };
-  const code = setCode(best.thumb);
-  const mark = SET_MARKS[code];
-  if (!isStandardLegal(entry.name, mark)) return { skip: `レギュレーション ${mark}（現行スタンダード外）` };
-  const num = best.cardNumber.split('/')[0];
-  return {
-    seed: {
-      id: [romaji(best.thumb), best.rarity === '-' ? null : best.rarity.toLowerCase(), code.toLowerCase(), num].filter(Boolean).join('-'),
-      name: entry.name.normalize('NFKC'),
-      rarity: best.rarity,
-      cardNumber: best.cardNumber,
-      expansionCode: code,
-      regulationMark: mark,
-      deck: entry.topArchetype,
-      role: `採用 ${entry.decks}デッキ（公式カードID ${best.cardId}${REPRINT_SETS.has(code) ? '・再録弾のためマークは推定' : ''}）`,
-    },
-  };
+  const { any, same } = await samePrintings(entry.name, usedIds);
+  if (!any) return { skip: '現行スタンダードの版なし（G以前のみ）' };
+  return seedFromPrintings(entry.name, same, { deck: entry.topArchetype, role: `採用 ${entry.decks}デッキ` });
 }
 
 // ---- 集計・実行 ----

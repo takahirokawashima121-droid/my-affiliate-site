@@ -1,0 +1,427 @@
+{
+  "_comment": [
+    "npm run import-decks が公式デッキコード（9/26 ジムバトル優勝 4デッキ）から生成。add-cards で楽天の出品を確認して追加済み。"
+  ],
+  "cards": [
+    {
+      "id": "gosu-c-m3-047",
+      "name": "ゴース",
+      "rarity": "C",
+      "cardNumber": "047/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "mega-gengar",
+      "role": "ポケモン（公式カードID 49680）"
+    },
+    {
+      "id": "gosuto-mc-444",
+      "name": "ゴースト",
+      "rarity": "-",
+      "cardNumber": "444/742",
+      "expansionCode": "MC",
+      "regulationMark": "I",
+      "deck": "mega-gengar",
+      "role": "ポケモン（公式カードID 48263）"
+    },
+    {
+      "id": "gosuto-c-m3-048",
+      "name": "ゴースト",
+      "rarity": "C",
+      "cardNumber": "048/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "mega-gengar",
+      "role": "ポケモン（公式カードID 49681）"
+    },
+    {
+      "id": "gengaiekkusu-rr-m6a-076",
+      "name": "ゲンガーex",
+      "rarity": "RR",
+      "cardNumber": "076/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "mega-gengar",
+      "role": "ポケモン（公式カードID 50688）"
+    },
+    {
+      "id": "genga-u-m3-049",
+      "name": "ゲンガー",
+      "rarity": "U",
+      "cardNumber": "049/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "mega-gengar",
+      "role": "ポケモン（公式カードID 49682）"
+    },
+    {
+      "id": "mgengaex-mbg-003",
+      "name": "メガゲンガーex",
+      "rarity": "-",
+      "cardNumber": "003/021",
+      "expansionCode": "MBG",
+      "regulationMark": "I",
+      "deck": "mega-gengar",
+      "role": "ポケモン（公式カードID 48264）"
+    },
+    {
+      "id": "nokotchi-c-sv9-078",
+      "name": "ノコッチ",
+      "rarity": "C",
+      "cardNumber": "078/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "mega-gengar",
+      "role": "ポケモン（公式カードID 49290）"
+    },
+    {
+      "id": "momowarouex-rr-sv6a-039",
+      "name": "モモワロウex",
+      "rarity": "RR",
+      "cardNumber": "039/064",
+      "expansionCode": "SV6a",
+      "regulationMark": "H",
+      "deck": "mega-gengar",
+      "role": "ポケモン（公式カードID 46766）"
+    },
+    {
+      "id": "haipaboru-u-sv1v-070",
+      "name": "ハイパーボール",
+      "rarity": "U",
+      "cardNumber": "070/078",
+      "expansionCode": "SV1V",
+      "regulationMark": "G",
+      "deck": "mega-gengar",
+      "role": "グッズ（公式カードID 49600）"
+    },
+    {
+      "id": "ririenokesshin-u-m1l-062",
+      "name": "リーリエの決心",
+      "rarity": "U",
+      "cardNumber": "062/063",
+      "expansionCode": "M1L",
+      "regulationMark": "I",
+      "deck": "mega-gengar",
+      "role": "サポート（公式カードID 49609）"
+    },
+    {
+      "id": "anzunohigi-u-sv6a-060",
+      "name": "アンズの秘技",
+      "rarity": "U",
+      "cardNumber": "060/064",
+      "expansionCode": "SV6a",
+      "regulationMark": "H",
+      "deck": "mega-gengar",
+      "role": "サポート（公式カードID 49415）"
+    },
+    {
+      "id": "bosunoshireigechisu-r-sv1a-069",
+      "name": "ボスの指令",
+      "rarity": "R",
+      "cardNumber": "069/073",
+      "expansionCode": "SV1a",
+      "regulationMark": "G",
+      "deck": "mega-gengar",
+      "role": "サポート（公式カードID 49440）"
+    },
+    {
+      "id": "idainataijixyu-sv7-101",
+      "name": "偉大な大樹",
+      "rarity": "-",
+      "cardNumber": "101/102",
+      "expansionCode": "SV7",
+      "regulationMark": "H",
+      "deck": "mega-gengar",
+      "role": "スタジアム（公式カードID 46040）"
+    },
+    {
+      "id": "mdeianshiex-mbd-005",
+      "name": "メガディアンシーex",
+      "rarity": "-",
+      "cardNumber": "005/021",
+      "expansionCode": "MBD",
+      "regulationMark": "I",
+      "deck": "mega-diancie",
+      "role": "ポケモン（公式カードID 48289）"
+    },
+    {
+      "id": "mixyuuiekkusu-rr-m6a-057",
+      "name": "ミュウex",
+      "rarity": "RR",
+      "cardNumber": "057/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "mega-diancie",
+      "role": "ポケモン（公式カードID 50669）"
+    },
+    {
+      "id": "habatakukami-r-sv5k-033",
+      "name": "ハバタクカミ",
+      "rarity": "R",
+      "cardNumber": "033/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "mega-diancie",
+      "role": "ポケモン（公式カードID 46733）"
+    },
+    {
+      "id": "annon-m6a-060",
+      "name": "アンノーン",
+      "rarity": "-",
+      "cardNumber": "060/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "mega-diancie",
+      "role": "ポケモン（公式カードID 50672）"
+    },
+    {
+      "id": "pururiru-c-sv11w-041",
+      "name": "プルリル",
+      "rarity": "C",
+      "cardNumber": "041/086",
+      "expansionCode": "SV11W",
+      "regulationMark": "I",
+      "deck": "mega-diancie",
+      "role": "ポケモン（公式カードID 47663）"
+    },
+    {
+      "id": "wandapatchi-mbd-015",
+      "name": "ワンダーパッチ",
+      "rarity": "-",
+      "cardNumber": "015/021",
+      "expansionCode": "MBD",
+      "regulationMark": "I",
+      "deck": "mega-diancie",
+      "role": "グッズ（公式カードID 48299）"
+    },
+    {
+      "id": "misuterigaden-u-m1s-063",
+      "name": "ミステリーガーデン",
+      "rarity": "U",
+      "cardNumber": "063/063",
+      "expansionCode": "M1S",
+      "regulationMark": "I",
+      "deck": "mega-diancie",
+      "role": "スタジアム（公式カードID 47859）"
+    },
+    {
+      "id": "terepasuchixyouenerugi-r-m3-079",
+      "name": "テレパス超エネルギー",
+      "rarity": "R",
+      "cardNumber": "079/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "mega-diancie",
+      "role": "エネルギー（公式カードID 49712）"
+    },
+    {
+      "id": "hoppunozashianex-rr-sv9-069",
+      "name": "ホップのザシアンex",
+      "rarity": "RR",
+      "cardNumber": "069/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "hops-zacian",
+      "role": "ポケモン（公式カードID 47077）"
+    },
+    {
+      "id": "mkuchitoex-rr-m1l-046",
+      "name": "メガクチートex",
+      "rarity": "RR",
+      "cardNumber": "046/063",
+      "expansionCode": "M1L",
+      "regulationMark": "I",
+      "deck": "hops-zacian",
+      "role": "ポケモン（公式カードID 47779）"
+    },
+    {
+      "id": "hoppunokabigon-r-sv9-075",
+      "name": "ホップのカビゴン",
+      "rarity": "R",
+      "cardNumber": "075/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "hops-zacian",
+      "role": "ポケモン（公式カードID 47083）"
+    },
+    {
+      "id": "hoppunobaggu-u-sv9-091",
+      "name": "ホップのバッグ",
+      "rarity": "U",
+      "cardNumber": "091/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "hops-zacian",
+      "role": "グッズ（公式カードID 47099）"
+    },
+    {
+      "id": "enerugitensou-mc-639",
+      "name": "エネルギー転送",
+      "rarity": "-",
+      "cardNumber": "639/742",
+      "expansionCode": "MC",
+      "regulationMark": "I",
+      "deck": "hops-zacian",
+      "role": "グッズ（公式カードID 49355）"
+    },
+    {
+      "id": "hoppunokodawarihachimaki-u-sv9-092",
+      "name": "ホップのこだわりハチマキ",
+      "rarity": "U",
+      "cardNumber": "092/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "hops-zacian",
+      "role": "ポケモンのどうぐ（公式カードID 47100）"
+    },
+    {
+      "id": "rokettodannoramuda-u-sv10-094",
+      "name": "ロケット団のラムダ",
+      "rarity": "U",
+      "cardNumber": "094/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "hops-zacian",
+      "role": "サポート（公式カードID 48701）"
+    },
+    {
+      "id": "jipuso-u-m4-076",
+      "name": "ジプソ",
+      "rarity": "U",
+      "cardNumber": "076/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "hops-zacian",
+      "role": "サポート（公式カードID 50160）"
+    },
+    {
+      "id": "harontaun-u-sv9-099",
+      "name": "ハロンタウン",
+      "rarity": "U",
+      "cardNumber": "099/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "hops-zacian",
+      "role": "スタジアム（公式カードID 47107）"
+    },
+    {
+      "id": "keromatsu-c-m4-020",
+      "name": "ケロマツ",
+      "rarity": "C",
+      "cardNumber": "020/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "mega-greninja",
+      "role": "ポケモン（公式カードID 50104）"
+    },
+    {
+      "id": "gekogashira-c-m4-021",
+      "name": "ゲコガシラ",
+      "rarity": "C",
+      "cardNumber": "021/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "mega-greninja",
+      "role": "ポケモン（公式カードID 50105）"
+    },
+    {
+      "id": "mgekkougaex-rr-m4-022",
+      "name": "メガゲッコウガex",
+      "rarity": "RR",
+      "cardNumber": "022/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "mega-greninja",
+      "role": "ポケモン（公式カードID 50106）"
+    },
+    {
+      "id": "gekkougaex-rr-sv5a-045",
+      "name": "ゲッコウガex",
+      "rarity": "RR",
+      "cardNumber": "045/066",
+      "expansionCode": "SV5a",
+      "regulationMark": "H",
+      "deck": "mega-greninja",
+      "role": "ポケモン（公式カードID 45621）"
+    },
+    {
+      "id": "gekkougaiekkusu-rr-m6a-015",
+      "name": "ゲッコウガex",
+      "rarity": "RR",
+      "cardNumber": "015/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "mega-greninja",
+      "role": "ポケモン（公式カードID 50627）"
+    },
+    {
+      "id": "yukiwarashi-m2a-035",
+      "name": "ユキワラシ",
+      "rarity": "-",
+      "cardNumber": "035/193",
+      "expansionCode": "M2a",
+      "regulationMark": "I",
+      "deck": "mega-greninja",
+      "role": "ポケモン（公式カードID 48557）"
+    },
+    {
+      "id": "myukimenokoex-rr-m2a-036",
+      "name": "メガユキメノコex",
+      "rarity": "RR",
+      "cardNumber": "036/193",
+      "expansionCode": "M2a",
+      "regulationMark": "I",
+      "deck": "mega-greninja",
+      "role": "ポケモン（公式カードID 48558）"
+    },
+    {
+      "id": "enerugikaishixyuu-u-sv11w-079",
+      "name": "エネルギー回収",
+      "rarity": "U",
+      "cardNumber": "079/086",
+      "expansionCode": "SV11W",
+      "regulationMark": "I",
+      "deck": "mega-greninja",
+      "role": "グッズ（公式カードID 49352）"
+    },
+    {
+      "id": "fuusen-u-sv11b-082",
+      "name": "ふうせん",
+      "rarity": "U",
+      "cardNumber": "082/086",
+      "expansionCode": "SV11B",
+      "regulationMark": "I",
+      "deck": "mega-greninja",
+      "role": "ポケモンのどうぐ（公式カードID 50464）"
+    },
+    {
+      "id": "touko-u-sv11w-085",
+      "name": "トウコ",
+      "rarity": "U",
+      "cardNumber": "085/086",
+      "expansionCode": "SV11W",
+      "regulationMark": "I",
+      "deck": "mega-greninja",
+      "role": "サポート（公式カードID 47707）"
+    },
+    {
+      "id": "naminoribichi-u-m1s-062",
+      "name": "なみのりビーチ",
+      "rarity": "U",
+      "cardNumber": "062/063",
+      "expansionCode": "M1S",
+      "regulationMark": "I",
+      "deck": "mega-greninja",
+      "role": "スタジアム（公式カードID 47858）"
+    },
+    {
+      "id": "neoappaenerugi-sv5k-071",
+      "name": "ネオアッパーエネルギー",
+      "rarity": "-",
+      "cardNumber": "071/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "mega-greninja",
+      "role": "エネルギー（公式カードID 45217）"
+    }
+  ]
+}

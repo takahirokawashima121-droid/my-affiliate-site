@@ -1,0 +1,68 @@
+# ポケカブックのデッキレシピから現環境で採用の多い未登録カードを毎週追加し、src/data/cards.json に差分があればコミットする
+# （npm run sync-trending: 集計 → シード作成 → add-cards → update-prices。main への push で Vercel が自動デプロイ）
+#
+# 事前設定: update-prices.yml と同じ Secrets（RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY / YAHOO_APP_ID）を使う
+name: Sync trending cards
+
+# トリガーは定期実行と手動実行のみ（自動コミットの push で再実行されない）
+on:
+  schedule:
+    - cron: '23 20 * * 0' # 毎週日曜 20:23 UTC = 日本時間 月曜 午前5時23分（毎日の価格更新 4時7分の後）
+  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
+
+permissions:
+  contents: write # cards.json・シードのコミット・プッシュに必要
+
+# 価格更新と同じグループにして、cards.json を同時に書き換えないよう順番に実行する
+concurrency:
+  group: update-prices
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # scripts/*.js は .ts を直接 import するため Node 22.18 以降が必要
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # 公式のデッキページ・カード詳細（内容が変わらないもの）を実行間で使い回し、相手サイトへのリクエストを減らす
+      - name: Restore page cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/trending
+          key: trending-${{ github.run_id }}
+          restore-keys: trending-
+
+      - name: Sync trending cards
+        run: npm run sync-trending
+        env:
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+          YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
+
+      # 追加したカードでサイトが壊れないことを確認してからコミットする（スタンダード外のカードが入るとビルドが失敗する）
+      - name: Build check
+        run: npm run build
+
+      - name: Commit and push if cards.json changed
+        run: |
+          if git diff --quiet -- src/data/cards.json; then
+            echo "追加されたカードはありません"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/cards.json scripts/seed/trending-cards.json
+          git commit -m "feat: 環境の頻出カードを自動追加（weekly sync-trending）"
+          git pull --rebase origin main
+          git push origin HEAD:main

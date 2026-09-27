@@ -71,6 +71,8 @@ npm run sync-trending                # 追加候補のシードを作り、add-c
 
 デッキページ・カード詳細は `.cache/`（Git 管理外）に保存し、同じサイトへのリクエストは1秒以上あけます。
 
+`.github/workflows/sync-trending.yml` が毎週月曜 日本時間 午前5時23分に `npm run sync-trending` を実行し、ビルドが通ることを確認してから、カードが追加されていればコミット・プッシュします（Secrets は価格の自動更新と共通。Actions タブ →「Sync trending cards」→「Run workflow」で手動実行も可）。
+
 ## 価格の自動更新（GitHub Actions）
 
 `.github/workflows/update-prices.yml` が毎日 日本時間 午前4時7分に `npm run update-prices` を実行し、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。

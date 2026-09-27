@@ -69,7 +69,7 @@ npm run sync-trending                # 追加候補のシードを作り、add-c
 - マークは弾から決めます（スクリプト内の `SET_MARKS`）。新しい弾が出たら追記してください。未登録の弾の版は選ばれません。
 - 結果は `scripts/seed/trending-cards.json` に保存され、add-cards が楽天の出品で型番を確認してから追加します。
 
-デッキページ・カード詳細は `.cache/`（Git 管理外）に保存し、同じサイトへのリクエストは1秒以上あけます。
+デッキページ・カード詳細は `.cache/`（Git 管理外）に保存し、同じサイトへのリクエストは1.5秒以上あけます。
 
 `.github/workflows/sync-trending.yml` が毎週月曜 日本時間 午前5時23分に `npm run sync-trending` を実行し、ビルドが通ることを確認してから、カードが追加されていればコミット・プッシュします（Secrets は価格の自動更新と共通。Actions タブ →「Sync trending cards」→「Run workflow」で手動実行も可）。
 

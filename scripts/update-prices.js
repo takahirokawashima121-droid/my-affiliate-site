@@ -21,7 +21,7 @@
 // - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）と商品画像（imageUrl）以外の項目は変更しない
 // - 商品画像は最安商品の1枚目を 300x300 に変換して保存。画像がない商品の場合は既存の imageUrl を維持する
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
-// - API ごとに呼び出し間隔を空ける（楽天 1秒、Yahoo! 1.5秒。Yahoo! の 429 は 5→15→30秒待って再試行）
+// - API ごとに呼び出し間隔を空ける（楽天・Yahoo! とも 1.5秒。Yahoo! の 429 は 5→15→30秒待って再試行）
 // - Yahoo! は yahooPrice（該当なしは null）/ yahooUrl（もしも経由）/ yahooUpdatedAt を更新する
 
 import { existsSync } from 'node:fs';
@@ -34,7 +34,7 @@ const CARDS_PATH = fileURLToPath(new URL('../src/data/cards.json', import.meta.u
 const ENV_PATH = fileURLToPath(new URL('../.env', import.meta.url));
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 const SITE_URL = 'https://my-affiliate-site-phi.vercel.app/';
-const WAIT_MS = 1000;
+const WAIT_MS = 1500;
 const SHOP_NAME = '楽天市場';
 
 // シングルカード以外の商品（鑑定品・オリパ・サプライ・海外版など）を検索段階で除外
@@ -234,7 +234,7 @@ async function searchRakuten(keyword, { appId, accessKey }) {
 
 /**
  * キーワード候補（cardSearchKeywords）を順に試し、カード名・番号が一致する最安商品が見つかった時点で返す。
- * 再検索の前にも1秒待機する（API負荷軽減）。
+ * 再検索の前にも1.5秒以上待機する（API負荷軽減）。
  */
 async function findCheapest(card, credentials) {
   const tried = [];

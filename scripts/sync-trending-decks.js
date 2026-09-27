@@ -17,7 +17,7 @@
 //    （G以前の版はここで除外される）。デッキで使われた版と効果テキストが同じ版のうち、最低レアリティの版を選ぶ
 // 4. scripts/seed/trending-cards.json を書き出し、add-cards（楽天の出品で型番を確認）→ update-prices の順に実行する
 //
-// マナー: 同じサイトへのリクエストは1秒以上あけ、デッキページ・カード詳細は .cache/ に保存して再取得しない（scripts/lib/official.js）
+// マナー: 同じサイトへのリクエストは1.5秒以上あけ、デッキページ・カード詳細は .cache/ に保存して再取得しない（scripts/lib/official.js）
 
 import { spawnSync } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';

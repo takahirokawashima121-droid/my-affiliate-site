@@ -1,7 +1,7 @@
 // ポケモンカード公式サイト（デッキページ・カード検索・カード詳細）の読み取りと、版（型番）選びの共通処理
 // scripts/sync-trending-decks.js・scripts/import-official-decks.js から使う
 //
-// マナー: 同じサイトへのリクエストは1秒以上あけ、デッキページ・カード詳細（内容が変わらないもの）は .cache/ に保存して再取得しない
+// マナー: 同じサイトへのリクエストは1.5秒以上あけ、デッキページ・カード詳細（内容が変わらないもの）は .cache/ に保存して再取得しない
 
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync } from 'node:fs';
@@ -13,7 +13,7 @@ import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../../src/consts.ts
 export const OFFICIAL = 'https://www.pokemon-card.com';
 const CACHE_DIR = fileURLToPath(new URL('../../.cache/trending/', import.meta.url));
 const USER_AGENT = 'Mozilla/5.0 (compatible; pokeca-price-navi/1.0; +https://my-affiliate-site-phi.vercel.app/)';
-const WAIT_MS = 1000;
+const WAIT_MS = 1500;
 
 /**
  * 弾ごとのレギュレーションマーク（公式の検索結果にはマークがないため、弾から決める）。

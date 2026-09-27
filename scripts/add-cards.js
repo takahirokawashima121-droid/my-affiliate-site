@@ -123,7 +123,7 @@ async function main() {
       console.log(`${label}\n  - 登録済み → スキップ`);
       continue;
     }
-    if (i > 0) await sleep(1000);
+    if (i > 0) await sleep(1500);
     try {
       const hits = await countMatches(s, { appId, accessKey });
       if (hits < minHits) {

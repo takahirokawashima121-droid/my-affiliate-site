@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>ポケカファクトリー X画像ジェネレーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet" />
+<style>
+  :root { --bg: #0b1120; --panel: #111827; --line: #1f2a44; --text: #e2e8f0; --muted: #94a3b8; --accent: #fbbf24; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Meiryo", "Yu Gothic", sans-serif; }
+  main { max-width: 1560px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  p.lead { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 20px; font-size: 13px; }
+  .controls label { display: inline-flex; gap: 6px; align-items: center; }
+  select { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 24px; }
+  section h2 { font-size: 15px; margin: 0 0 12px; }
+  canvas { display: block; max-width: 100%; height: auto; border-radius: 8px; background: #000; }
+  #icon { width: 400px; }
+  #header { width: 100%; }
+  #banner { width: 100%; max-width: 1200px; }
+  button { margin-top: 12px; background: var(--accent); color: #0f172a; border: 0; border-radius: 10px; padding: 10px 18px; font-weight: 900; font-size: 14px; cursor: pointer; font-family: inherit; }
+  button:hover { filter: brightness(1.08); }
+  .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>ポケカファクトリー（POKECA FACTORY）X用画像ジェネレーター</h1>
+  <p class="lead">X（Twitter）のアイコン（400×400）・ヘッダー（1500×500）・告知バナー（1200×675）を描画します。ボタンで PNG をそのまま保存できます。</p>
+
+  <div class="controls">
+    <label>出力倍率
+      <select id="scale">
+        <option value="1">等倍（400×400 / 1500×500 / 1200×675）</option>
+        <option value="2" selected>2倍・高解像度（800×800 / 3000×1000 / 2400×1350）</option>
+        <option value="3">3倍（1200×1200 / 4500×1500 / 3600×2025）</option>
+      </select>
+    </label>
+    <label><input type="checkbox" id="guides" checked /> Xのトリミング目安を表示（保存画像には入りません）</label>
+  </div>
+
+  <section>
+    <h2>アイコン（400×400）</h2>
+    <canvas id="icon"></canvas>
+    <button type="button" id="dl-icon">アイコンをダウンロード（PNG）</button>
+    <p class="note">点線の円は X の円形トリミングの範囲です。モチーフは円の内側に収めています。</p>
+  </section>
+
+  <section>
+    <h2>ヘッダー（1500×500）</h2>
+    <canvas id="header"></canvas>
+    <button type="button" id="dl-header">ヘッダーをダウンロード（PNG）</button>
+    <p class="note">赤い枠はスマホの X アプリでアイコンと重なる左下の領域、点線は端末によって上下が切れる目安です。文字・バッジはこの外に配置しています。</p>
+  </section>
+  <section>
+    <h2>サイト紹介バナー（1200×675・16:9）</h2>
+    <canvas id="banner"></canvas>
+    <button type="button" id="dl-banner">告知バナーをダウンロード（PNG）</button>
+    <p class="note">X の固定ポスト・告知ポスト用。16:9 なのでタイムラインでも切れずに表示されます。</p>
+  </section>
+</main>
+
+<script>
+(() => {
+  const C = {
+    navy0: '#0a0f1d', navy1: '#1e293b', ink: '#0f172a',
+    amber: '#fbbf24', amberDeep: '#f59e0b', red: '#ef4444',
+    sky: '#38bdf8', skyDim: 'rgba(56,189,248,0.35)', white: '#f8fafc', slate: '#94a3b8',
+    emerald: '#34d399',
+  };
+  // Canvas の文字はすべて同じゴシック体で描く（漢字・かな・英数でフォントが混ざらないように1つのスタックに統一）
+  const FONT = '"Noto Sans JP", "Hiragino Kaku Gothic ProN", "Meiryo", "Yu Gothic", sans-serif';
+
+  const $ = (id) => document.getElementById(id);
+  const scaleEl = $('scale');
+  const guidesEl = $('guides');
+
+  /** 角丸の長方形のパス */
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  /** 設計図風のグリッド（細線 + 太線） */
+  function grid(ctx, w, h, step, minor, major, every = 5) {
+    ctx.save();
+    ctx.lineWidth = 1;
+    for (let i = 0, x = 0; x <= w; i++, x += step) {
+      ctx.strokeStyle = i % every === 0 ? major : minor;
+      ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, h); ctx.stroke();
+    }
+    for (let i = 0, y = 0; y <= h; i++, y += step) {
+      ctx.strokeStyle = i % every === 0 ? major : minor;
+      ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(w, y + 0.5); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /** 寸法線（設計図の注記） */
+  function dimension(ctx, x1, y1, x2, y2, label, color) {
+    ctx.save();
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const ang = Math.atan2(y2 - y1, x2 - x1);
+    for (const [px, py, a] of [[x1, y1, ang], [x2, y2, ang + Math.PI]]) {
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + 9 * Math.cos(a + 0.4), py + 9 * Math.sin(a + 0.4));
+      ctx.lineTo(px + 9 * Math.cos(a - 0.4), py + 9 * Math.sin(a - 0.4));
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.font = `700 13px ${FONT}`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.translate((x1 + x2) / 2, (y1 + y2) / 2);
+    ctx.rotate(Math.abs(ang) > Math.PI / 2 ? ang + Math.PI : ang);
+    ctx.fillText(label, 0, -6);
+    ctx.restore();
+  }
+
+  /**
+   * 積層したカードフレームと幾何学的な「P」（アイコンの主役。ヘッダーでも縮小して使う）
+   * cx, cy: 中心 / s: 基準サイズ（カードの高さ）
+   */
+  function factoryMark(ctx, cx, cy, s) {
+    const w = s * 0.72, h = s, r = s * 0.06;
+    ctx.save();
+    ctx.translate(cx, cy);
+
+    // 背面のカード2枚（ずらして積層）
+    const layers = [
+      { dx: -s * 0.16, dy: s * 0.07, rot: -0.2, stroke: 'rgba(56,189,248,0.55)', fill: 'rgba(30,41,59,0.9)' },
+      { dx: -s * 0.08, dy: s * 0.035, rot: -0.1, stroke: 'rgba(56,189,248,0.8)', fill: 'rgba(15,23,42,0.95)' },
+    ];
+    for (const l of layers) {
+      ctx.save();
+      ctx.translate(l.dx, l.dy); ctx.rotate(l.rot);
+      roundRect(ctx, -w / 2, -h / 2, w, h, r);
+      ctx.fillStyle = l.fill; ctx.fill();
+      ctx.lineWidth = Math.max(2, s * 0.012); ctx.strokeStyle = l.stroke; ctx.stroke();
+      ctx.restore();
+    }
+
+    // 前面のカード（ゴールドのフレーム）
+    roundRect(ctx, -w / 2, -h / 2, w, h, r);
+    const face = ctx.createLinearGradient(0, -h / 2, 0, h / 2);
+    face.addColorStop(0, '#16213a'); face.addColorStop(1, '#0b1224');
+    ctx.fillStyle = face; ctx.fill();
+    const frame = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
+    frame.addColorStop(0, '#fde68a'); frame.addColorStop(0.5, C.amber); frame.addColorStop(1, C.amberDeep);
+    ctx.lineWidth = Math.max(3, s * 0.025); ctx.strokeStyle = frame; ctx.stroke();
+
+    // カード内の設計図ライン（内枠・中心線・目盛り）
+    ctx.save();
+    roundRect(ctx, -w / 2 + s * 0.05, -h / 2 + s * 0.05, w - s * 0.1, h - s * 0.1, r * 0.6);
+    ctx.clip();
+    ctx.strokeStyle = 'rgba(56,189,248,0.22)'; ctx.lineWidth = 1;
+    const step = s * 0.06;
+    for (let x = -w / 2; x < w / 2; x += step) { ctx.beginPath(); ctx.moveTo(x, -h / 2); ctx.lineTo(x, h / 2); ctx.stroke(); }
+    for (let y = -h / 2; y < h / 2; y += step) { ctx.beginPath(); ctx.moveTo(-w / 2, y); ctx.lineTo(w / 2, y); ctx.stroke(); }
+    ctx.restore();
+    ctx.setLineDash([s * 0.025, s * 0.02]);
+    ctx.strokeStyle = 'rgba(56,189,248,0.7)'; ctx.lineWidth = Math.max(1.5, s * 0.008);
+    roundRect(ctx, -w / 2 + s * 0.05, -h / 2 + s * 0.05, w - s * 0.1, h - s * 0.1, r * 0.6); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 幾何学的な「P」（直線と45°の面取りだけで構成したシャープな字形）
+    const u = s * 0.075; // 線の太さ
+    const px = -w * 0.26, top = -h * 0.3, bottom = h * 0.3;
+    const bowlW = w * 0.5, bowlH = h * 0.34, cut = u * 1.1;
+    const P = new Path2D();
+    // 外形
+    P.moveTo(px, top);
+    P.lineTo(px + bowlW - cut, top);
+    P.lineTo(px + bowlW, top + cut);
+    P.lineTo(px + bowlW, top + bowlH - cut);
+    P.lineTo(px + bowlW - cut, top + bowlH);
+    P.lineTo(px + u, top + bowlH);
+    P.lineTo(px + u, bottom);
+    P.lineTo(px, bottom);
+    P.closePath();
+    // 内側の穴（逆回り）
+    const ix = px + u, iy = top + u, iw = bowlW - u * 2, ih = bowlH - u * 2, ic = cut * 0.45;
+    P.moveTo(ix, iy);
+    P.lineTo(ix, iy + ih);
+    P.lineTo(ix + iw - ic, iy + ih);
+    P.lineTo(ix + iw, iy + ih - ic);
+    P.lineTo(ix + iw, iy + ic);
+    P.lineTo(ix + iw - ic, iy);
+    P.closePath();
+    const pg = ctx.createLinearGradient(px, top, px + bowlW, bottom);
+    pg.addColorStop(0, '#fef3c7'); pg.addColorStop(0.45, C.amber); pg.addColorStop(1, C.red);
+    ctx.shadowColor = 'rgba(251,191,36,0.45)'; ctx.shadowBlur = s * 0.06;
+    ctx.fillStyle = pg; ctx.fill(P, 'evenodd');
+    ctx.shadowBlur = 0;
+
+    // P の脚に「工房」の目盛り（ボルト穴風の刻み）
+    ctx.fillStyle = C.ink;
+    for (let i = 0; i < 3; i++) {
+      const y = top + bowlH + u * 0.9 + i * u * 1.05;
+      ctx.fillRect(px + u * 0.25, y, u * 0.5, u * 0.22);
+    }
+
+    // 右下のギア風の六角ナット（ファクトリーのアクセント）
+    const nx = w * 0.2, ny = h * 0.24, nr = s * 0.085;
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = Math.PI / 6 + (i * Math.PI) / 3;
+      ctx[i ? 'lineTo' : 'moveTo'](nx + nr * Math.cos(a), ny + nr * Math.sin(a));
+    }
+    ctx.closePath();
+    ctx.fillStyle = C.sky; ctx.fill();
+    ctx.beginPath(); ctx.arc(nx, ny, nr * 0.42, 0, Math.PI * 2); ctx.fillStyle = '#0b1224'; ctx.fill();
+
+    // 右上のコーナーマーク（カードの位置合わせトンボ）
+    ctx.strokeStyle = C.sky; ctx.lineWidth = Math.max(2, s * 0.012);
+    const tx = w / 2 - s * 0.1, ty = -h / 2 + s * 0.1, tl = s * 0.06;
+    ctx.beginPath(); ctx.moveTo(tx - tl, ty); ctx.lineTo(tx, ty); ctx.lineTo(tx, ty + tl); ctx.stroke();
+
+    ctx.restore();
+  }
+
+  // ───────────── アイコン（400×400） ─────────────
+  function drawIcon(canvas, scale, guides) {
+    const S = 400;
+    canvas.width = S * scale; canvas.height = S * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+    const bg = ctx.createLinearGradient(0, 0, S, S);
+    bg.addColorStop(0, C.navy0); bg.addColorStop(1, C.navy1);
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, S, S);
+
+    // 中心から広がる淡い光
+    const glow = ctx.createRadialGradient(S / 2, S / 2, 20, S / 2, S / 2, S * 0.55);
+    glow.addColorStop(0, 'rgba(56,189,248,0.18)'); glow.addColorStop(1, 'rgba(56,189,248,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, S, S);
+
+    // 円の内側だけに設計図グリッド
+    ctx.save();
+    ctx.beginPath(); ctx.arc(S / 2, S / 2, S / 2 - 6, 0, Math.PI * 2); ctx.clip();
+    grid(ctx, S, S, 20, 'rgba(56,189,248,0.07)', 'rgba(56,189,248,0.16)', 5);
+    ctx.restore();
+
+    // 円形トリミングの内側に置くリング（ブランドの枠）
+    ctx.save();
+    ctx.strokeStyle = 'rgba(251,191,36,0.55)'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(S / 2, S / 2, 176, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(56,189,248,0.5)'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 8]);
+    ctx.beginPath(); ctx.arc(S / 2, S / 2, 166, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    // リング上の目盛り（12方向）
+    ctx.strokeStyle = 'rgba(251,191,36,0.8)'; ctx.lineWidth = 3;
+    for (let i = 0; i < 12; i++) {
+      const a = (i * Math.PI) / 6;
+      ctx.beginPath();
+      ctx.moveTo(S / 2 + 176 * Math.cos(a), S / 2 + 176 * Math.sin(a));
+      ctx.lineTo(S / 2 + (i % 3 === 0 ? 162 : 169) * Math.cos(a), S / 2 + (i % 3 === 0 ? 162 : 169) * Math.sin(a));
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 主役のマーク（カードの高さ 230px。積層のずれも含め半径約150px 以内に収まる）
+    factoryMark(ctx, S / 2 + 10, S / 2 - 2, 230);
+
+    if (guides) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.setLineDash([6, 6]); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(S / 2, S / 2, S / 2 - 1, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /**
+   * ダークメッシュ（放射グラデーションの重ね）＋サイバーグリッド＋遠近感のある床グリッドの背景。
+   * blobs: [x, y, 半径, 色] / vx, vy: 床グリッドの消失点
+   */
+  function cyberBackground(ctx, W, H, blobs, vx, vy) {
+    ctx.fillStyle = C.navy0; ctx.fillRect(0, 0, W, H);
+    for (const [x, y, r, c] of blobs) {
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    }
+    grid(ctx, W, H, 25, 'rgba(56,189,248,0.06)', 'rgba(56,189,248,0.14)', 4);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(56,189,248,0.18)'; ctx.lineWidth = 1;
+    for (let i = -14; i <= 14; i++) {
+      ctx.beginPath(); ctx.moveTo(vx, vy); ctx.lineTo(vx + i * 140, H + 40); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ───────────── ヘッダー（1500×500） ─────────────
+  // スマホの X アプリではアイコンが左下（おおよそ x:0〜280, y:340〜500）に重なり、上下も端末によって約60pxずつ切れるため、
+  // 文字・バッジは x:300 以降・y:70〜420 の範囲に置く
+  const AVATAR_ZONE = { x: 0, y: 340, w: 280, h: 160 };
+  const SAFE = { top: 70, bottom: 430 };
+
+  function drawHeader(canvas, scale, guides) {
+    const W = 1500, H = 500;
+    canvas.width = W * scale; canvas.height = H * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+    cyberBackground(ctx, W, H, [
+      [260, 120, 520, 'rgba(30,58,138,0.55)'],
+      [1180, 380, 560, 'rgba(14,116,144,0.35)'],
+      [760, 520, 420, 'rgba(251,191,36,0.10)'],
+      [1400, 40, 360, 'rgba(239,68,68,0.12)'],
+    ], 1120, 250);
+
+    // 左端の縦のアクセントライン（アイコンの領域の上で止める）
+    const bar = ctx.createLinearGradient(0, SAFE.top, 0, 330);
+    bar.addColorStop(0, C.amber); bar.addColorStop(1, C.red);
+    ctx.fillStyle = bar; ctx.fillRect(300, 92, 6, 214);
+
+    // ── テキストブロック（x:330〜） ──
+    const X = 330;
+    ctx.textBaseline = 'alphabetic';
+
+    ctx.font = `900 22px ${FONT}`;
+    ctx.fillStyle = C.sky;
+    ctx.fillText('POKECA FACTORY', X, 112);
+    const enW = ctx.measureText('POKECA FACTORY').width;
+    ctx.font = `900 18px ${FONT}`;
+    ctx.fillStyle = C.slate;
+    ctx.fillText('／ ポケトリー', X + enW + 14, 112);
+
+    // サイト名（大見出し）
+    ctx.save();
+    // 右の設計図（x:1040〜）に重ならないよう、幅 600px に収まる大きさで描く
+    const title = 'ポケカファクトリー';
+    let size = 80;
+    ctx.font = `900 ${size}px ${FONT}`;
+    while (ctx.measureText(title).width > 600 && size > 40) ctx.font = `900 ${--size}px ${FONT}`;
+    const tg = ctx.createLinearGradient(X, 130, X, 210);
+    tg.addColorStop(0, '#ffffff'); tg.addColorStop(1, '#fde68a');
+    ctx.shadowColor = 'rgba(251,191,36,0.35)'; ctx.shadowBlur = 24;
+    ctx.fillStyle = tg;
+    ctx.fillText(title, X, 206);
+    ctx.restore();
+
+    // サブタイトル
+    ctx.font = `900 26px ${FONT}`;
+    ctx.fillStyle = C.white;
+    ctx.fillText('対戦で勝つためのデッキ研究＆パーツ調達工房', X, 258);
+    ctx.font = `700 20px ${FONT}`;
+    ctx.fillStyle = C.slate;
+    ctx.fillText('（略称：ポケトリー）', X, 292);
+
+    // バッジ（2段。アイコン領域より右・安全範囲の内側）
+    const badges = [
+      ['現行スタンダード（H・I・J）特化', C.amber],
+      ['ジムバトル優勝レシピ＆回し方', C.sky],
+      ['パーツ最安値一括比較', C.emerald],
+    ];
+    ctx.font = `900 19px ${FONT}`;
+    let bx = X, by = 322;
+    for (const [label, color] of badges) {
+      const tw = ctx.measureText(label).width;
+      const bw = tw + 46, bh = 40;
+      if (bx + bw > 960) { bx = X; by += bh + 12; }
+      roundRect(ctx, bx, by, bw, bh, 10);
+      ctx.fillStyle = 'rgba(15,23,42,0.85)'; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.arc(bx + 18, by + bh / 2, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = C.white;
+      ctx.fillText(label, bx + 32, by + 27);
+      bx += bw + 12;
+    }
+
+    // ── 右側: 60枚デッキの設計図（10×6 のカードスロット） ──
+    drawBlueprint(ctx, 1062, 100);
+
+    if (guides) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(239,68,68,0.18)';
+      ctx.fillRect(AVATAR_ZONE.x, AVATAR_ZONE.y, AVATAR_ZONE.w, AVATAR_ZONE.h);
+      ctx.strokeStyle = 'rgba(239,68,68,0.9)'; ctx.lineWidth = 2;
+      ctx.strokeRect(AVATAR_ZONE.x + 1, AVATAR_ZONE.y + 1, AVATAR_ZONE.w - 2, AVATAR_ZONE.h - 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.font = `900 14px ${FONT}`;
+      ctx.fillText('スマホ版のアイコン位置', 16, AVATAR_ZONE.y + 26);
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.setLineDash([8, 8]);
+      for (const y of [SAFE.top - 10, SAFE.bottom + 10]) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+      ctx.restore();
+    }
+  }
+
+  /** 右側のグラフィック: 60枚デッキの設計図（x, y は左上。用紙は y-18〜y+330 に収まる） */
+  function drawBlueprint(ctx, x, y) {
+    const cols = 10, rows = 6, cw = 30, ch = 40, gap = 6;
+    const gw = cols * cw + (cols - 1) * gap, gh = rows * ch + (rows - 1) * gap;
+    const pad = 18;
+
+    // 設計図の用紙
+    ctx.save();
+    roundRect(ctx, x - pad, y - pad, gw + pad * 2, gh + 8 + 52 + pad, 14);
+    ctx.fillStyle = 'rgba(8,47,73,0.55)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(56,189,248,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    // 用紙のタイトル
+    ctx.font = `900 13px ${FONT}`; ctx.fillStyle = C.sky;
+    ctx.fillText('DECK BLUEPRINT  60 / 60', x, y - 4);
+    ctx.textAlign = 'right'; ctx.fillStyle = C.amber;
+    ctx.fillText('REG. H・I・J', x + gw, y - 4);
+    ctx.textAlign = 'left';
+
+    // カードスロット（ポケモン 17・トレーナーズ 33・エネルギー 10 の配分で色分け）
+    const kinds = [];
+    for (let i = 0; i < 60; i++) kinds.push(i < 17 ? 'p' : i < 50 ? 't' : 'e');
+    const color = { p: C.amber, t: C.sky, e: C.emerald };
+    kinds.forEach((k, i) => {
+      const cx = x + (i % cols) * (cw + gap), cy = y + 8 + Math.floor(i / cols) * (ch + gap);
+      roundRect(ctx, cx, cy, cw, ch, 4);
+      // 数枚だけ「空きスロット（不足パーツ）」として点線にする
+      const missing = [8, 23, 37, 44].includes(i);
+      if (missing) {
+        ctx.setLineDash([4, 3]); ctx.strokeStyle = 'rgba(239,68,68,0.9)'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(239,68,68,0.9)'; ctx.font = `900 16px ${FONT}`; ctx.textAlign = 'center';
+        ctx.fillText('+', cx + cw / 2, cy + ch / 2 + 6); ctx.textAlign = 'left';
+      } else {
+        const g = ctx.createLinearGradient(cx, cy, cx, cy + ch);
+        g.addColorStop(0, color[k]); g.addColorStop(1, 'rgba(15,23,42,0.9)');
+        ctx.globalAlpha = 0.85; ctx.fillStyle = g; ctx.fill(); ctx.globalAlpha = 1;
+        ctx.strokeStyle = 'rgba(248,250,252,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+        // カードの中の小さな窓（イラスト枠）
+        ctx.fillStyle = 'rgba(15,23,42,0.55)';
+        ctx.fillRect(cx + 5, cy + 7, cw - 10, ch * 0.4);
+      }
+    });
+
+    // 寸法線と凡例
+    const gy = y + 8 + gh + 22;
+    dimension(ctx, x, gy, x + gw, gy, '60 CARDS', 'rgba(56,189,248,0.9)');
+    const legend = [['POKÉMON', C.amber], ['TRAINERS', C.sky], ['ENERGY', C.emerald], ['MISSING', C.red]];
+    ctx.font = `700 10px ${FONT}`;
+    const step = gw / legend.length;
+    legend.forEach(([label, c], i) => {
+      const lx = x + i * step;
+      ctx.fillStyle = c; ctx.fillRect(lx, gy + 10, 9, 9);
+      ctx.fillStyle = C.white; ctx.fillText(label, lx + 14, gy + 19);
+    });
+    ctx.restore();
+  }
+
+  // ───────────── 告知バナー（1200×675・16:9） ─────────────
+  // X のタイムラインでは 16:9 の画像は切れずに表示される。文字は四辺から 60px 以上内側に置く
+  const TIERS = [
+    { label: 'TIER 1', cards: 2, frame: ['#fde68a', '#fbbf24', '#ef4444'], text: '#0f172a' },
+    { label: 'TIER 2', cards: 5, frame: ['#e2e8f0', '#94a3b8', '#2563eb'], text: '#0f172a' },
+    { label: 'TIER 3', cards: 6, frame: ['#fdba74', '#b45309', '#059669'], text: '#f8fafc' },
+  ];
+
+  function drawBanner(canvas, scale) {
+    const W = 1200, H = 675;
+    canvas.width = W * scale; canvas.height = H * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+    cyberBackground(ctx, W, H, [
+      [180, 140, 520, 'rgba(30,58,138,0.55)'],
+      [960, 520, 560, 'rgba(14,116,144,0.32)'],
+      [620, 700, 420, 'rgba(251,191,36,0.10)'],
+      [1150, 60, 340, 'rgba(239,68,68,0.13)'],
+    ], 900, 360);
+
+    // ── 左側: ロゴと見出し ──
+    const X = 70;
+    factoryMark(ctx, X + 44, 118, 96);
+    ctx.textBaseline = 'alphabetic';
+    ctx.font = `900 20px ${FONT}`; ctx.fillStyle = C.sky;
+    ctx.fillText('POKECA FACTORY', X + 104, 96);
+    ctx.save();
+    const title = 'ポケカファクトリー';
+    let size = 58;
+    ctx.font = `900 ${size}px ${FONT}`;
+    while (ctx.measureText(title).width > 470 && size > 36) ctx.font = `900 ${--size}px ${FONT}`;
+    const tg = ctx.createLinearGradient(0, 100, 0, 160);
+    tg.addColorStop(0, '#ffffff'); tg.addColorStop(1, '#fde68a');
+    ctx.shadowColor = 'rgba(251,191,36,0.35)'; ctx.shadowBlur = 20;
+    ctx.fillStyle = tg; ctx.fillText(title, X + 104, 156);
+    ctx.restore();
+    ctx.font = `900 20px ${FONT}`; ctx.fillStyle = C.slate;
+    ctx.fillText('（ポケトリー）対戦で勝つためのデッキ研究＆パーツ調達工房', X, 214);
+
+    // 区切り線
+    const line = ctx.createLinearGradient(X, 0, X + 540, 0);
+    line.addColorStop(0, C.amber); line.addColorStop(1, 'rgba(251,191,36,0)');
+    ctx.fillStyle = line; ctx.fillRect(X, 238, 540, 3);
+
+    // 3つの見出し（番号つきのパネル）
+    const heads = [
+      ['01', '現行スタン（H・I・J）特化', 'スタン落ちの心配なし・大会で使えるカードだけ', C.amber],
+      ['02', 'ジムバトル優勝レシピ＆立ち回り', '60枚レシピと序盤〜終盤の回し方を解説', C.sky],
+      ['03', '不足パーツ最安値一括検索', '楽天市場・Yahoo!ショッピングを毎日比較', C.emerald],
+    ];
+    heads.forEach(([num, head, sub, color], i) => {
+      const y = 268 + i * 112, h = 92, w = 560;
+      roundRect(ctx, X, y, w, h, 14);
+      ctx.fillStyle = 'rgba(15,23,42,0.82)'; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke();
+      roundRect(ctx, X + 16, y + 18, 56, 56, 10);
+      ctx.fillStyle = color; ctx.fill();
+      ctx.font = `900 24px ${FONT}`; ctx.fillStyle = C.ink; ctx.textAlign = 'center';
+      ctx.fillText(num, X + 44, y + 55); ctx.textAlign = 'left';
+      let hs = 30;
+      ctx.font = `900 ${hs}px ${FONT}`;
+      while (ctx.measureText(head).width > w - 110 && hs > 20) ctx.font = `900 ${--hs}px ${FONT}`;
+      ctx.fillStyle = C.white; ctx.fillText(head, X + 90, y + 46);
+      ctx.font = `700 16px ${FONT}`; ctx.fillStyle = C.slate;
+      ctx.fillText(sub, X + 90, y + 74);
+    });
+
+    // ── 右側: Tier ボード（Tier1〜3 のカードフレーム） ──
+    drawTierBoard(ctx, 690, 80);
+  }
+
+  /** 右側のグラフィック: Tier1〜3 の段にカードフレームを並べたボード（x, y は左上。幅 450・高さ 520） */
+  function drawTierBoard(ctx, x, y) {
+    const w = 450, h = 520, pad = 20;
+    ctx.save();
+    roundRect(ctx, x, y, w, h, 18);
+    ctx.fillStyle = 'rgba(8,47,73,0.5)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(56,189,248,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.font = `900 14px ${FONT}`; ctx.fillStyle = C.sky;
+    ctx.fillText('META TIER BOARD', x + pad, y + 32);
+    ctx.textAlign = 'right'; ctx.fillStyle = C.amber;
+    ctx.fillText('REG. H・I・J', x + w - pad, y + 32);
+    ctx.textAlign = 'left';
+
+    const rowH = 146, cw = 52, ch = 72, gap = 8;
+    TIERS.forEach((t, i) => {
+      const ry = y + 52 + i * (rowH + 6);
+      roundRect(ctx, x + pad, ry, w - pad * 2, rowH, 12);
+      const rg = ctx.createLinearGradient(x, 0, x + w, 0);
+      rg.addColorStop(0, t.frame[1] + '40'); rg.addColorStop(1, 'rgba(15,23,42,0.2)');
+      ctx.fillStyle = rg; ctx.fill();
+      ctx.strokeStyle = t.frame[1] + 'aa'; ctx.lineWidth = 1.5; ctx.stroke();
+
+      // Tier バッジ
+      roundRect(ctx, x + pad + 12, ry + 14, 96, 34, 8);
+      const bg = ctx.createLinearGradient(x + pad + 12, ry + 14, x + pad + 108, ry + 48);
+      bg.addColorStop(0, t.frame[0]); bg.addColorStop(0.5, t.frame[1]); bg.addColorStop(1, t.frame[2]);
+      ctx.fillStyle = bg; ctx.fill();
+      ctx.font = `900 17px ${FONT}`; ctx.fillStyle = t.text; ctx.textAlign = 'center';
+      ctx.fillText(t.label, x + pad + 60, ry + 38); ctx.textAlign = 'left';
+
+      // カードフレーム（段の枚数ぶん。Tier1 は大きめに少し傾けて並べる）
+      const big = i === 0;
+      const fw = big ? cw * 1.35 : cw, fh = big ? ch * 1.35 : ch;
+      const startX = big ? x + pad + 130 : x + pad + 14;
+      const fy = big ? ry + (rowH - fh) / 2 : ry + 60;
+      for (let k = 0; k < t.cards; k++) {
+        const fx = startX + k * (big ? fw + 12 : cw + gap);
+        ctx.save();
+        ctx.translate(fx + fw / 2, fy + fh / 2);
+        if (big) ctx.rotate((k - 0.5) * 0.08);
+        roundRect(ctx, -fw / 2, -fh / 2, fw, fh, 6);
+        const face = ctx.createLinearGradient(0, -fh / 2, 0, fh / 2);
+        face.addColorStop(0, '#16213a'); face.addColorStop(1, '#0b1224');
+        ctx.fillStyle = face; ctx.fill();
+        const fg = ctx.createLinearGradient(-fw / 2, -fh / 2, fw / 2, fh / 2);
+        fg.addColorStop(0, t.frame[0]); fg.addColorStop(0.5, t.frame[1]); fg.addColorStop(1, t.frame[2]);
+        ctx.lineWidth = big ? 3 : 2; ctx.strokeStyle = fg; ctx.stroke();
+        // 中のイラスト枠と設計図ライン
+        ctx.fillStyle = t.frame[1] + '55';
+        ctx.fillRect(-fw / 2 + 6, -fh / 2 + 8, fw - 12, fh * 0.42);
+        ctx.strokeStyle = 'rgba(56,189,248,0.45)'; ctx.lineWidth = 1;
+        for (let l = 0; l < 3; l++) {
+          const ly = fh * 0.02 + l * fh * 0.12;
+          ctx.beginPath(); ctx.moveTo(-fw / 2 + 6, ly); ctx.lineTo(fw / 2 - 6 - (l === 2 ? fw * 0.3 : 0), ly); ctx.stroke();
+        }
+        ctx.restore();
+      }
+      if (big) {
+        // Tier1 の段の右側に注記
+        const nx = startX + 2 * (fw + 12) + 4;
+        ctx.font = `900 13px ${FONT}`; ctx.fillStyle = C.white;
+        ctx.fillText('60 CARDS', nx, ry + 64);
+        ctx.font = `900 13px ${FONT}`; ctx.fillStyle = C.slate;
+        ctx.fillText('レシピ・最安値', nx, ry + 86);
+        ctx.fillText('つき', nx, ry + 106);
+      }
+    });
+    ctx.restore();
+  }
+
+  // ───────────── 描画・保存 ─────────────
+  const icon = $('icon'), header = $('header'), banner = $('banner');
+  const scale = () => Number(scaleEl.value) || 2;
+  function render() {
+    drawIcon(icon, scale(), guidesEl.checked);
+    drawHeader(header, scale(), guidesEl.checked);
+    drawBanner(banner, scale());
+  }
+
+  /** 目安線を消して描き直してから保存し、表示を元にもどす */
+  function download(canvas, draw, name) {
+    draw(canvas, scale(), false);
+    canvas.toBlob((blob) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${name}-${canvas.width}x${canvas.height}.png`;
+      document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      render();
+    }, 'image/png');
+  }
+
+  $('dl-icon').addEventListener('click', () => download(icon, drawIcon, 'pokeca-factory-icon'));
+  $('dl-header').addEventListener('click', () => download(header, drawHeader, 'pokeca-factory-header'));
+  $('dl-banner').addEventListener('click', () => download(banner, drawBanner, 'pokeca-factory-banner'));
+  scaleEl.addEventListener('change', render);
+  guidesEl.addEventListener('change', render);
+
+  // Web フォントを読み込んでから描画する。
+  // Google Fonts の Noto Sans JP は文字ごとのサブセットに分かれていて、使う文字のサブセットしかダウンロードされない。
+  // Canvas の文字は DOM にないため、そのままでは漢字のサブセットが読み込まれず明朝体などにフォールバックする。
+  // そこで一度描画して実際に描く文字を集め、その文字を指定して 700・900 の両方を読み込んでから描き直す
+  const usedChars = new Set();
+  const fillText = CanvasRenderingContext2D.prototype.fillText;
+  CanvasRenderingContext2D.prototype.fillText = function (text, ...rest) {
+    for (const ch of String(text)) usedChars.add(ch);
+    return fillText.call(this, text, ...rest);
+  };
+  render();
+  const chars = [...usedChars].join('');
+  Promise.all(['700', '900'].map((w) => document.fonts.load(`${w} 24px "Noto Sans JP"`, chars)))
+    .catch(() => {}) // 読み込めない環境（オフライン等）ではシステムのゴシック体で描く
+    .then(() => document.fonts.ready)
+    .then(() => {
+      render();
+    });
+})();
+</script>
+</body>
+</html>

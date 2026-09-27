@@ -54,6 +54,23 @@ npm run update-prices -- --ids=<追加したid>  # 販売価格・画像・Yahoo
 
 楽天で「カード名・番号・弾記号」をすべて含む出品が3件以上あるカードだけが追加されます（`--min-hits=` で変更可）。既存と id・型番が重複するカードは追加されません。買取目安は、未設定（0）の場合に update-prices が販売最安値の約62%で自動設定します。
 
+### 環境の頻出カードを自動で追加（ポケカブック）
+
+```
+npm run sync-trending -- --dry-run   # 採用ランキング・急上昇・追加候補を表示するだけ
+npm run sync-trending                # 追加候補のシードを作り、add-cards → update-prices まで実行
+```
+
+[ポケカブックのデッキレシピ一覧](https://pokecabook.com/archives/category/deck-recipe)（既定 2ページ）の記事から公式デッキコードを集め、公式のデッキページでカードを集計します。
+
+- 記事の見出し（「〇〇環境」「レギュレーション変更前」）で各デッキの環境を判定し、**現環境のデッキだけ**で採用率を出します。急上昇は前環境からの採用率の伸びです。
+- 追加候補は、未登録カードのうち採用の多い上位（`--top=` 既定 15、`--min-decks=` 既定 3）と、優先デッキ（`PRIORITY_DECKS`：ぷにぷにサークル・メガミミロップ）の未登録パーツすべてです。基本エネルギーは除きます。
+- 版は公式カード検索の「スタンダード」絞り込みで選ぶため、G以前の版は自動で除外されます。デッキで使われた版と効果テキストが同じ版のうち、最低レアリティの版を選びます。
+- マークは弾から決めます（スクリプト内の `SET_MARKS`）。新しい弾が出たら追記してください。未登録の弾の版は選ばれません。
+- 結果は `scripts/seed/trending-cards.json` に保存され、add-cards が楽天の出品で型番を確認してから追加します。
+
+デッキページ・カード詳細は `.cache/`（Git 管理外）に保存し、同じサイトへのリクエストは1秒以上あけます。
+
 ## 価格の自動更新（GitHub Actions）
 
 `.github/workflows/update-prices.yml` が毎日 日本時間 午前4時7分に `npm run update-prices` を実行し、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。

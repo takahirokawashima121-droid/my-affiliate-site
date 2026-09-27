@@ -1,0 +1,20 @@
+{
+  "_comment": [
+    "急上昇デッキのキーカード（最低レアリティ・初収録の版）。npm run add-cards -- --seed=scripts/seed/meta-rising-cards.json で追加する。",
+    "型番は楽天の出品タイトルで確認済み。依頼リストから修正: ヤドン/ヤドキング SV7 044・045 → 038・039、フーディン系統 SV8 → SV6（047〜049）、ユンゲラー U → C、ノココッチ U → R。",
+    "ノココッチ・ノコッチの 057/071・056/071 は SV2P（G）にも同じ番号があるため、H の SV5K 版であることを弾記号で確認して登録。",
+    "ぷにぷにサークルは H/I/J の出品を確認できないため除外。"
+  ],
+  "cards": [
+    { "id": "slowpoke-c-sv7-038", "name": "ヤドン", "rarity": "C", "cardNumber": "038/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "ヤドキング", "role": "たねポケモン" },
+    { "id": "slowking-u-sv7-039", "name": "ヤドキング", "rarity": "U", "cardNumber": "039/102", "expansionCode": "SV7", "regulationMark": "H", "deck": "ヤドキング", "role": "1進化" },
+    { "id": "talonflame-ex-rr-m6-062", "name": "ファイアローex", "rarity": "RR", "cardNumber": "062/076", "expansionCode": "M6", "regulationMark": "J", "deck": "ファイアローex", "role": "アタッカー" },
+    { "id": "dunsparce-c-sv5k-056", "name": "ノコッチ", "rarity": "C", "cardNumber": "056/071", "expansionCode": "SV5K", "regulationMark": "H", "deck": "汎用", "role": "たねポケモン" },
+    { "id": "dudunsparce-r-sv5k-057", "name": "ノココッチ", "rarity": "R", "cardNumber": "057/071", "expansionCode": "SV5K", "regulationMark": "H", "deck": "汎用", "role": "1進化（ドロー要員）" },
+    { "id": "abra-c-sv6-047", "name": "ケーシィ", "rarity": "C", "cardNumber": "047/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "フーディン", "role": "たねポケモン" },
+    { "id": "kadabra-c-sv6-048", "name": "ユンゲラー", "rarity": "C", "cardNumber": "048/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "フーディン", "role": "1進化" },
+    { "id": "alakazam-r-sv6-049", "name": "フーディン", "rarity": "R", "cardNumber": "049/101", "expansionCode": "SV6", "regulationMark": "H", "deck": "フーディン", "role": "2進化アタッカー" },
+    { "id": "buneary-c-m2-071", "name": "ミミロル", "rarity": "C", "cardNumber": "071/080", "expansionCode": "M2", "regulationMark": "I", "deck": "メガミミロップex", "role": "たねポケモン" },
+    { "id": "mega-lopunny-ex-rr-m2-072", "name": "メガミミロップex", "rarity": "RR", "cardNumber": "072/080", "expansionCode": "M2", "regulationMark": "I", "deck": "メガミミロップex", "role": "アタッカー" }
+  ]
+}

@@ -6,6 +6,7 @@ import CardImage from '../../components/CardImage.astro';
 import CardItem from '../../components/CardItem.astro';
 import CardTags from '../../components/CardTags.astro';
 import AffiliateButton from '../../components/AffiliateButton.astro';
+import { SALE_PRIMARY, SALE_SECONDARY } from '../../utils/buttonStyles';
 import AffiliatePixels from '../../components/AffiliatePixels.astro';
 import MallSearchButtons from '../../components/MallSearchButtons.astro';
 import CompareShopLinks from '../../components/CompareShopLinks.astro';
@@ -184,10 +185,10 @@ const jsonLd = {
             <!-- モール別の価格（安い方に「最安値」ラベル。在庫のある側の購入ボタンを目立たせる） -->
             <ul class="mt-4 grid grid-cols-2 gap-2">
               {mallPanels.map((m) => (
-                <li class:list={['flex flex-col rounded-xl border p-3', m.offer && isBest(m.offer.price) ? 'border-rose-500/40 bg-rose-500/10' : 'border-slate-700/60 bg-slate-800/60']}>
+                <li class:list={['flex flex-col rounded-xl border p-3', m.offer && isBest(m.offer.price) ? 'border-amber-500/40 bg-amber-500/[0.07]' : 'border-slate-700/60 bg-slate-800/60']}>
                   <p class="flex items-center justify-between gap-1 text-xs font-bold text-slate-300">
                     {m.name}
-                    {m.offer && isBest(m.offer.price) && <span class="rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] text-slate-100">最安値</span>}
+                    {m.offer && isBest(m.offer.price) && <span class="rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] text-slate-950">最安値</span>}
                   </p>
                   {m.offer ? (
                     <Fragment>
@@ -201,8 +202,8 @@ const jsonLd = {
                         data-aff-type="sale"
                         data-aff-item={label}
                         class:list={[
-                          'mt-2 rounded-lg px-2 py-2 text-center text-sm font-bold transition',
-                          isBest(m.offer.price) ? 'bg-rose-600 text-slate-100 shadow-sm hover:bg-rose-700' : 'border border-rose-500/40 bg-slate-900 text-rose-400 hover:bg-rose-500/15',
+                          'mt-2 rounded-lg px-2 py-2 text-center text-sm font-bold leading-tight transition focus-visible:outline-2 focus-visible:outline-offset-2',
+                          isBest(m.offer.price) ? SALE_PRIMARY : SALE_SECONDARY,
                         ]}
                       >
                         {isBest(m.offer.price) ? '最安値で購入する' : 'このショップで購入'}

@@ -1,5 +1,7 @@
 ---
 // 「最安値で購入する」「最高値で買い取ってもらう」ボタン（別タブで開く）
+import { SALE_PRIMARY, SWITCH_BASE as switchBase } from '../utils/buttonStyles';
+
 interface Props {
   kind: 'sale' | 'buyback' | 'bulk';
   href: string;
@@ -14,11 +16,9 @@ interface Props {
 const { kind, href, shop, size = 'sm', item, label } = Astro.props;
 const network = href.includes('a8.net') ? 'a8' : href.includes('moshimo.com') ? 'moshimo' : undefined;
 
-// 工房の計器スイッチ風：上端のハイライト + 下端の影で押し込めるボタンに見せる（押すと 1px 沈む）
-const switchBase = 'shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_2px_0_rgb(0_0_0/0.45)] active:translate-y-px active:shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_1px_0_rgb(0_0_0/0.45)]';
 const styles = {
   // メイン：作業灯のアンバー（濃い文字）
-  sale: { label: '最安値で購入する', color: `${switchBase} bg-amber-500 text-slate-950 hover:bg-amber-400 focus-visible:outline-amber-400`, led: 'bg-slate-950/70' },
+  sale: { label: '最安値で購入する', color: SALE_PRIMARY, led: 'bg-slate-950/70' },
   // サブ：ダークサーフェス + エメラルドの細枠（購入ボタンと並べても主張しすぎない）
   buyback: {
     label: '最高値で買い取ってもらう',

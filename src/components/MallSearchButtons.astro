@@ -3,6 +3,7 @@
 // ※Bee本舗通販店（A8.net）は下段の CompareShopLinks に表示する
 import { MALLS, moshimoClickUrl, moshimoImpressionUrl, type MallKey } from '../utils/moshimo';
 import { mercariSearchUrl } from '../config/affiliate';
+import { SWITCH_BASE } from '../utils/buttonStyles';
 
 interface Props {
   /** 検索キーワード（cardSearchKeyword() の結果。例: 「ナンジャモ SAR 096/071 ポケカ」） */
@@ -13,20 +14,21 @@ interface Props {
 
 const { keyword, shopKeyword } = Astro.props;
 
-const malls: { mall: MallKey; color: string }[] = [
-  { mall: 'rakuten', color: 'bg-[#bf0000] hover:bg-[#990000] focus-visible:outline-[#bf0000]' },
-  { mall: 'yahoo', color: 'bg-[#ff0033] hover:bg-[#d6002b] focus-visible:outline-[#ff0033]' },
+// ボタンはダークサーフェスで統一し、各サービスのブランドカラーはランプ（左の丸）にだけ使う
+const malls: { mall: MallKey; led: string }[] = [
+  { mall: 'rakuten', led: 'bg-[#bf0000]' },
+  { mall: 'yahoo', led: 'bg-[#ff0033]' },
 ];
 
 const buttons = [
-  ...malls.map(({ mall, color }) => ({
+  ...malls.map(({ mall, led }) => ({
     href: moshimoClickUrl(mall, keyword),
     label: `${MALLS[mall].label}で探す`,
     icon: '',
     network: 'moshimo',
     shop: MALLS[mall].label,
     type: 'mall_search',
-    color,
+    led,
   })),
   {
     href: mercariSearchUrl(shopKeyword),
@@ -35,8 +37,7 @@ const buttons = [
     network: 'mercari',
     shop: 'メルカリ',
     type: 'mall_search',
-    // メルカリのブランドカラー（赤）。白文字が読めるよう red-600 以上の濃さにする
-    color: 'bg-red-600 hover:bg-red-700 focus-visible:outline-red-600',
+    led: 'bg-[#ff333f]',
   },
 ];
 ---
@@ -57,10 +58,11 @@ const buttons = [
         data-aff-type={b.type}
         data-aff-item={keyword}
         class:list={[
-          'flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-center text-base font-bold text-slate-100 shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2',
-          b.color,
+          SWITCH_BASE,
+          'flex items-center justify-center gap-2 rounded-lg border border-slate-600 bg-slate-800/80 px-4 py-3.5 text-center text-base font-bold text-slate-200 transition hover:border-amber-400/70 hover:text-amber-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-500',
         ]}
       >
+        <span class:list={['h-2 w-2 shrink-0 rounded-full', b.led]} aria-hidden="true"></span>
         {b.icon && <span aria-hidden="true">{b.icon}</span>}
         {b.label}
         <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">

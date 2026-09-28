@@ -16,7 +16,7 @@ const featured = columns.map((column) => ({ ...column, ...deckSummary(column, ca
 ---
 
 {featured.length > 0 && (
-  <section aria-labelledby="featured-decks" class="bg-lab-panel lab-corners mb-8 rounded-2xl border border-lab-600 p-4 text-white shadow-xl shadow-black/20 sm:p-6">
+  <section aria-labelledby="featured-decks" class="bg-lab-panel lab-corners mb-8 rounded-2xl border border-lab-600 p-4 text-slate-100 shadow-xl shadow-black/20 sm:p-6">
     <p class="font-mono text-[11px] font-bold tracking-widest text-gauge">LATEST GYM BATTLE WINNERS / AUTO-SORTED</p>
     <h2 id="featured-decks" class="mt-1 text-lg font-black sm:text-xl">
       <span aria-hidden="true">🏆</span> {title}
@@ -33,7 +33,7 @@ const featured = columns.map((column) => ({ ...column, ...deckSummary(column, ca
                 <time datetime={c.date} class="spec-tag border-lamp/60 bg-lamp/10 text-lamp">🏆 {c.date.replaceAll('-', '.')} 優勝</time>
                 {c.badges.map((b) => <span class={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
               </span>
-              <span class="mt-1.5 text-base font-black leading-snug text-white group-hover:text-lamp">{c.deckName}</span>
+              <span class="mt-1.5 text-base font-black leading-snug text-slate-100 group-hover:text-lamp">{c.deckName}</span>
               <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-300">{c.highlight}</span>
               {c.estimate > 0 && (
                 <span class="mt-1.5 font-mono text-[11px] text-slate-400">60枚の概算 <span class="text-sm font-bold tabular-nums text-gauge">{formatYen(c.estimate)}</span></span>
@@ -41,14 +41,14 @@ const featured = columns.map((column) => ({ ...column, ...deckSummary(column, ca
             </span>
           </a>
           <span class="mt-3 grid grid-cols-2 gap-2 text-xs font-black">
-            <a href={columnPath(c)} class="rounded-md border border-lab-600 px-2 py-2 text-center text-slate-200 transition hover:border-slate-300 hover:text-white">デッキ解説</a>
-            <a href={`${columnPath(c)}#deck-recipe`} class="rounded-md bg-lamp px-2 py-2 text-center text-slate-900 transition hover:bg-amber-300">⚡ パーツ一括調達</a>
+            <a href={columnPath(c)} class="rounded-md border border-lab-600 px-2 py-2 text-center text-slate-200 transition hover:border-slate-600 hover:text-slate-100">デッキ解説</a>
+            <a href={`${columnPath(c)}#deck-recipe`} class="rounded-md bg-lamp/90 px-2 py-2 text-center text-slate-950 transition hover:bg-amber-400">⚡ パーツ一括調達</a>
           </span>
         </li>
       ))}
     </ul>
 
-    <a href="/columns/" class="mt-4 flex items-center justify-center rounded-lg border border-lamp/60 px-4 py-3 text-sm font-black text-lamp transition hover:bg-lamp hover:text-slate-900 sm:text-base">
+    <a href="/columns/" class="mt-4 flex items-center justify-center rounded-lg border border-lamp/60 px-4 py-3 text-sm font-black text-lamp transition hover:bg-lamp/90 hover:text-slate-950 sm:text-base">
       優勝デッキ解説・コラム一覧を見る（全{DECK_COLUMNS.length}記事） →
     </a>
   </section>

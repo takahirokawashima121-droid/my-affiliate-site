@@ -11,7 +11,7 @@ const { title, description, pubDate, heroImage, tags } = post.data;
 const href = `/blog/${post.id}/`;
 ---
 
-<article class="group flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white transition hover:shadow-md">
+<article class="group flex flex-col overflow-hidden rounded-xl border border-slate-700/60 bg-slate-900 transition hover:shadow-md">
   {heroImage && (
     <a href={href} tabindex="-1" aria-hidden="true">
       <img
@@ -26,16 +26,16 @@ const href = `/blog/${post.id}/`;
     </a>
   )}
   <div class="flex flex-1 flex-col p-5">
-    <time datetime={pubDate.toISOString()} class="text-xs text-gray-500">{formatDate(pubDate)}</time>
-    <h2 class="mt-1 text-lg font-bold leading-snug text-gray-900">
-      <a href={href} class="group-hover:text-brand-600">{title}</a>
+    <time datetime={pubDate.toISOString()} class="text-xs text-slate-400">{formatDate(pubDate)}</time>
+    <h2 class="mt-1 text-lg font-bold leading-snug text-slate-100">
+      <a href={href} class="group-hover:text-sky-400">{title}</a>
     </h2>
-    <p class="mt-2 line-clamp-3 text-sm text-gray-600">{description}</p>
+    <p class="mt-2 line-clamp-3 text-sm text-slate-400">{description}</p>
     {tags.length > 0 && (
       <ul class="mt-auto flex flex-wrap gap-2 pt-4">
         {tags.map((tag) => (
           <li>
-            <a href={`/tags/${tag}/`} class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600 hover:bg-brand-50 hover:text-brand-700">#{tag}</a>
+            <a href={`/tags/${tag}/`} class="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs text-slate-400 hover:bg-sky-500/15 hover:text-sky-300">#{tag}</a>
           </li>
         ))}
       </ul>

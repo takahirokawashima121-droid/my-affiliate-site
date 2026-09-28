@@ -22,7 +22,7 @@ const title = page.currentPage === 1 ? 'ポケカお役立ちコラム一覧' : 
 
 <BaseLayout title={title} description={`ポケモンカードの買取・保管・レアリティ・購入方法など、${SITE.title}のお役立ちコラム一覧です。`}>
   <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: 'コラム一覧', href: '/blog/' }]} />
-  <h1 class="mb-8 text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
+  <h1 class="mb-8 text-2xl font-bold text-slate-100 sm:text-3xl">{title}</h1>
   <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
     {page.data.map((post, i) => <PostCard post={post} eager={i < 3} />)}
   </div>

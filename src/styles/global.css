@@ -10,16 +10,19 @@
   --color-brand-600: #2563eb;
   --color-brand-700: #1d4ed8;
   /* 工房（ラボ）テーマ：ダークスレートの下地 + 作業灯のアンバー + 計器のシアン */
-  --color-lab-950: #080b12;
+  --color-lab-950: #0b0f19;
   --color-lab-900: #0e131d;
   --color-lab-800: #161d2a;
   --color-lab-700: #232d3f;
   --color-lab-600: #33405a;
-  --color-lamp: #fbbf24;
-  --color-gauge: #22d3ee;
+  /* 眩しすぎない作業灯のアンバー・計器のシアン（amber-400/cyan-400 より彩度と明度を少し落とす） */
+  --color-lamp: #f0a830;
+  --color-gauge: #3fc1d6;
 }
 
 html {
+  /* フォーム部品・スクロールバーもダークで描画する */
+  color-scheme: dark;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
@@ -33,12 +36,12 @@ html {
   background-size: 28px 28px;
 }
 
-/* 作業台：本文を載せる明るいパネル（ごく薄い設計図の方眼。読みやすさを優先して明るい面にする） */
+/* 作業台：本文を載せるパネル。床と同じダークトーンで、方眼だけ少し濃くして面を区切る（明度差で目が疲れないように） */
 @utility bg-workbench {
-  background-color: #f6f7f9;
+  background-color: rgb(15 23 42 / 0.55);
   background-image:
-    linear-gradient(rgb(15 23 42 / 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(15 23 42 / 0.035) 1px, transparent 1px);
+    linear-gradient(rgb(148 163 184 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 184 / 0.045) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 

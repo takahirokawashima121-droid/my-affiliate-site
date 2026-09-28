@@ -50,29 +50,29 @@ if (imageUrl) {
       loading={eager ? 'eager' : 'lazy'}
       fetchpriority={eager ? 'high' : undefined}
       decoding="async"
-      class="absolute inset-0 h-full w-full bg-white object-contain"
+      class="absolute inset-0 h-full w-full bg-slate-900 object-contain"
       onerror={onImageError}
     />
   )}
 
   <!-- プレースホルダー（画像なし・読み込み失敗時） -->
   <div
-    class="absolute inset-0 rounded-lg bg-gradient-to-br from-amber-300 via-red-400 to-blue-500 p-[3%]"
+    class="absolute inset-0 rounded-lg bg-gradient-to-br from-amber-400 via-red-400 to-blue-500 p-[3%]"
     role="img"
     aria-label={`${alt}（画像準備中）`}
     hidden={Boolean(imageUrl)}
   >
-    <div class="flex h-full w-full flex-col items-center justify-between rounded-[6%] bg-gradient-to-b from-slate-800 to-slate-950 p-[8%] text-center text-white">
+    <div class="flex h-full w-full flex-col items-center justify-between rounded-[6%] bg-gradient-to-b from-slate-800 to-slate-950 p-[8%] text-center text-slate-100">
       {rarity !== '-' ? <span class={`rounded px-[6%] py-[1.5%] text-[9cqw] font-bold tracking-wide ${rarityClass(rarity)}`}>{rarity}</span> : <span></span>}
       <div class="flex flex-col items-center gap-[4cqw]">
-        <svg viewBox="0 0 24 24" class="h-[18cqw] w-[18cqw] text-white/30" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+        <svg viewBox="0 0 24 24" class="h-[18cqw] w-[18cqw] text-slate-100/30" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
           <circle cx="12" cy="12" r="9"></circle>
           <path d="M3 12h6m6 0h6"></path>
           <circle cx="12" cy="12" r="3"></circle>
         </svg>
         <span class="line-clamp-3 text-[11cqw] leading-tight font-bold break-words">{name}</span>
       </div>
-      <span class="font-mono text-[8cqw] text-white/70">[{cardModel(card)}]</span>
+      <span class="font-mono text-[8cqw] text-slate-100/70">[{cardModel(card)}]</span>
     </div>
   </div>
 </div>

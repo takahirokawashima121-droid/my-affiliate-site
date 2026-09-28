@@ -13,8 +13,8 @@ const { title, description } = Astro.props.frontmatter;
 <BaseLayout title={title} description={description}>
   <div class="mx-auto max-w-3xl">
     <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: title, href: Astro.url.pathname }]} />
-    <h1 class="mb-8 text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
-    <div class="prose prose-gray max-w-none prose-a:text-brand-600">
+    <h1 class="mb-8 text-2xl font-bold text-slate-100 sm:text-3xl">{title}</h1>
+    <div class="prose prose-invert max-w-none prose-a:text-sky-400">
       <slot />
     </div>
   </div>

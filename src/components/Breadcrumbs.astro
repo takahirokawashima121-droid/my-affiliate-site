@@ -17,13 +17,13 @@ const jsonLd = {
 };
 ---
 
-<nav aria-label="パンくずリスト" class="mb-6 text-xs text-gray-500">
+<nav aria-label="パンくずリスト" class="mb-6 text-xs text-slate-400">
   <ol class="flex flex-wrap items-center gap-1">
     {items.map((item, i) => (
       <li class="flex items-center gap-1">
         {i < items.length - 1 ? (
           <Fragment>
-            <a href={item.href} class="hover:text-brand-600">{item.name}</a>
+            <a href={item.href} class="hover:text-sky-400">{item.name}</a>
             <span aria-hidden="true">›</span>
           </Fragment>
         ) : (

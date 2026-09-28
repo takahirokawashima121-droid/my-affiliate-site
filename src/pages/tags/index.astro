@@ -8,10 +8,10 @@ const tags = getAllTags(await getPosts());
 
 <BaseLayout title="タグ一覧" description="記事のタグ一覧です。">
   <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: 'タグ一覧', href: '/tags/' }]} />
-  <h1 class="mb-8 text-2xl font-bold text-gray-900 sm:text-3xl">タグ一覧</h1>
+  <h1 class="mb-8 text-2xl font-bold text-slate-100 sm:text-3xl">タグ一覧</h1>
   <ul class="flex flex-wrap gap-3">
     {tags.map(({ tag, count }) => (
-      <li><a href={`/tags/${tag}/`} class="rounded-full border border-gray-200 px-4 py-1.5 text-gray-700 hover:border-brand-600 hover:text-brand-600">#{tag} <span class="text-gray-400">({count})</span></a></li>
+      <li><a href={`/tags/${tag}/`} class="rounded-full border border-slate-700/60 px-4 py-1.5 text-slate-300 hover:border-brand-600 hover:text-sky-400">#{tag} <span class="text-slate-500">({count})</span></a></li>
     ))}
   </ul>
 </BaseLayout>

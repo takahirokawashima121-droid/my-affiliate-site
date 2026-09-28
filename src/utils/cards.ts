@@ -130,22 +130,22 @@ export function cardModel(card: Card): string {
 // ポケモンらしいキーカラー（イエロー / レッド / ブルー）を軸にした、紫を使わない配色。
 // 白文字のバッジは -500 以上の濃さにして読みやすさを確保する
 const RARITY_STYLES: Record<string, string> = {
-  MUR: 'bg-gradient-to-r from-red-500 via-amber-400 to-sky-500 text-white [text-shadow:0_1px_1px_rgb(0_0_0/0.35)]',
-  FUR: 'bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 text-white',
-  UR: 'bg-gradient-to-r from-amber-300 to-yellow-400 text-amber-950',
-  SAR: 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-white',
-  SSR: 'bg-gradient-to-r from-slate-700 to-slate-500 text-amber-200',
-  HR: 'bg-amber-500 text-white',
-  SR: 'bg-blue-600 text-white',
-  SA: 'bg-blue-600 text-white',
-  ACE: 'bg-gradient-to-r from-red-600 to-rose-500 text-white',
-  AR: 'bg-teal-600 text-white',
-  U: 'bg-slate-500 text-white',
+  MUR: 'bg-gradient-to-r from-red-500 via-amber-400 to-sky-500 text-slate-100 [text-shadow:0_1px_1px_rgb(0_0_0/0.35)]',
+  FUR: 'bg-gradient-to-r from-sky-500 via-cyan-500 to-emerald-500 text-slate-100',
+  UR: 'bg-gradient-to-r from-amber-400 to-yellow-400 text-amber-950',
+  SAR: 'bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 text-slate-100',
+  SSR: 'bg-gradient-to-r from-slate-700 to-slate-500 text-amber-300',
+  HR: 'bg-amber-500 text-slate-100',
+  SR: 'bg-blue-600 text-slate-100',
+  SA: 'bg-blue-600 text-slate-100',
+  ACE: 'bg-gradient-to-r from-red-600 to-rose-500 text-slate-100',
+  AR: 'bg-teal-600 text-slate-100',
+  U: 'bg-slate-500 text-slate-100',
 };
 
 /** レアリティバッジの配色クラス */
 export function rarityClass(rarity: string): string {
-  return RARITY_STYLES[rarity] ?? 'bg-slate-600 text-white';
+  return RARITY_STYLES[rarity] ?? 'bg-slate-600 text-slate-100';
 }
 
 export function formatYen(value: number): string {

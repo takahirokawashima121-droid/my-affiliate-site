@@ -18,7 +18,7 @@ const styles = {
   sale: { label: '最安値で購入する', color: 'bg-rose-600 hover:bg-rose-700 focus-visible:outline-rose-600' },
   buyback: { label: '最高値で買い取ってもらう', color: 'bg-emerald-600 hover:bg-emerald-700 focus-visible:outline-emerald-600' },
   // まとめて送る宅配買取（ふるいち）。黄色地は白文字だと読みにくいため濃い文字
-  bulk: { label: 'まとめて買取査定', color: 'bg-amber-400 !text-slate-900 hover:bg-amber-300 focus-visible:outline-amber-500' },
+  bulk: { label: 'まとめて買取査定', color: 'bg-amber-500/90 !text-slate-950 hover:bg-amber-400 focus-visible:outline-amber-500' },
 }[kind];
 ---
 
@@ -31,7 +31,7 @@ const styles = {
   data-aff-type={kind === 'bulk' ? 'buyback_bulk' : kind}
   data-aff-item={item}
   class:list={[
-    'flex flex-col items-center justify-center rounded-xl text-center font-bold text-white shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2',
+    'flex flex-col items-center justify-center rounded-xl text-center font-bold text-slate-100 shadow-sm transition focus-visible:outline-2 focus-visible:outline-offset-2',
     styles.color,
     size === 'lg' ? 'px-4 py-4 text-base' : 'px-2 py-2.5 text-sm',
   ]}

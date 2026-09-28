@@ -21,7 +21,7 @@ const items = [
           href={item.href}
           data-bottom-nav={item.key}
           aria-current={item.active ? 'page' : undefined}
-          class:list={['flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold transition active:scale-95', item.active ? 'text-lamp' : 'hover:text-white']}
+          class:list={['flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold transition active:scale-95', item.active ? 'text-lamp' : 'hover:text-slate-100']}
         >
           <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
             <path d={item.icon}></path>
@@ -31,7 +31,7 @@ const items = [
       </li>
     ))}
     <li>
-      <button type="button" data-bottom-nav="top" class="flex h-full w-full flex-col items-center justify-center gap-1 text-[11px] font-bold transition hover:text-white active:scale-95">
+      <button type="button" data-bottom-nav="top" class="flex h-full w-full flex-col items-center justify-center gap-1 text-[11px] font-bold transition hover:text-slate-100 active:scale-95">
         <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 19V6m-6 6 6-6 6 6M5 3h14"></path>
         </svg>

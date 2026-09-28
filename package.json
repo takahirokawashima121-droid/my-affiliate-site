@@ -12,7 +12,8 @@
     "add-cards": "node scripts/add-cards.js",
     "sync-trending": "node scripts/sync-trending-decks.js",
     "import-decks": "node scripts/import-official-decks.js",
-    "auto-decks": "node scripts/auto-deck-updater.js"
+    "auto-decks": "node scripts/auto-deck-updater.js",
+    "auto-city": "node scripts/auto-deck-updater.js --source=city"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",

@@ -1,11 +1,18 @@
-// ポケカブックのデッキレシピRSSから新着の「ジムバトル優勝デッキまとめ」を検知し、
-// 優勝デッキのカードを cards.json に追加して、デッキ解説コラム（src/pages/columns/*.astro）を自動生成する
+// ポケカブックのRSSから新着の「ジムバトル優勝デッキまとめ」「シティリーグ ベスト16デッキまとめ」を検知し、
+// 入賞デッキのカードを cards.json に追加して、デッキ解説コラム（src/pages/columns/*.astro）を自動生成する
 //
 // 使い方:
-//   npm run auto-decks                     新着を処理（カード追加・価格取得・記事生成）
+//   npm run auto-decks                     ジムバトルの新着を処理（カード追加・価格取得・記事生成）
+//   npm run auto-city                      シティリーグの新着を処理（= npm run auto-decks -- --source=city）
 //   npm run auto-decks -- --dry-run        新着と生成予定を表示するだけ（何も保存しない）
 //   npm run auto-decks -- --init           いまRSSにある記事を「処理済み」にするだけ（導入時・過去分を生成しない）
 //   npm run auto-decks -- --max-columns=4  1回に生成する記事数の上限（既定 4）
+//
+// シティリーグ（--source=city）:
+//   RSS（https://pokecabook.com/archives/category/tournament/city-league/feed）の新しい2記事から、会場（見出し）ごとの
+//   「優勝・準優勝・TOP4」の公式デッキコードを取り出し、最新の開催日のデッキだけを 優勝 → 準優勝 → TOP4 の順に選ぶ。
+//   まとめ記事はデッキ名を画像でしか載せていないため、デッキ名はレシピから推定する（既存の記事のデッキ名 → メガシンカ → ex の順）。
+//   推定したデッキ名は PR で確認・修正してからマージする。記事には eventType: 'city'・rank・eventName・venue・eventDate を付ける
 //
 // 仕組み:
 // 1. RSS（https://pokecabook.com/archives/category/deck-recipe/feed）から「ジムバトル優勝デッキまとめ」の記事を取り出す。
@@ -33,14 +40,24 @@ import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
-const FEED_URL = 'https://pokecabook.com/archives/category/deck-recipe/feed';
-/** 対象にする記事（デッキタイプ別のまとめ記事は過去の環境のデッキを含むため対象外） */
-const TARGET_TITLE = /ジムバトル優勝デッキまとめ/;
+/** 取得元（デッキタイプ別のまとめ記事は過去の環境のデッキを含むため対象外） */
+const SOURCES = {
+  gym: { feed: 'https://pokecabook.com/archives/category/deck-recipe/feed', title: /ジムバトル優勝デッキまとめ/, label: 'ジムバトル', prBody: '.cache/auto-deck-pr.md' },
+  city: {
+    feed: 'https://pokecabook.com/archives/category/tournament/city-league/feed',
+    title: /シティリーグ.*デッキまとめ/,
+    label: 'シティリーグ',
+    prBody: '.cache/auto-city-pr.md',
+  },
+};
+/** シティリーグで記事にする成績（上位入賞のみ。並び順が優先順） */
+const CITY_RANKS = ['優勝', '準優勝', 'TOP4'];
+/** シティリーグで1回に見るまとめ記事の数（新しい順） */
+const CITY_ARTICLES = 2;
 const PROCESSED_PATH = path('scripts/cache/processed-decks.json');
 const COLUMNS_PATH = path('src/data/deck-columns.json');
 const DECKS_PATH = path('src/data/official-decks.json');
 const CARDS_PATH = path('src/data/cards.json');
-const PR_BODY_PATH = path('.cache/auto-deck-pr.md');
 const SITE_URL = 'https://my-affiliate-site-phi.vercel.app/';
 
 function parseArgs(argv) {
@@ -48,6 +65,7 @@ function parseArgs(argv) {
     dryRun: argv.includes('--dry-run'),
     init: argv.includes('--init'),
     maxColumns: Number(argv.find((a) => a.startsWith('--max-columns='))?.split('=')[1] ?? 4),
+    source: argv.find((a) => a.startsWith('--source='))?.split('=')[1] === 'city' ? 'city' : 'gym',
   };
 }
 
@@ -62,8 +80,8 @@ const todayJst = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/{/g, '&#123;').replace(/}/g, '&#125;');
 
 /** RSS の記事一覧 */
-async function feedItems() {
-  const $ = cheerio.load(await fetchText(FEED_URL), { xmlMode: true });
+async function feedItems(feedUrl) {
+  const $ = cheerio.load(await fetchText(feedUrl), { xmlMode: true });
   return $('item')
     .map((_, it) => ({ title: $(it).find('title').first().text().trim(), link: $(it).find('link').first().text().trim(), pubDate: $(it).find('pubDate').text().trim() }))
     .get();
@@ -83,6 +101,49 @@ async function articleDecks(url) {
     });
   });
   return decks;
+}
+
+/**
+ * シティリーグのまとめ記事から、会場ごとの入賞デッキ（CITY_RANKS の成績のみ）を取り出す。
+ * 記事の構成: 日付の見出し（「シティリーグ9/28【月】」。1日だけの記事はタイトルの日付）→ 会場の見出し（h2 / h4）→
+ * 「大会結果」→ 成績ごとの画像（figcaption のリンク文字が「優勝」「準優勝」「TOP4」…、リンク先が公式デッキコード）
+ */
+async function cityArticleDecks(url, title) {
+  const $ = cheerio.load(await fetchText(url));
+  let date = title.match(/(\d{1,2}\/\d{1,2})/)?.[1];
+  let venue = null;
+  const decks = [];
+  $('.entry-content').children().each((_, el) => {
+    if (/^h[2-4]$/.test(el.tagName)) {
+      const text = $(el).text().trim();
+      const headingDate = text.match(/シティリーグ\s*(\d{1,2}\/\d{1,2})/)?.[1];
+      if (headingDate) [date, venue] = [headingDate, null];
+      else venue = text;
+      return;
+    }
+    if (!venue) return;
+    $(el).find('figcaption a[href*="deckID/"]').each((_, a) => {
+      const rank = $(a).text().normalize('NFKC').replace(/\s+/g, '').toUpperCase();
+      const deckId = $(a).attr('href').match(/deckID\/([A-Za-z0-9-]+)/)?.[1];
+      if (deckId && CITY_RANKS.includes(rank) && !decks.some((d) => d.deckId === deckId)) decks.push({ deckId, archetype: null, date, rank, venue });
+    });
+  });
+  return decks;
+}
+
+/** 「9/27」→ 月日の比較用の数値（927） */
+const dateKey = (date) => (date ? date.split('/').map(Number).reduce((m, d) => m * 100 + d) : 0);
+
+/**
+ * レシピからデッキ名を推定する（シティリーグのまとめ記事はデッキ名を文字で載せていないため）。
+ * 既存の記事のデッキ名と同じポケモン > メガシンカ ex > ex > それ以外、同じなら枚数の多い順。汎用のポケモン（STAPLES）は選ばない
+ */
+function inferArchetype(list, knownNames) {
+  const counts = new Map();
+  for (const c of list.filter((c) => c.category === 'ポケモン')) counts.set(c.name, (counts.get(c.name) ?? 0) + c.count);
+  const score = (name) =>
+    (knownNames.has(norm(name)) ? 150 : 0) + (/^メガ.+ex$/.test(name) ? 200 : /ex$/.test(name) ? 100 : 0) - (STAPLES.has(name) ? 500 : 0) + counts.get(name);
+  return [...counts.keys()].sort((a, b) => score(b) - score(a))[0] ?? 'デッキ';
 }
 
 /**
@@ -168,15 +229,20 @@ async function main() {
   const doneArticles = new Set(processed.articles.map((a) => a.key));
   const doneDecks = new Set(processed.decks);
 
-  const items = (await feedItems()).filter((it) => TARGET_TITLE.test(it.title));
-  const fresh = items.filter((it) => !doneArticles.has(articleKey(it)));
+  const source = SOURCES[opts.source];
+  const PR_BODY_PATH = path(source.prBody);
+  console.log(`■ 取得元: ${source.label}（${source.feed}）`);
+  const items = (await feedItems(source.feed)).filter((it) => source.title.test(it.title));
+  // シティリーグの期間まとめ記事は同じタイトルのまま会場が追記されていくため、記事単位ではなくデッキコード単位で処理済みを判定する
+  const fresh = opts.source === 'city' ? items.slice(0, CITY_ARTICLES) : items.filter((it) => !doneArticles.has(articleKey(it)));
+  const decksOf = (it) => (opts.source === 'city' ? cityArticleDecks(it.link, it.title) : articleDecks(it.link));
   console.log(`■ RSS: 対象記事 ${items.length}件 / 未処理 ${fresh.length}件`);
   for (const it of fresh) console.log(`  - ${it.title}（${it.link}）`);
 
   // 導入時: いまある記事を処理済みにするだけ
   if (opts.init) {
     for (const it of fresh) {
-      const decks = await articleDecks(it.link);
+      const decks = await decksOf(it);
       processed.articles.push({ key: articleKey(it), link: it.link, title: it.title, processedAt: todayJst(), decks: decks.map((d) => d.deckId), columns: [] });
       for (const d of decks) doneDecks.add(d.deckId);
     }
@@ -192,25 +258,40 @@ async function main() {
   const existingNames = new Set(columns.map((c) => norm(baseDeckName(c.deckName))));
   const candidates = [];
   for (const it of fresh) {
-    const decks = (await articleDecks(it.link)).filter((d) => !doneDecks.has(d.deckId) && !imported.has(d.deckId));
+    const decks = (await decksOf(it)).filter((d) => !doneDecks.has(d.deckId) && !imported.has(d.deckId));
     console.log(`
 ■ ${it.title}: 新しいデッキ ${decks.length}件`);
     for (const d of decks) candidates.push({ ...d, article: it });
   }
+  if (opts.source === 'city' && candidates.length === 0) return console.log('新着はありません。');
   // 優先順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）
+  // （シティリーグはこの時点でデッキ名が未定のため、下の成績順で並べる）
   const occurrence = new Map();
   const rank = (d) => d.nth * 2 + Number(existingNames.has(norm(d.archetype)));
   const ordered = candidates
+    .filter(() => opts.source === 'gym')
     .map((d) => {
       const nth = occurrence.get(norm(d.archetype)) ?? 0;
       occurrence.set(norm(d.archetype), nth + 1);
       return { ...d, nth };
     })
     .sort((a, b) => rank(a) - rank(b));
+  // シティリーグ: 最新の開催日のデッキだけを、成績順（優勝 → 準優勝 → TOP4）・会場の掲載順に並べる。
+  // デッキ名はレシピから推定するため、ここで公式のデッキページを取得して名前を付け、同じ回に同じデッキ名が重ならないようにする
+  const latest = Math.max(...candidates.map((d) => dateKey(d.date)));
+  const pool =
+    opts.source === 'city'
+      ? candidates.filter((d) => dateKey(d.date) === latest).sort((a, b) => CITY_RANKS.indexOf(a.rank) - CITY_RANKS.indexOf(b.rank))
+      : ordered;
+  if (opts.source === 'city') console.log(`\n■ 最新の開催日 ${candidates.find((d) => dateKey(d.date) === latest)?.date}：上位入賞 ${pool.length}件（${CITY_RANKS.join('・')}）`);
   // 取り込めないデッキ（60枚でない・現行スタンダード外のカードを含む）は飛ばして次の候補で埋める
   const selected = [];
-  for (const d of ordered) {
+  for (const d of pool) {
     if (selected.length >= opts.maxColumns) break;
+    if (opts.source === 'city') {
+      d.archetype = inferArchetype(await deckCards(d.deckId), existingNames);
+      if (selected.some((o) => norm(o.archetype) === norm(d.archetype))) continue;
+    }
     const check = await importDecks([{ slug: `check-${d.deckId}`, deckId: d.deckId }], { dryRun: true, skipInvalid: true });
     if (check.decks.length > 0) selected.push(d);
   }
@@ -229,7 +310,7 @@ async function main() {
     d.variant = peers.length > 0 ? variantLabel(asRecipe(d.list), peers) : null;
     d.slug = makeSlug(d.archetype, d.list, d.date, taken, d.variant);
     taken.add(d.slug);
-    console.log(`  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}）→ /columns/${d.slug}/`);
+    console.log(`  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}${d.rank ? ` ${d.venue} ${d.rank}・デッキ名は推定` : ''}）→ /columns/${d.slug}/`);
   }
   if (opts.dryRun) return console.log('\n（dry-run: カード追加・記事生成・処理済みの記録は行いません）');
 
@@ -242,7 +323,9 @@ async function main() {
   for (const d of selected.filter((x) => result.decks.includes(x.slug))) {
     const recipe = recipes[d.slug].cards;
     const keyCards = pickKeyCards(recipe, d.archetype);
-    const label = `${d.date ?? ''} ジムバトル優勝`.trim();
+    const isCity = opts.source === 'city';
+    const label = isCity ? `${d.date ?? ''} シティリーグ${d.rank}`.trim() : `${d.date ?? ''} ジムバトル優勝`.trim();
+    const placed = { 優勝: '優勝した', 準優勝: '準優勝した', TOP4: 'TOP4に入賞した' }[d.rank] ?? '優勝した';
     const deckName = d.variant ? `${d.archetype}（${d.variant.text}型）` : d.archetype;
     // 型名のない既存の同名記事にも、新しいデッキとの差分から型名を付ける（一覧・タイトルで区別できるように）
     for (const c of columns.filter((c) => c.deckName === d.archetype && recipes[c.deckKey])) {
@@ -258,12 +341,20 @@ async function main() {
       deckKey: d.slug,
       deckName,
       title: `【${label}】${deckName}デッキレシピ！採用カード最安値・代替パーツ提案`,
-      description: `${d.date ? `${d.date}の` : ''}ジムバトルで優勝した${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`,
+      description: isCity
+        ? `${d.date ? `${d.date}の` : ''}シティリーグ（${d.venue}）で${placed}${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`
+        : `${d.date ? `${d.date}の` : ''}ジムバトルで優勝した${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`,
       result: label,
       // 大会の種類・成績（トップページの特集・一覧の大会バッジと絞り込みに使う）
-      eventType: 'gym',
-      rank: '優勝',
-      eventName: 'ジムバトル',
+      ...(isCity
+        ? {
+            eventType: 'city',
+            rank: d.rank,
+            eventName: 'シティリーグ',
+            venue: d.venue,
+            ...(d.date && { eventDate: `${todayJst().slice(0, 4)}-${d.date.split('/').map((n) => n.padStart(2, '0')).join('-')}` }),
+          }
+        : { eventType: 'gym', rank: '優勝', eventName: 'ジムバトル' }),
       pubDate: todayJst(),
       highlight: `${keyCards.slice(0, 2).join('・')}を採用した${d.archetype}デッキ。主力カードの効果と最安値をまとめて確認`,
       keyCards,
@@ -278,6 +369,8 @@ async function main() {
   // 処理済みを記録（選ばなかったデッキ・無効だったデッキも記録し、次回は新しい記事のデッキだけを見る）
   for (const it of fresh) {
     const ids = candidates.filter((c) => c.article === it).map((c) => c.deckId);
+    // シティリーグは同じ記事を毎回見るため、新しいデッキがなかった記事は記録しない（処理済みの判定はデッキコードで行う）
+    if (opts.source === 'city' && ids.length === 0) continue;
     processed.articles.push({ key: articleKey(it), link: it.link, title: it.title, processedAt: todayJst(), decks: ids, columns: generated.filter((g) => selected.some((s) => s.slug === g.slug && s.article === it)).map((g) => g.slug) });
     for (const id of ids) doneDecks.add(id);
   }
@@ -298,9 +391,12 @@ async function main() {
     return [`#### ${c.deckName}`, '1ポスト目（親）', '```', parent, '```', '2ポスト目（リプライ）', '```', reply, '```', ''];
   });
   const body = [
-    '## 🏭 ポケカファクトリー｜新着優勝デッキ記事の自動生成',
+    `## 🏭 ポケカファクトリー｜新着${source.label}入賞デッキ記事の自動生成`,
     '',
-    `RSS（${FEED_URL}）の新着記事から自動生成しました。`,
+    `RSS（${source.feed}）の新着記事から自動生成しました。`,
+    ...(opts.source === 'city'
+      ? ['', '> ⚠ シティリーグのまとめ記事はデッキ名を画像でしか載せていないため、**デッキ名はレシピから推定**しています。元記事の画像と見比べて、違っていれば deck-columns.json の deckName・title とページを直してください。']
+      : []),
     '',
     ...fresh.map((it) => `- 元記事: [${it.title}](${it.link})`),
     '',
@@ -314,6 +410,7 @@ async function main() {
     ...(result.skipped?.length ? ['### 価格を掲載できなかったカード（レシピには載るがリンクなし）', ...result.skipped.map((x) => `- ${x.name}: ${x.reason}`), ''] : []),
     ...(xSection.length ? ['### 📱 X（Twitter）投稿用コピペ文', 'マージして公開されたあとに投稿してください（見どころを書き直した場合は、公開後の記事末尾「Xシェア用テキスト」の文面を使うと最新になります）。', '', ...xSection] : []),
     '### マージ前に確認すること',
+    ...(opts.source === 'city' ? ['- [ ] 推定したデッキ名が元記事の画像のデッキ名と合っている'] : []),
     '- [ ] 各記事の TODO（回し方・代替カード / カスタマイズ案）を追記した',
     '- [ ] 追加したカードの型番・レギュレーションマークに誤りがない',
     '- [ ] トップページの特集（優勝日が新しい順に自動で選ばれる）に載る記事の見どころ（highlight）を確認した',
@@ -324,7 +421,7 @@ async function main() {
   ].join('\n');
   mkdirSync(path('.cache/'), { recursive: true });
   await writeFile(PR_BODY_PATH, `${body}\n`, 'utf8');
-  console.log(`\n記事 ${generated.length}本・カード ${addedCards.length}枚。PR本文: .cache/auto-deck-pr.md`);
+  console.log(`\n記事 ${generated.length}本・カード ${addedCards.length}枚。PR本文: ${source.prBody}`);
 }
 
 main().catch((error) => {

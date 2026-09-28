@@ -177,7 +177,9 @@ const chip =
     </a>
   </section>
 
-  <FeaturedDecks cards={cards} />
+  <!-- 大会別の特集：上段がシティリーグ（公式大会・目玉枠）、下段がジムバトル -->
+  <FeaturedDecks cards={cards} type="city" />
+  <FeaturedDecks cards={cards} type="gym" />
 
   <p class="mb-6 rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs leading-relaxed text-slate-600 sm:text-sm" role="note">{SITE.priceNotice}</p>
 

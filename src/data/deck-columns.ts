@@ -25,6 +25,8 @@ export type DeckColumn = {
   rank?: EventRank;
   /** 大会名（例: 「シティリーグ2026 S1」「ジムバトル」）。バッジの表記に使う */
   eventName?: string;
+  /** 会場（シティリーグの開催店舗など） */
+  venue?: string;
   /** 開催日（YYYY-MM-DD）。省略時は result の「M/D」と公開年から求める */
   eventDate?: string;
 };
@@ -105,14 +107,14 @@ const deckBase = (c: DeckColumn) => c.deckName.replace(/（.*）$/, '');
 
 /**
  * トップページの「最新大会入賞デッキ特集」。deck-columns.json のシティリーグ・ジムバトル入賞デッキを、開催日（→ 公開日）が
- * 新しい順に並べて先頭から選ぶ。新しい大会のデッキが追加されれば、次のビルドで自動的に特集が切り替わる。
+ * 新しい順に並べて先頭から選ぶ（type を渡すとその大会だけ）。新しい大会のデッキが追加されれば、次のビルドで自動的に特集が切り替わる。
  * 同じ日付どうしはシティリーグ → ジムバトル、成績の高い順、deck-columns.json の掲載順。同じ系統のデッキは1件だけ載せる
  */
-export function latestEventDecks(limit = 6): { title: string; date: string; columns: DeckColumn[] } {
+export function latestEventDecks(limit = 6, type?: EventType): { title: string; date: string; columns: DeckColumn[] } {
   const rankOrder: EventRank[] = ['優勝', '準優勝', 'TOP4', 'TOP8'];
   const score = (c: DeckColumn) => (eventTypeOf(c) === 'city' ? 0 : 10) + rankOrder.indexOf(rankOf(c)!);
   const sorted = DECK_COLUMNS.map((c, order) => ({ c, order, date: eventDate(c) }))
-    .filter(({ c }) => isEventPlacing(c))
+    .filter(({ c }) => isEventPlacing(c) && (!type || eventTypeOf(c) === type))
     .sort((a, b) => b.date.localeCompare(a.date) || score(a.c) - score(b.c) || b.c.pubDate.localeCompare(a.c.pubDate) || a.order - b.order);
   const seen = new Set<string>();
   const columns = sorted.filter(({ c }) => !seen.has(deckBase(c)) && seen.add(deckBase(c))).slice(0, limit).map(({ c }) => c);

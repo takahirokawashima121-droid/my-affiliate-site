@@ -1,56 +1,94 @@
 ---
-// トップページの「最新大会入賞デッキ特集」。deck-columns.json のシティリーグ・ジムバトル入賞デッキから開催日が新しい順に自動で選ぶ（latestEventDecks）
+// トップページの大会別特集（上段：シティリーグ入賞 / 下段：ジムバトル優勝）。deck-columns.json から開催日が新しい順に自動で選ぶ（latestEventDecks）
 // PC は3列、タブレットは2列、スマホは1列（画像を左に置いた横長カードで縦に伸びすぎないようにする）
 import CardImage from './CardImage.astro';
 import EventBadge from './EventBadge.astro';
-import { DECK_COLUMNS, columnPath, latestEventDecks } from '../data/deck-columns';
+import { columnPath, latestEventDecks, type EventType } from '../data/deck-columns';
 import { formatYen, type Card } from '../utils/cards';
 import { deckBadgeClass, deckSummary } from '../utils/decks';
 
 interface Props {
   cards: Card[];
+  type: EventType;
 }
 
-const { cards } = Astro.props;
-const { title, columns } = latestEventDecks(6);
+const { cards, type } = Astro.props;
+
+// 大会ごとの見出し・説明・配色（シティリーグ：濃紺×ゴールド / ジムバトル：アンバー）
+const SECTIONS = {
+  city: {
+    eyebrow: 'CITY LEAGUE / OFFICIAL TOURNAMENT RESULTS',
+    unit: 'DATA UNIT 02',
+    icon: '🏆',
+    title: '最新シティリーグ入賞デッキ特集',
+    lead: '公式大会（シティリーグ）で結果を残した上位デッキ。現環境の最前線レシピとキーパーツをチェック。',
+    empty: 'シティリーグの入賞デッキを集計中です。新しい大会結果が出しだい、ここに自動で追加されます。',
+    accent: 'border-t-slate-900',
+    eyebrowTone: 'text-amber-700',
+    more: 'シティリーグ入賞デッキをすべて見る',
+  },
+  gym: {
+    eyebrow: 'GYM BATTLE / STORE TOURNAMENT WINNERS',
+    unit: 'DATA UNIT 03',
+    icon: '⚔️',
+    title: '最新ジムバトル優勝デッキ特集',
+    lead: '全国のジムバトルで全勝・優勝した実戦レシピ。店舗メタや最新ギミックの研究に。',
+    empty: '',
+    accent: 'border-t-amber-400',
+    eyebrowTone: 'text-cyan-700',
+    more: 'ジムバトル優勝デッキをすべて見る',
+  },
+}[type];
+
+const { date, columns } = latestEventDecks(6, type);
 const featured = columns.map((column) => ({ column, ...column, ...deckSummary(column, cards) }));
+const updated = date ? date.slice(5).replace(/^0/, '').replace('-0', '/').replace('-', '/') : '';
+const headingId = `featured-${type}`;
 ---
 
-{featured.length > 0 && (
-  <section aria-labelledby="featured-decks" class="bg-lab-panel lab-corners mb-8 rounded-2xl border border-slate-300 p-4 text-slate-900 shadow-md sm:p-6">
-    <p class="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] font-bold tracking-widest text-cyan-700">LATEST TOURNAMENT PLACINGS / CITY LEAGUE &amp; GYM BATTLE<span class="unit-label">DATA UNIT 02</span></p>
-    <h2 id="featured-decks" class="mt-1 text-lg font-black sm:text-xl">
-      <span aria-hidden="true">🏆</span> {title}
+<!-- ジムバトルは記事がなければ出さない。シティリーグは目玉枠のため、記事がなくても集計中の案内を出す -->
+{(featured.length > 0 || SECTIONS.empty) && (
+  <section aria-labelledby={headingId} class={`bg-lab-panel lab-corners mb-8 rounded-2xl border border-t-4 border-slate-300 p-4 text-slate-900 shadow-md sm:p-6 ${SECTIONS.accent}`}>
+    <p class={`flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] font-bold tracking-widest ${SECTIONS.eyebrowTone}`}>
+      {SECTIONS.eyebrow}<span class="unit-label">{SECTIONS.unit}{updated && ` · ${updated} 更新`}</span>
+    </p>
+    <h2 id={headingId} class="mt-1 text-lg font-black sm:text-xl">
+      <span aria-hidden="true">{SECTIONS.icon}</span> {SECTIONS.title}
     </h2>
-    <p class="mt-1 text-xs text-slate-600 sm:text-sm">シティリーグ・ジムバトルの入賞デッキを、開催日が新しい順に自動で入れ替えています。60枚レシピ・回し方と、採用パーツの最安値をまとめてチェック。</p>
+    <p class="mt-1 text-xs text-slate-600 sm:text-sm">{SECTIONS.lead}</p>
 
-    <ul class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
-      {featured.map((c) => (
-        <li class="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md sm:p-4">
-          <a href={columnPath(c)} class="group flex flex-1 gap-3">
-            {c.mainCard && <span class="block w-16 shrink-0 overflow-hidden rounded-md ring-1 ring-slate-300 sm:w-[4.5rem]"><CardImage card={c.mainCard} sizes="72px" /></span>}
-            <span class="flex min-w-0 flex-1 flex-col">
-              <span class="flex flex-wrap items-center gap-1">
-                <EventBadge column={c.column} />
-                {c.badges.map((b) => <span class={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
+    {featured.length === 0 ? (
+      <p class="mt-4 rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-6 text-center text-sm text-slate-600">{SECTIONS.empty}</p>
+    ) : (
+      <ul class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+        {featured.map((c) => (
+          <li class="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md sm:p-4">
+            <a href={columnPath(c)} class="group flex flex-1 gap-3">
+              {c.mainCard && <span class="block w-16 shrink-0 overflow-hidden rounded-md ring-1 ring-slate-300 sm:w-[4.5rem]"><CardImage card={c.mainCard} sizes="72px" /></span>}
+              <span class="flex min-w-0 flex-1 flex-col">
+                <span class="flex flex-wrap items-center gap-1">
+                  <EventBadge column={c.column} />
+                  {c.badges.map((b) => <span class={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
+                </span>
+                <span class="mt-1.5 text-base font-black leading-snug text-slate-900 group-hover:text-amber-700">{c.deckName}</span>
+                {c.venue && <span class="mt-0.5 truncate text-[11px] text-slate-500">📍 {c.venue}</span>}
+                <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{c.highlight}</span>
+                {c.estimate > 0 && (
+                  <span class="mt-1.5 font-mono text-[11px] text-slate-600">60枚の概算 <span class="text-sm font-bold tabular-nums text-cyan-700">{formatYen(c.estimate)}</span></span>
+                )}
               </span>
-              <span class="mt-1.5 text-base font-black leading-snug text-slate-900 group-hover:text-amber-700">{c.deckName}</span>
-              <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{c.highlight}</span>
-              {c.estimate > 0 && (
-                <span class="mt-1.5 font-mono text-[11px] text-slate-600">60枚の概算 <span class="text-sm font-bold tabular-nums text-cyan-700">{formatYen(c.estimate)}</span></span>
-              )}
+            </a>
+            <span class="mt-3 grid grid-cols-2 gap-2 text-xs font-black">
+              <a href={columnPath(c)} class="rounded-md border border-slate-300 bg-white px-2 py-2 text-center text-slate-800 shadow-sm transition hover:border-slate-400 hover:bg-slate-50">デッキ解説</a>
+              <a href={`${columnPath(c)}#deck-recipe`} class="rounded-md bg-red-600 px-2 py-2 text-center text-white shadow-sm shadow-red-900/10 transition hover:bg-red-700">⚡ パーツ一括調達</a>
             </span>
-          </a>
-          <span class="mt-3 grid grid-cols-2 gap-2 text-xs font-black">
-            <a href={columnPath(c)} class="rounded-md border border-slate-300 bg-white px-2 py-2 text-center text-slate-800 shadow-sm transition hover:border-slate-400 hover:bg-slate-50">デッキ解説</a>
-            <a href={`${columnPath(c)}#deck-recipe`} class="rounded-md bg-red-600 px-2 py-2 text-center text-white shadow-sm shadow-red-900/10 transition hover:bg-red-700">⚡ パーツ一括調達</a>
-          </span>
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+    )}
 
-    <a href="/columns/" class="mt-4 flex items-center justify-center rounded-lg border border-amber-400 px-4 py-3 text-sm font-black text-amber-700 transition hover:bg-amber-500 hover:text-white sm:text-base">
-      優勝デッキ解説・コラム一覧を見る（全{DECK_COLUMNS.length}記事） →
+    <a href={`/columns/?event=${type}`} class="mt-4 flex items-center justify-center rounded-lg border border-amber-400 px-4 py-3 text-sm font-black text-amber-700 transition hover:bg-amber-500 hover:text-white sm:text-base">
+      {SECTIONS.more} →
     </a>
   </section>
 )}

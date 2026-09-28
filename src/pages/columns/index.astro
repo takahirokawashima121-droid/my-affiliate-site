@@ -67,7 +67,7 @@ const tab =
           <!-- カード全体が1つのリンクのため、ボタンは <a> の入れ子にせず見た目だけのボタン（span）にする -->
           <a href={columnPath(c)} class="group flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-blue-400 hover:shadow-md sm:p-4">
             <span class="flex gap-3 pb-4">
-              {c.mainCard && <span class="block w-14 shrink-0 sm:w-20"><CardImage card={c.mainCard} sizes="80px" /></span>}
+              {c.mainCard && <span class="block w-20 shrink-0 self-start sm:w-24"><CardImage card={c.mainCard} sizes="96px" class="border border-slate-200" /></span>}
               <span class="flex min-w-0 flex-1 flex-col">
                 <span><EventBadge column={c} /></span>
                 <span class="mt-1 text-base font-black leading-snug text-slate-900 group-hover:text-blue-600">{c.deckName}</span>

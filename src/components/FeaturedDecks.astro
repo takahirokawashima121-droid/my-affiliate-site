@@ -64,7 +64,8 @@ const headingId = `featured-${type}`;
         {featured.map((c) => (
           <li class="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-400 hover:shadow-md sm:p-4">
             <a href={columnPath(c)} class="group flex flex-1 gap-3">
-              {c.mainCard && <span class="block w-16 shrink-0 overflow-hidden rounded-md ring-1 ring-slate-300 sm:w-[4.5rem]"><CardImage card={c.mainCard} sizes="72px" /></span>}
+              <!-- self-start：右の本文の高さに引き伸ばされて画像の下に空枠が出ないよう、枠はカード画像（63:88）自体に付ける -->
+              {c.mainCard && <span class="block w-20 shrink-0 self-start sm:w-24"><CardImage card={c.mainCard} sizes="96px" class="border border-slate-200" /></span>}
               <span class="flex min-w-0 flex-1 flex-col">
                 <span class="flex flex-wrap items-center gap-1">
                   <EventBadge column={c.column} />

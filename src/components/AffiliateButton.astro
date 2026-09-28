@@ -1,6 +1,6 @@
 ---
 // 「最安値で購入する」「最高値で買い取ってもらう」ボタン（別タブで開く）
-import { BUYBACK_PRIMARY, SALE_PRIMARY, SWITCH_BASE as switchBase } from '../utils/buttonStyles';
+import { BUYBACK_PRIMARY, BUYBACK_SECONDARY, SALE_PRIMARY } from '../utils/buttonStyles';
 
 interface Props {
   kind: 'sale' | 'buyback' | 'bulk';
@@ -17,16 +17,12 @@ const { kind, href, shop, size = 'sm', item, label } = Astro.props;
 const network = href.includes('a8.net') ? 'a8' : href.includes('moshimo.com') ? 'moshimo' : undefined;
 
 const styles = {
-  // メイン：インダストリアルオレンジ
+  // 購入：ファイアレッド
   sale: { label: '最安値で購入する', color: SALE_PRIMARY, led: 'bg-white/90' },
-  // 買取：落ち着いたエメラルド
+  // 買取：リーフグリーン
   buyback: { label: '最高値で買い取ってもらう', color: BUYBACK_PRIMARY, led: 'bg-emerald-200' },
-  // まとめて送る宅配買取（ふるいち）。在庫なしのカードで購入ボタンの代わりに出すため、白地 + アンバーの枠で区別する
-  bulk: {
-    label: 'まとめて買取査定',
-    color: `${switchBase} border border-amber-400 bg-white text-amber-700 hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-amber-500`,
-    led: 'bg-amber-500',
-  },
+  // まとめて送る宅配買取（ふるいち）。在庫なしのカードでシングル買取ボタンと並ぶため、白地 + 緑枠で区別する
+  bulk: { label: 'まとめて買取査定', color: BUYBACK_SECONDARY, led: 'bg-emerald-500' },
 }[kind];
 ---
 
@@ -39,7 +35,7 @@ const styles = {
   data-aff-type={kind === 'bulk' ? 'buyback_bulk' : kind}
   data-aff-item={item}
   class:list={[
-    'flex flex-col items-center justify-center gap-1 rounded-lg text-center font-bold leading-tight transition focus-visible:outline-2 focus-visible:outline-offset-2',
+    'flex flex-col items-center justify-center gap-1 text-center font-bold leading-tight transition focus-visible:outline-2 focus-visible:outline-offset-2',
     styles.color,
     size === 'lg' ? 'px-4 py-3.5 text-base' : 'min-h-[3.5rem] px-2 py-2 text-[13px]',
   ]}

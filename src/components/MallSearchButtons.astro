@@ -42,13 +42,13 @@ const buttons = [
 ];
 ---
 
-<!-- 購入先を探す導線なので、白いセクションに埋もれないよう淡いローズの背景・赤枠で区別する -->
-<section aria-labelledby="mall-search" class="mt-6 rounded-2xl border border-rose-300 bg-rose-50/60 p-5 shadow-sm">
+<!-- 購入先を探す導線なので、白いセクションに埋もれないようファイアレッドを薄く引いた背景・赤枠で区別する -->
+<section aria-labelledby="mall-search" class="mt-6 rounded-2xl border border-red-300 bg-red-50/60 p-5 shadow-sm">
   <h3 id="mall-search" class="flex items-center gap-2 text-base font-bold text-slate-900">
-    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-rose-600 text-white shadow-sm" aria-hidden="true">
+    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-red-600 text-white shadow-sm" aria-hidden="true">
       <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6"></circle><path d="m15 15 5 5"></path></svg>
     </span>
-    <span><span class="text-rose-700">モール・フリマ</span>で在庫・価格を探す</span>
+    <span><span class="text-red-700">モール・フリマ</span>で在庫・価格を探す</span>
   </h3>
   <p class="mt-1 text-xs text-slate-600">
     楽天市場・Yahoo!ショッピング・メルカリは「{shopKeyword}」の検索結果を開きます（楽天市場・Yahoo!ショッピングはレアリティも含めて検索）。
@@ -65,10 +65,10 @@ const buttons = [
         data-aff-item={keyword}
         class:list={[
           SWITCH_BASE,
-          'flex items-center justify-center gap-2.5 rounded-lg border border-rose-200 bg-white px-4 py-3.5 text-center text-base font-bold text-slate-800 transition hover:border-rose-400 hover:bg-rose-50 hover:text-rose-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500',
+          'flex items-center justify-center gap-2.5 border border-slate-300 bg-white px-4 py-3.5 text-center text-base font-bold text-slate-800 transition hover:border-red-500 hover:text-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500',
         ]}
       >
-        <span class:list={['h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-rose-100', b.led]} aria-hidden="true"></span>
+        <span class:list={['h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-red-100', b.led]} aria-hidden="true"></span>
         {b.icon && <span aria-hidden="true">{b.icon}</span>}
         {b.label}
         <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">

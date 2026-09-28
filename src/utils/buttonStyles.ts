@@ -1,13 +1,14 @@
-// アフィリエイト導線ボタンの共通スタイル（ホワイトラボの操作パネル風）
+// アフィリエイト導線ボタンの共通スタイル（ファイアレッド・リーフグリーン配色）
+// 購入 = ファイアレッド（赤）、買取 = リーフグリーン（緑）。白背景の上で対になるアクセントとして使う
 
-/** 白地で立体感を出すクリーンな影（押すと 1px 沈む） */
-export const SWITCH_BASE = 'shadow-sm active:translate-y-px active:shadow-none';
+/** 精密機器のトリガースイッチ風：微細な角丸 + クリーンな影（押すと 1px 沈む） */
+export const SWITCH_BASE = 'rounded-md shadow-sm active:translate-y-px active:shadow-none';
 
-/** メインの購入ボタン：インダストリアルオレンジ（白文字。明るい地でも読めるよう薄い文字影を付ける） */
-export const SALE_PRIMARY = `${SWITCH_BASE} bg-amber-500 text-white [text-shadow:0_1px_1px_rgb(120_53_15/0.45)] hover:bg-amber-600 focus-visible:outline-amber-500`;
+/** 購入ボタン：ファイアレッド */
+export const SALE_PRIMARY = `${SWITCH_BASE} bg-red-600 text-white shadow-red-900/10 hover:bg-red-700 focus-visible:outline-red-600`;
 
-/** 控えめな購入ボタン（最安ではない側）：白地 + アンバーの枠・文字 */
-export const SALE_SECONDARY = `${SWITCH_BASE} border border-amber-400 bg-white text-amber-700 hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-amber-500`;
+/** 買取ボタン：リーフグリーン */
+export const BUYBACK_PRIMARY = `${SWITCH_BASE} bg-emerald-600 text-white shadow-emerald-900/10 hover:bg-emerald-700 focus-visible:outline-emerald-600`;
 
-/** 買取ボタン：落ち着いたエメラルド（白文字） */
-export const BUYBACK_PRIMARY = `${SWITCH_BASE} bg-emerald-600 text-white hover:bg-emerald-700 focus-visible:outline-emerald-600`;
+/** 買取の補助ボタン（宅配でまとめて査定）：白地 + リーフグリーンの枠。単品買取ボタンと並んだときに区別する */
+export const BUYBACK_SECONDARY = `${SWITCH_BASE} border border-emerald-500 bg-white text-emerald-700 hover:bg-emerald-50 focus-visible:outline-emerald-600`;

@@ -98,5 +98,5 @@ html {
 
 /* 記事内のアフィリエイトボタン: <a class="btn-affiliate" href="..." rel="sponsored nofollow noopener" target="_blank"> */
 @utility btn-affiliate {
-  @apply inline-block rounded-lg bg-amber-500 px-6 py-3 font-bold text-white no-underline shadow-sm transition hover:bg-amber-600;
+  @apply inline-block rounded-md bg-red-600 px-6 py-3 font-bold text-white no-underline shadow-sm shadow-red-900/10 transition hover:bg-red-700;
 }

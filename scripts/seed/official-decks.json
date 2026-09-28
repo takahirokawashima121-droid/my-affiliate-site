@@ -4,144 +4,94 @@
   ],
   "cards": [
     {
-      "id": "mherakurosuex-rr-m2-004",
-      "name": "メガヘラクロスex",
-      "rarity": "RR",
-      "cardNumber": "004/080",
+      "id": "erezun-c-m2-056",
+      "name": "エレズン",
+      "rarity": "C",
+      "cardNumber": "056/080",
       "expansionCode": "M2",
       "regulationMark": "I",
-      "deck": "mherakurosuex-deck-0927",
-      "role": "ポケモン（公式カードID 48344）"
+      "deck": "mabusoruex-deck-0928",
+      "role": "ポケモン（公式カードID 48396）"
     },
     {
-      "id": "guroukusaenerugi-r-m3-078",
-      "name": "グロウ草エネルギー",
+      "id": "sutorinda-r-m2-057",
+      "name": "ストリンダー",
       "rarity": "R",
-      "cardNumber": "078/080",
-      "expansionCode": "M3",
-      "regulationMark": "J",
-      "deck": "mherakurosuex-deck-0927",
-      "role": "エネルギー（公式カードID 49711）"
-    },
-    {
-      "id": "hisui-m6a-098",
-      "name": "ヒスイ ゾロア",
-      "rarity": "-",
-      "cardNumber": "098/103",
-      "expansionCode": "M6a",
-      "regulationMark": "J",
-      "deck": "hisui-deck-0927",
-      "role": "ポケモン（公式カードID 50710・再録弾のためマークは推定）"
-    },
-    {
-      "id": "hisui-m6a-099",
-      "name": "ヒスイ ゾロアーク",
-      "rarity": "-",
-      "cardNumber": "099/103",
-      "expansionCode": "M6a",
-      "regulationMark": "J",
-      "deck": "hisui-deck-0927",
-      "role": "ポケモン（公式カードID 50711・再録弾のためマークは推定）"
-    },
-    {
-      "id": "buba-c-sv9-013",
-      "name": "ブーバー",
-      "rarity": "C",
-      "cardNumber": "013/100",
-      "expansionCode": "SV9",
+      "cardNumber": "057/080",
+      "expansionCode": "M2",
       "regulationMark": "I",
-      "deck": "hisui-deck-0927",
-      "role": "ポケモン（公式カードID 47021）"
+      "deck": "mabusoruex-deck-0928",
+      "role": "ポケモン（公式カードID 48397）"
     },
     {
-      "id": "buban-r-sv9-014",
-      "name": "ブーバーン",
+      "id": "iyui-r-m5-057",
+      "name": "イーユイ",
       "rarity": "R",
-      "cardNumber": "014/100",
-      "expansionCode": "SV9",
-      "regulationMark": "I",
-      "deck": "hisui-deck-0927",
-      "role": "ポケモン（公式カードID 47022）"
+      "cardNumber": "057/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "mabusoruex-deck-0928",
+      "role": "ポケモン（公式カードID 50276）"
     },
     {
-      "id": "borukenionex-rr-sv9-017",
-      "name": "ボルケニオンex",
-      "rarity": "RR",
-      "cardNumber": "017/100",
-      "expansionCode": "SV9",
+      "id": "rokettodannonixyura-r-sv10-072",
+      "name": "ロケット団のニューラ",
+      "rarity": "R",
+      "cardNumber": "072/098",
+      "expansionCode": "SV10",
       "regulationMark": "I",
-      "deck": "hisui-deck-0927",
-      "role": "ポケモン（公式カードID 47025）"
+      "deck": "mabusoruex-deck-0928",
+      "role": "ポケモン（公式カードID 47465）"
     },
     {
-      "id": "pureshixyasukixyari-mc-658",
-      "name": "プレシャスキャリー",
-      "rarity": "-",
-      "cardNumber": "658/742",
-      "expansionCode": "MC",
-      "regulationMark": "I",
-      "deck": "hisui-deck-0927",
-      "role": "グッズ（公式カードID 49374・再録弾のためマークは推定）"
-    },
-    {
-      "id": "hitokage-c-m2-011",
-      "name": "ヒトカゲ",
-      "rarity": "C",
-      "cardNumber": "011/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "mrizadonxex-deck-0927",
-      "role": "ポケモン（公式カードID 48351）"
-    },
-    {
-      "id": "rizado-c-m2-012",
-      "name": "リザード",
-      "rarity": "C",
-      "cardNumber": "012/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "mrizadonxex-deck-0927",
-      "role": "ポケモン（公式カードID 48352）"
-    },
-    {
-      "id": "mrizadonxex-rr-m2-013",
-      "name": "メガリザードンXex",
-      "rarity": "RR",
-      "cardNumber": "013/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "mrizadonxex-deck-0927",
-      "role": "ポケモン（公式カードID 48353）"
-    },
-    {
-      "id": "mrizadonyex-mc-085",
-      "name": "メガリザードンYex",
-      "rarity": "-",
-      "cardNumber": "085/742",
-      "expansionCode": "MC",
-      "regulationMark": "I",
-      "deck": "mrizadonxex-deck-0927",
-      "role": "ポケモン（公式カードID 48801・再録弾のためマークは推定）"
-    },
-    {
-      "id": "odoridoriex-rr-m2-018",
-      "name": "オドリドリex",
-      "rarity": "RR",
-      "cardNumber": "018/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "mrizadonxex-deck-0927",
-      "role": "ポケモン（公式カードID 48358）"
-    },
-    {
-      "id": "hifukiyarou-u-m2-078",
-      "name": "ひふきやろう",
+      "id": "araburutake-u-sv6-071",
+      "name": "アラブルタケ",
       "rarity": "U",
-      "cardNumber": "078/080",
-      "expansionCode": "M2",
+      "cardNumber": "071/101",
+      "expansionCode": "SV6",
+      "regulationMark": "H",
+      "deck": "mabusoruex-deck-0928",
+      "role": "ポケモン（公式カードID 45762）"
+    },
+    {
+      "id": "momowarou-u-sv8-075",
+      "name": "モモワロウ",
+      "rarity": "U",
+      "cardNumber": "075/106",
+      "expansionCode": "SV8",
+      "regulationMark": "H",
+      "deck": "mabusoruex-deck-0928",
+      "role": "ポケモン（公式カードID 46415）"
+    },
+    {
+      "id": "mabusoruex-rr-m1l-038",
+      "name": "メガアブソルex",
+      "rarity": "RR",
+      "cardNumber": "038/063",
+      "expansionCode": "M1L",
       "regulationMark": "I",
-      "deck": "mrizadonxex-deck-0927",
-      "role": "サポート（公式カードID 48418）"
+      "deck": "mabusoruex-deck-0928",
+      "role": "ポケモン（公式カードID 47771）"
+    },
+    {
+      "id": "pankumetto-mbg-017",
+      "name": "パンクメット",
+      "rarity": "-",
+      "cardNumber": "017/021",
+      "expansionCode": "MBG",
+      "regulationMark": "I",
+      "deck": "mabusoruex-deck-0928",
+      "role": "ポケモンのどうぐ（公式カードID 48278・再録弾のためマークは推定）"
+    },
+    {
+      "id": "danbaru-c-m4-057",
+      "name": "ダンバル",
+      "rarity": "C",
+      "cardNumber": "057/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "mdorixyuuzuex-deck-0928-pureshixyasukixyari",
+      "role": "ポケモン（公式カードID 50141）"
     }
   ]
 }

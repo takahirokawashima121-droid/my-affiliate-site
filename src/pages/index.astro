@@ -5,7 +5,7 @@ import AffiliatePixels from '../components/AffiliatePixels.astro';
 import PostCard from '../components/PostCard.astro';
 import FeaturedDecks from '../components/FeaturedDecks.astro';
 import { DECK_COLUMNS } from '../data/deck-columns';
-import { TIER_LIST } from '../data/tier';
+import { TIER_LIST, TIER_SOURCES } from '../data/tier';
 import { SITE, STANDARD_REGULATIONS } from '../consts';
 import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cardModel, cheapestVariantIds, bestOffer, hasSaleStock } from '../utils/cards';
 import { getPosts } from '../utils/posts';
@@ -16,7 +16,12 @@ const cheapestIds = cheapestVariantIds(cards); // 同名カードが複数ある
 const updated = latestUpdate(cards);
 const posts = (await getPosts()).slice(0, 6);
 // 環境Tier表への導線に出す Tier1・Tier2 のデッキ名
-const tierPreview = TIER_LIST.tiers.slice(0, 2).map((t) => ({ label: t.label, rank: t.rank, names: t.decks.map((d) => DECK_COLUMNS.find((c) => c.slug === d.slug)?.deckName ?? d.slug) }));
+const tierPreview = TIER_LIST.tiers.slice(0, 2).map((t) => ({
+  label: t.label,
+  rank: t.rank,
+  title: t.title,
+  decks: t.decks.map((d) => ({ slug: d.slug, name: DECK_COLUMNS.find((c) => c.slug === d.slug)?.deckName ?? d.slug })),
+}));
 
 // 構造化データ：サイト情報 + 掲載カード一覧（商品と最安値）
 const jsonLd = [
@@ -114,22 +119,53 @@ const chip =
     </p>
   </section>
 
-  <!-- 環境Tier表への導線 -->
-  <a href="/tier/" class="bg-lab-panel group mb-8 block rounded-2xl border border-lab-600 p-4 text-slate-100 shadow-lg shadow-black/20 transition hover:-translate-y-0.5 hover:border-lamp/60 sm:p-6">
-    <span class="flex flex-wrap items-center justify-between gap-2">
-      <span class="text-lg font-black sm:text-xl"><span aria-hidden="true">📊</span> 最新環境Tier表（H・I・J）</span>
-      <span class="font-mono text-[11px] text-slate-400">{TIER_LIST.updated.replaceAll('-', '/')} 更新・5サイトの評価を独自分析</span>
-    </span>
-    <span class="mt-3 block space-y-2">
-      {tierPreview.map((t) => (
-        <span class="flex items-start gap-2 text-xs sm:text-sm">
-          <span class:list={['spec-tag shrink-0', t.rank === 1 ? 'border-lamp bg-lamp/90 text-slate-950' : 'border-gauge/70 bg-gauge/10 text-gauge']}>{t.label}</span>
-          <span class="text-slate-200">{t.names.join(' ／ ')}</span>
+  <!-- 環境Tier表への導線：戦況分析モニター（Tier1・Tier2 のデッキをチップで並べ、各デッキ解説へ直接飛べる） -->
+  <section aria-labelledby="tier-monitor" class="bg-lab-panel lab-corners mb-8 rounded-2xl border border-lab-600 p-4 text-slate-100 shadow-xl shadow-black/25 ring-1 ring-inset ring-gauge/10 sm:p-6">
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-slate-700/80 pb-3">
+      <p class="flex items-center gap-2 font-mono text-[11px] font-bold tracking-widest text-gauge">
+        <span class="relative flex h-2 w-2" aria-hidden="true">
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-gauge/60 motion-reduce:animate-none"></span>
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-gauge"></span>
         </span>
+        TACTICAL RADAR / ENVIRONMENT MONITOR
+      </p>
+      <p class="font-mono text-[11px] text-slate-400">UPDATED {TIER_LIST.updated.replaceAll('-', '.')} ・ SRC ×{TIER_SOURCES.length}</p>
+    </div>
+    <h2 id="tier-monitor" class="mt-3 text-lg font-black sm:text-2xl"><span aria-hidden="true">📊</span> 最新環境Tier表（H・I・J）</h2>
+    <p class="mt-1 text-xs text-slate-400 sm:text-sm">攻略サイト{TIER_SOURCES.length}社のTier評価と大会結果を突き合わせた、いま勝っているデッキの一覧です。デッキ名をタップするとレシピ解説へ。</p>
+
+    <div class="mt-4 space-y-3">
+      {tierPreview.map((t) => (
+        <div class:list={['rounded-xl border p-3 sm:flex sm:items-start sm:gap-4 sm:p-4', t.rank === 1 ? 'border-amber-500/50 bg-amber-500/[0.07] shadow-[inset_3px_0_0_var(--color-lamp)]' : 'border-slate-700/70 bg-slate-900/60 shadow-[inset_3px_0_0_var(--color-gauge)]']}>
+          <div class="mb-2 flex shrink-0 items-center gap-2 sm:mb-0 sm:w-40 sm:flex-col sm:items-start sm:gap-1">
+            <span class:list={['rounded-md px-2.5 py-1 font-mono text-sm font-black tracking-wider', t.rank === 1 ? 'bg-amber-500 text-slate-950 shadow-[0_0_14px_rgb(245_158_11/0.35)]' : 'border border-gauge/60 bg-gauge/10 text-gauge']}>{t.label.toUpperCase()}</span>
+            <span class:list={['text-xs font-bold', t.rank === 1 ? 'text-amber-400' : 'text-slate-300']}>{t.rank === 1 ? '環境トップ・勝率最上位' : t.title}</span>
+            <span class="font-mono text-[10px] text-slate-500">{t.decks.length} DECKS</span>
+          </div>
+          <ul class="flex flex-1 flex-wrap gap-2">
+            {t.decks.map((d) => (
+              <li>
+                <a
+                  href={`/columns/${d.slug}/`}
+                  class:list={[
+                    'inline-flex min-h-[2.5rem] items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_2px_0_rgb(0_0_0/0.4)] transition hover:-translate-y-px active:translate-y-px',
+                    t.rank === 1 ? 'border-amber-500/60 bg-slate-800 text-amber-300 hover:border-amber-400 hover:text-amber-200' : 'border-slate-700 bg-slate-800 text-slate-200 hover:border-amber-400 hover:text-slate-100',
+                  ]}
+                >
+                  {t.rank === 1 && <span aria-hidden="true">👑</span>}
+                  {d.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       ))}
-    </span>
-    <span class="mt-4 block text-right text-sm font-black text-lamp group-hover:underline">Tier1〜3の全デッキとレシピを見る →</span>
-  </a>
+    </div>
+
+    <a href="/tier/" class="mt-4 flex items-center justify-center gap-2 rounded-lg border border-amber-500/60 px-4 py-3 text-sm font-black text-amber-400 transition hover:bg-amber-500 hover:text-slate-950 sm:text-base">
+      Tier1〜3の全デッキ・評価の根拠を見る →
+    </a>
+  </section>
 
   <FeaturedDecks cards={cards} />
 

@@ -14,7 +14,11 @@ export const SITE = {
   ogImage: '/og-default.png',
   twitter: '', // 例: '@your_account'
   gaMeasurementId: 'G-LVWFTFK7L7', // Google Analytics 4 測定ID（空にすると計測タグを出力しない）
-  googleSiteVerification: 'WNP7X16_Qz86ctYfInfGAMD753rBl78ULK5nTMZoH8g', // Google Search Console の所有権確認
+  // Google Search Console の所有権確認（プロパティごとに1つ。複数あればすべて出力する）
+  googleSiteVerification: [
+    'WNP7X16_Qz86ctYfInfGAMD753rBl78ULK5nTMZoH8g',
+    'V2wcDtyhtHDh5d_E8NeaaotuAS2EJlVwNHOV25kxF6o',
+  ],
   postsPerPage: 12,
   // 価格データの出典に関する注意書き（トップ・カード詳細に表示）。データの取得方法を変えたら実態に合わせて更新すること
   priceNotice:

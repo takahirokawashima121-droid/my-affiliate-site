@@ -20,7 +20,10 @@ const alt = `${nameWithRarity({ name, rarity })} [${cardNumber}]`;
 // 読み込みエラー時に画像を隠し、直後のプレースホルダーを表示する（JS バンドル不要のインラインハンドラ）
 const onImageError = 'this.hidden=true;this.nextElementSibling.hidden=false';
 
-// 楽天のサムネイルサーバー（?_ex=幅x高さ）なら高解像度版も用意する
+// 画像URLを高解像度版に置き換える（データ側のリサイズ指定が小さくてもボヤけないようにする）
+// - 楽天のサムネイルサーバー（?_ex=幅x高さ）：通常は 400x400、高密度ディスプレイ向けに 800x800（元画像より大きくはならない）
+// - Yahoo!ショッピングの画像（/i/{サイズ}/）：j = 300x300、l = 600x600
+let src = imageUrl;
 let srcset: string | undefined;
 if (imageUrl) {
   try {
@@ -30,7 +33,12 @@ if (imageUrl) {
         url.searchParams.set('_ex', size);
         return url.toString();
       };
-      srcset = `${at('300x300')} 300w, ${at('600x600')} 600w`;
+      src = at('400x400');
+      srcset = `${src} 400w, ${at('800x800')} 800w`;
+    } else if (url.hostname === 'item-shopping.c.yimg.jp' && /^\/i\/[a-z]\//.test(url.pathname)) {
+      const at = (size: string) => imageUrl.replace(/\/i\/[a-z]\//, `/i/${size}/`);
+      src = at('j');
+      srcset = `${src} 300w, ${at('l')} 600w`;
     }
   } catch {
     // 相対パス（public/ 配下の画像）はそのまま使う
@@ -38,10 +46,11 @@ if (imageUrl) {
 }
 ---
 
-<div class:list={['@container relative aspect-[63/88] w-full overflow-hidden rounded-lg', className]}>
+<!-- ポケカの標準比率（63:88）の枠に固定し、出品画像の余白に関係なくカードを枠いっぱいに表示する（object-cover） -->
+<div class:list={['@container relative aspect-[63/88] w-full overflow-hidden rounded-md bg-white', className]}>
   {imageUrl && (
     <img
-      src={imageUrl}
+      src={src}
       srcset={srcset}
       sizes={srcset ? sizes : undefined}
       alt={alt}
@@ -50,14 +59,14 @@ if (imageUrl) {
       loading={eager ? 'eager' : 'lazy'}
       fetchpriority={eager ? 'high' : undefined}
       decoding="async"
-      class="absolute inset-0 h-full w-full bg-white object-contain"
+      class="absolute inset-0 h-full w-full bg-white object-cover object-center"
       onerror={onImageError}
     />
   )}
 
   <!-- プレースホルダー（画像なし・読み込み失敗時） -->
   <div
-    class="absolute inset-0 rounded-lg bg-gradient-to-br from-amber-400 via-red-400 to-blue-500 p-[3%]"
+    class="absolute inset-0 rounded-md bg-gradient-to-br from-amber-400 via-red-400 to-blue-500 p-[3%]"
     role="img"
     aria-label={`${alt}（画像準備中）`}
     hidden={Boolean(imageUrl)}

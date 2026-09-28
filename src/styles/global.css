@@ -3,16 +3,90 @@
 
 @theme {
   --font-sans: system-ui, -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo, sans-serif;
-  /* ブランドカラー = ポケモンブルー（blue-50〜700） */
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  /* ブランドカラー = ポケモンブルー（blue-50〜700）。本文中のリンク等に使う */
   --color-brand-50: #eff6ff;
   --color-brand-100: #dbeafe;
   --color-brand-600: #2563eb;
   --color-brand-700: #1d4ed8;
+  /* 工房（ラボ）テーマ：ダークスレートの下地 + 作業灯のアンバー + 計器のシアン */
+  --color-lab-950: #080b12;
+  --color-lab-900: #0e131d;
+  --color-lab-800: #161d2a;
+  --color-lab-700: #232d3f;
+  --color-lab-600: #33405a;
+  --color-lamp: #fbbf24;
+  --color-gauge: #22d3ee;
 }
 
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+}
+
+/* 工房の床：ダークスレートに薄い方眼（ページ全体の背景） */
+@utility bg-lab-floor {
+  background-color: var(--color-lab-950);
+  background-image:
+    linear-gradient(rgb(148 163 184 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 184 / 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* 作業台：本文を載せる明るいパネル（ごく薄い設計図の方眼。読みやすさを優先して明るい面にする） */
+@utility bg-workbench {
+  background-color: #f6f7f9;
+  background-image:
+    linear-gradient(rgb(15 23 42 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(15 23 42 / 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* 計器パネル：ダークの装飾ブロック（ヒーロー・特集など）。方眼 + 上端に作業灯のにじみ */
+@utility bg-lab-panel {
+  background-color: var(--color-lab-900);
+  background-image:
+    radial-gradient(ellipse 60% 50% at 85% 0%, rgb(251 191 36 / 0.14), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 0% 100%, rgb(34 211 238 / 0.08), transparent 70%),
+    linear-gradient(rgb(148 163 184 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 184 / 0.07) 1px, transparent 1px);
+  background-size: auto, auto, 22px 22px, 22px 22px;
+}
+
+/* 注意喚起のハザードストライプ（黄×黒）。ヘッダー下や作業台の上端のライン */
+@utility bg-hazard {
+  background-image: repeating-linear-gradient(-45deg, var(--color-lamp) 0 10px, #111827 10px 20px);
+}
+
+/* 四隅のブラケット（メカニカルな枠）。relative な要素に付ける */
+@utility lab-corners {
+  position: relative;
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    pointer-events: none;
+    border-color: var(--color-lamp);
+  }
+  &::before {
+    top: 6px;
+    left: 6px;
+    border-top: 2px solid;
+    border-left: 2px solid;
+  }
+  &::after {
+    right: 6px;
+    bottom: 6px;
+    border-right: 2px solid;
+    border-bottom: 2px solid;
+  }
+}
+
+/* パーツのスペック表のようなタグ（等幅・角ばった小ラベル） */
+@utility spec-tag {
+  @apply inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 font-mono text-[11px] font-bold tracking-wider;
 }
 
 /* 記事内のアフィリエイトボタン: <a class="btn-affiliate" href="..." rel="sponsored nofollow noopener" target="_blank"> */

@@ -13,11 +13,17 @@ type Props = HeadProps;
   <head>
     <BaseHead {...Astro.props} />
   </head>
-  <body class="flex min-h-screen flex-col bg-slate-50 pb-[calc(4rem+env(safe-area-inset-bottom))] font-sans text-slate-800 antialiased md:pb-0">
+  <body class="bg-lab-floor flex min-h-screen flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] font-sans text-slate-800 antialiased md:pb-0">
     <a href="#main" class="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-white focus:px-3 focus:py-2">本文へスキップ</a>
     <Header />
-    <main id="main" class="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:py-12">
-      <slot />
+    <!-- 工房の床（ダーク）の上に、本文を載せる明るい「作業台」を置く。スマホは画面幅いっぱい、PC は角の丸いパネル -->
+    <main id="main" class="mx-auto w-full max-w-6xl flex-1 sm:px-4 sm:py-8">
+      <div class="bg-workbench shadow-2xl shadow-black/40 sm:rounded-2xl sm:ring-1 sm:ring-lab-600">
+        <div class="bg-hazard h-1.5 sm:rounded-t-2xl" aria-hidden="true"></div>
+        <div class="px-4 py-8 sm:px-8 sm:py-10">
+          <slot />
+        </div>
+      </div>
     </main>
     <Footer />
     <MobileBottomNav />

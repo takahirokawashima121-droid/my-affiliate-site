@@ -12,12 +12,12 @@ export type MallConfig = {
 export const MALLS = {
   rakuten: {
     label: '楽天市場',
-    ids: { a_id: '5819091', p_id: '54', pc_id: '54', pl_id: '616' },
+    ids: { a_id: '5821460', p_id: '54', pc_id: '54', pl_id: '616' },
     searchUrl: (kw) => `https://search.rakuten.co.jp/search/mall/${kw}/`,
   },
   yahoo: {
     label: 'Yahoo!ショッピング',
-    ids: { a_id: '5819096', p_id: '1225', pc_id: '1925', pl_id: '18502' },
+    ids: { a_id: '5821461', p_id: '1225', pc_id: '1925', pl_id: '18502' },
     searchUrl: (kw) => `https://shopping.yahoo.co.jp/search?p=${kw}`,
   },
 } satisfies Record<string, MallConfig>;

@@ -63,66 +63,72 @@ const chip =
 ---
 
 <BaseLayout jsonLd={jsonLd}>
-  <!-- ヒーロー：現行スタンダード（H・I・J）で対戦するプレイヤー向け -->
-  <section class="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-sky-500 via-blue-600 to-blue-700 px-6 py-10 text-white shadow-xl shadow-blue-600/25 sm:px-10 sm:py-14">
-    <!-- 装飾：ポップなモンスターボール（赤・白・黄のアクセント）ときらめき -->
-    <svg class="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rotate-12 opacity-40 drop-shadow-xl sm:-right-4 sm:-top-8 sm:h-64 sm:w-64 sm:opacity-95 lg:h-72 lg:w-72" viewBox="0 0 100 100" aria-hidden="true">
-      <circle cx="50" cy="50" r="47" fill="#fbbf24"></circle>
-      <circle cx="50" cy="50" r="43" fill="#fff"></circle>
-      <path d="M7 50a43 43 0 0 1 86 0z" fill="#ef4444"></path>
-      <path d="M20 30a34 34 0 0 1 18-14" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".55"></path>
-      <rect x="7" y="46" width="86" height="8" fill="#1e293b"></rect>
-      <circle cx="50" cy="50" r="15" fill="#1e293b"></circle>
-      <circle cx="50" cy="50" r="9.5" fill="#fff"></circle>
-      <circle cx="50" cy="50" r="5" fill="#fde68a"></circle>
+  <!-- ヒーロー：現行スタンダード（H・I・J）で対戦するプレイヤー向けのデッキ研究＆パーツ調達工房 -->
+  <section class="bg-lab-panel lab-corners relative mb-8 overflow-hidden rounded-2xl border border-lab-600 px-5 py-8 text-white shadow-xl shadow-black/25 sm:px-10 sm:py-12">
+    <!-- 装飾：工房の歯車（計器のシアン・作業灯のアンバー） -->
+    <svg class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 text-lamp/15 sm:-right-6 sm:-top-6 sm:h-64 sm:w-64 sm:text-lamp/20" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" aria-hidden="true">
+      <path d="M50 8v12M50 80v12M8 50h12M80 50h12M20.3 20.3l8.5 8.5M71.2 71.2l8.5 8.5M20.3 79.7l8.5-8.5M71.2 28.8l8.5-8.5" stroke-linecap="square" stroke-width="9"></path>
+      <circle cx="50" cy="50" r="28"></circle>
+      <circle cx="50" cy="50" r="11"></circle>
     </svg>
-    <svg class="pointer-events-none absolute right-[42%] top-6 hidden h-6 w-6 text-amber-300 sm:block" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0l2.6 9.4L24 12l-9.4 2.6L12 24l-2.6-9.4L0 12l9.4-2.6z"></path></svg>
-    <svg class="pointer-events-none absolute bottom-10 right-[30%] hidden h-4 w-4 text-white/70 sm:block" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0l2.6 9.4L24 12l-9.4 2.6L12 24l-2.6-9.4L0 12l9.4-2.6z"></path></svg>
-    <div class="pointer-events-none absolute -bottom-20 right-24 h-48 w-48 rounded-full bg-white/10" aria-hidden="true"></div>
+    <svg class="pointer-events-none absolute bottom-6 right-24 hidden h-20 w-20 text-gauge/20 sm:block" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" aria-hidden="true">
+      <path d="M50 10v14M50 76v14M10 50h14M76 50h14M21.7 21.7l9.9 9.9M68.4 68.4l9.9 9.9M21.7 78.3l9.9-9.9M68.4 31.6l9.9-9.9" stroke-linecap="square" stroke-width="10"></path>
+      <circle cx="50" cy="50" r="24"></circle>
+    </svg>
 
-    <p class="relative text-xs font-black tracking-widest text-amber-300">FOR COMPETITIVE PLAYERS / REGULATION H・I・J ONLY</p>
-    <h1 class="relative mt-3 text-2xl font-black leading-snug [text-shadow:0_2px_10px_rgb(30_58_138/0.45)] sm:text-4xl sm:leading-tight">
-      バトルに勝つための<br />
-      <span class="underline decoration-amber-300 decoration-[6px] underline-offset-[6px] sm:decoration-[8px] sm:underline-offset-8">デッキ研究＆パーツ調達工房</span>
-    </h1>
-    <p class="relative mt-5 max-w-2xl text-sm leading-relaxed text-blue-50 sm:text-base">
-      現行スタンダード（H・I・J）優勝デッキの60枚レシピ・立ち回りと、不足パーツの最安値を一括チェック。
-    </p>
-    <p class="relative mt-2 max-w-2xl text-xs leading-relaxed text-blue-100 sm:text-sm">
-      コレクター向けの相場サイトではありません。{SITE.title}は、強いデッキを分析し、勝つために必要なパーツを無駄なく揃えたいプレイヤーのための工房です。スタン落ちカードをつかまされる心配はありません。
-    </p>
-    <ul class="relative mt-8 flex flex-wrap gap-3">
-      <li class="flex items-center gap-2 rounded-2xl bg-white/20 px-4 py-2.5 shadow-sm ring-1 ring-white/40 backdrop-blur-md">
-        <span class="text-xl" aria-hidden="true">🛡️</span>
-        <span class="text-sm font-bold">H・I・J スタン完全特化</span>
-      </li>
-      <li class="flex items-center gap-2 rounded-2xl bg-white/20 px-4 py-2.5 shadow-sm ring-1 ring-white/40 backdrop-blur-md">
-        <span class="text-xl" aria-hidden="true">⚡</span>
-        <span class="text-sm font-bold">掲載パーツ <span class="text-xl font-black tabular-nums">{cards.length}</span>種</span>
-      </li>
-      <li class="flex items-center gap-2 rounded-2xl bg-white/20 px-4 py-2.5 shadow-sm ring-1 ring-white/40 backdrop-blur-md">
-        <span class="text-xl" aria-hidden="true">🏆</span>
-        <span class="text-sm font-bold">優勝デッキ研究 × 最安パーツ調達</span>
-      </li>
+    <ul class="relative flex flex-wrap gap-2" aria-label="対象">
+      <li class="spec-tag border-lamp/70 bg-lamp/10 text-lamp">競技プレイヤー専用</li>
+      <li class="spec-tag border-gauge/60 bg-gauge/10 text-gauge">現行レギュレーション H・I・J 特化</li>
     </ul>
-    <p class="relative mt-4 text-xs text-blue-100">最終更新: {updated ? formatDateTime(updated) : '-'}</p>
+    <h1 class="relative mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+      {SITE.title}
+      <span class="mt-2 block h-1 w-24 bg-hazard sm:w-32" aria-hidden="true"></span>
+    </h1>
+    <p class="relative mt-4 max-w-2xl text-base font-bold leading-relaxed text-slate-100 sm:text-xl">バトルに勝つためのデッキ研究＆パーツ調達サポートサイト</p>
+
+    <!-- 当工房の特徴 -->
+    <h2 class="relative mt-8 font-mono text-[11px] font-bold tracking-widest text-slate-400">当工房の特徴 / FEATURES</h2>
+    <ul class="relative mt-2 grid gap-3 md:grid-cols-3">
+      {[
+        { icon: '🛠️', no: '01', title: 'ジムバトル優勝レシピの分析', body: '勝率を高める60枚の採用理由と立ち回りを研究' },
+        { icon: '⚡', no: '02', title: '最安パーツ一括調達', body: '不足しているカードの最安値をショップ横断で即時チェック' },
+        { icon: '🛡️', no: '03', title: 'スタン落ち完全排除', body: 'H・I・J規格のみ掲載。使えないカードを買ってしまう事故を防止' },
+      ].map((f) => (
+        <li class="rounded-lg border border-lab-600 bg-lab-800/80 p-4">
+          <span class="flex items-center justify-between">
+            <span class="text-2xl" aria-hidden="true">{f.icon}</span>
+            <span class="font-mono text-[10px] font-bold tracking-widest text-slate-500">SPEC-{f.no}</span>
+          </span>
+          <span class="mt-2 block text-sm font-black text-lamp sm:text-base">{f.title}</span>
+          <span class="mt-1 block text-xs leading-relaxed text-slate-300 sm:text-sm">{f.body}</span>
+        </li>
+      ))}
+    </ul>
+
+    <p class="relative mt-6 border-l-2 border-lamp/70 pl-3 text-xs leading-relaxed text-slate-300 sm:text-sm">
+      ※当サイトは対戦プレイヤー専用のデッキ構築サポートサイトです。レアリティ相場・投資・PSA価値の追跡は一切行いません。実戦に必要な最安パーツを無駄なく揃えたいプレイヤーのために設計されています。
+    </p>
+    <p class="relative mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-slate-400">
+      <span>PARTS: <span class="font-bold tabular-nums text-gauge">{cards.length}</span>種</span>
+      <span>UPDATED: <span class="text-slate-300">{updated ? formatDateTime(updated) : '-'}</span></span>
+    </p>
   </section>
 
   <!-- 環境Tier表への導線 -->
-  <a href="/tier/" class="group mb-8 block rounded-3xl border-2 border-slate-800 bg-slate-900 p-4 text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl sm:p-6">
+  <a href="/tier/" class="bg-lab-panel group mb-8 block rounded-2xl border border-lab-600 p-4 text-white shadow-lg shadow-black/20 transition hover:-translate-y-0.5 hover:border-lamp/60 sm:p-6">
     <span class="flex flex-wrap items-center justify-between gap-2">
       <span class="text-lg font-black sm:text-xl"><span aria-hidden="true">📊</span> 最新環境Tier表（H・I・J）</span>
-      <span class="text-xs text-slate-400">{TIER_LIST.updated.replaceAll('-', '/')} 更新・5サイトの評価を独自分析</span>
+      <span class="font-mono text-[11px] text-slate-400">{TIER_LIST.updated.replaceAll('-', '/')} 更新・5サイトの評価を独自分析</span>
     </span>
     <span class="mt-3 block space-y-2">
       {tierPreview.map((t) => (
         <span class="flex items-start gap-2 text-xs sm:text-sm">
-          <span class:list={['shrink-0 rounded-md px-2 py-0.5 font-black', t.rank === 1 ? 'bg-gradient-to-r from-amber-400 to-red-500' : 'bg-gradient-to-r from-slate-400 to-blue-600']}>{t.label}</span>
+          <span class:list={['spec-tag shrink-0', t.rank === 1 ? 'border-lamp bg-lamp text-slate-900' : 'border-gauge/70 bg-gauge/10 text-gauge']}>{t.label}</span>
           <span class="text-slate-200">{t.names.join(' ／ ')}</span>
         </span>
       ))}
     </span>
-    <span class="mt-4 block text-right text-sm font-black text-amber-300 group-hover:underline">Tier1〜3の全デッキとレシピを見る →</span>
+    <span class="mt-4 block text-right text-sm font-black text-lamp group-hover:underline">Tier1〜3の全デッキとレシピを見る →</span>
   </a>
 
   <FeaturedDecks cards={cards} />

@@ -12,7 +12,7 @@ const items = [
 
 <nav
   aria-label="スマホ用メニュー"
-  class="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-slate-900/80 pb-[env(safe-area-inset-bottom)] text-slate-300 backdrop-blur-md md:hidden"
+  class="fixed inset-x-0 bottom-0 z-30 border-t border-lab-700 bg-lab-950/90 pb-[env(safe-area-inset-bottom)] text-slate-300 backdrop-blur-md md:hidden"
 >
   <ul class="grid h-16 grid-cols-5">
     {items.map((item) => (
@@ -21,7 +21,7 @@ const items = [
           href={item.href}
           data-bottom-nav={item.key}
           aria-current={item.active ? 'page' : undefined}
-          class:list={['flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold transition active:scale-95', item.active ? 'text-amber-300' : 'hover:text-white']}
+          class:list={['flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold transition active:scale-95', item.active ? 'text-lamp' : 'hover:text-white']}
         >
           <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
             <path d={item.icon}></path>

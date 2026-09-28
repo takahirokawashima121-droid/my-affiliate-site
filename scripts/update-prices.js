@@ -1,10 +1,18 @@
 // 楽天市場商品検索API・Yahoo!ショッピング商品検索API（v3）で各カードの販売最安値を取得し、src/data/cards.json を更新する
 //
 // 使い方:
-//   npm run update-prices                         全カードを更新
-//   npm run update-prices -- --ids=id1,id2        指定したカードだけ更新
+//   npm run update-prices                         更新時期が来たカードを優先度順に更新（下の「差分更新」）
+//   npm run update-prices -- --all                全カードを更新
+//   npm run update-prices -- --budget=210         210秒たったら新しいカードの取得を始めない（残りは次回。GitHub Actions で使用）
+//   npm run update-prices -- --ids=id1,id2        指定したカードだけ更新（時期・上限に関係なく必ず取得）
 //   npm run update-prices -- --limit=2            先頭から2枚だけ更新
 //   npm run update-prices -- --dry-run            取得結果を表示するだけで保存しない
+//
+// 差分更新（--ids / --all 以外）:
+// - 前回の確認日時（.cache/price-checks.json。GitHub Actions ではキャッシュで引き継ぐ）と updatedAt の新しい方から、
+//   優先カード（環境Tier1〜2のデッキ・新着のデッキ記事12本のレシピに入っているカード）は約1日（20時間）、それ以外は約4日（90時間）
+//   たったものだけを取得する
+// - 更新間隔に対する遅れが大きいものから取得する。--budget の時間を過ぎたら打ち切り、残りは次回に回す
 //
 // 必要な環境変数（.env に記載。.env は Git 管理外）:
 //   RAKUTEN_APP_ID      楽天ウェブサービスのアプリID
@@ -22,20 +30,36 @@
 // - 商品画像は、宣伝帯を焼き込む出品者（BANNER_IMAGE_SHOP_CODES）を除いた最安商品の1枚目を 300x300 に変換して保存。
 //   該当する商品がなければ既存のクリーンな画像を維持し、画像がない商品の場合も既存の imageUrl を維持する
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
-// - API ごとに呼び出し間隔を空ける（楽天・Yahoo! とも 1.5秒。Yahoo! の 429 は 5→15→30秒待って再試行）
+// - API ごとに呼び出し間隔を空ける（楽天 1.05秒・Yahoo! 2.5秒。2つの API は別々の制限のため同じカードを並行して取得する。
+//   Yahoo! の 429 は3秒待って1回だけ再試行し、それでも拒否されたら60秒間 Yahoo! を休む（そのあいだのカードは次回取り直す））
 // - Yahoo! は yahooPrice（該当なしは null）/ yahooUrl（もしも経由）/ yahooUpdatedAt を更新する
 
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
 import { readFile, rename, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cardDisplayName, cardSearchKeyword, cardSearchKeywords } from '../src/utils/cardFormat.ts';
 import { moshimoClickUrl, moshimoImpressionUrl, moshimoLinkUrl } from '../src/utils/moshimo.ts';
+import { TIER_LIST } from '../src/data/tier.ts';
 
 const CARDS_PATH = fileURLToPath(new URL('../src/data/cards.json', import.meta.url));
+const COLUMNS_PATH = fileURLToPath(new URL('../src/data/deck-columns.json', import.meta.url));
+const DECKS_PATH = fileURLToPath(new URL('../src/data/official-decks.json', import.meta.url));
+/** カードごとの前回の確認日時（Git 管理外。GitHub Actions では actions/cache で次回に引き継ぐ） */
+const CHECKS_PATH = fileURLToPath(new URL('../.cache/price-checks.json', import.meta.url));
+/**
+ * 更新間隔：優先カードは毎日（20時間。毎日同じ時刻の実行で「24時間に数分足りない」ために1日飛ばさないよう短めにする）、
+ * それ以外は約4日（90時間）ごと
+ */
+const PRIORITY_INTERVAL_MS = 20 * 3600e3;
+const ROTATION_INTERVAL_MS = 90 * 3600e3;
+/** 「注目カード」とみなす新着デッキ記事の数（トップページの特集に載る最新の記事） */
+const FEATURED_COLUMNS = 12;
 const ENV_PATH = fileURLToPath(new URL('../.env', import.meta.url));
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 const SITE_URL = 'https://my-affiliate-site-phi.vercel.app/';
-const WAIT_MS = 1500;
+/** 楽天の呼び出し間隔（楽天ウェブサービスの上限は1秒1回。わずかに余裕を持たせる） */
+const WAIT_MS = 1050;
 const SHOP_NAME = '楽天市場';
 
 // シングルカード以外の商品（鑑定品・オリパ・サプライ・海外版など）を検索段階で除外
@@ -237,11 +261,17 @@ function makeThrottle(ms) {
   };
 }
 const rakutenThrottle = makeThrottle(WAIT_MS);
-// Yahoo! は1秒1回に加えて短時間の合計回数でも 429 になる（実測で数十回連続すると拒否が続く）ため、間隔を広めに取る
-const YAHOO_WAIT_MS = 1500;
+// Yahoo! は1秒1回に加えて1分あたりの合計回数でも 429 になる（実測で2秒間隔 = 毎分30回でも約30回で拒否が始まる）ため、
+// 毎分24回（2.5秒間隔）に抑える
+const YAHOO_WAIT_MS = 2500;
 const yahooThrottle = makeThrottle(YAHOO_WAIT_MS);
-/** Yahoo! が 429 を返したときの待ち時間（再試行ごとに延ばす） */
-const YAHOO_BACKOFF_MS = [5000, 15000, 30000];
+/** Yahoo! が 429 を返したときの待ち時間（1回だけ再試行する） */
+const YAHOO_BACKOFF_MS = [3000];
+/** 再試行しても 429 のときは、この時間 Yahoo! の取得を休む（待たずに飛ばす。飛ばしたカードは次回取り直す） */
+const YAHOO_COOLDOWN_MS = 60000;
+let yahooCooldownUntil = 0;
+/** Yahoo! を休んでいるあいだに飛ばしたことを表すエラー（取得失敗とは区別する） */
+class YahooSkipped extends Error {}
 
 async function searchRakuten(keyword, { appId, accessKey }) {
   const params = new URLSearchParams({
@@ -300,12 +330,18 @@ const YAHOO_API_URL = 'https://shopping.yahooapis.jp/ShoppingWebService/V3/itemS
 async function searchYahoo(keyword, appid) {
   const params = new URLSearchParams({ appid, query: keyword, sort: '+price', results: '30', in_stock: 'true' });
   for (let attempt = 0; attempt <= YAHOO_BACKOFF_MS.length; attempt++) {
+    if (Date.now() < yahooCooldownUntil) throw new YahooSkipped('Yahoo!の呼び出し制限のため休止中');
     await yahooThrottle();
     const res = await fetch(`${YAHOO_API_URL}?${params}`);
-    if (res.status === 429 && attempt < YAHOO_BACKOFF_MS.length) {
-      // リクエスト過多：待ち時間を延ばしながら再試行
-      await sleep(YAHOO_BACKOFF_MS[attempt]);
-      continue;
+    if (res.status === 429) {
+      if (attempt < YAHOO_BACKOFF_MS.length) {
+        // リクエスト過多：少し待って再試行
+        await sleep(YAHOO_BACKOFF_MS[attempt]);
+        continue;
+      }
+      // 再試行しても拒否される：しばらく Yahoo! を休み、そのあいだのカードは待たずに飛ばす
+      yahooCooldownUntil = Date.now() + YAHOO_COOLDOWN_MS;
+      throw new YahooSkipped(`Yahoo!の呼び出し制限（429）のため ${YAHOO_COOLDOWN_MS / 1000}秒休止`);
     }
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -367,7 +403,40 @@ function parseArgs(argv) {
     ids: get('ids')?.split(',').filter(Boolean),
     limit: get('limit') ? Number(get('limit')) : undefined,
     dryRun: argv.includes('--dry-run'),
+    all: argv.includes('--all'),
+    budgetMs: get('budget') ? Number(get('budget')) * 1000 : undefined,
   };
+}
+
+const readJsonFile = async (file, fallback) => (existsSync(file) ? JSON.parse(await readFile(file, 'utf8')) : fallback);
+
+/** 優先して毎日更新するカード：環境Tier1〜2のデッキと、新着のデッキ記事（最新 FEATURED_COLUMNS 本）のレシピに入っているカード */
+async function priorityCardIds() {
+  const columns = await readJsonFile(COLUMNS_PATH, []);
+  const recipes = await readJsonFile(DECKS_PATH, {});
+  const tierSlugs = new Set(TIER_LIST.tiers.filter((t) => t.rank <= 2).flatMap((t) => t.decks.map((d) => d.slug)));
+  // 新着の記事：公開日の新しい順（同じ日は deck-columns.json で後ろにあるほど新しい）
+  const featured = columns
+    .map((c, order) => ({ c, order }))
+    .sort((a, b) => b.c.pubDate.localeCompare(a.c.pubDate) || b.order - a.order)
+    .slice(0, FEATURED_COLUMNS)
+    .map(({ c }) => c.slug);
+  const deckKeys = columns.filter((c) => tierSlugs.has(c.slug) || featured.includes(c.slug)).map((c) => c.deckKey);
+  return new Set(deckKeys.flatMap((key) => (recipes[key]?.cards ?? []).map((e) => e.cardId).filter(Boolean)));
+}
+
+/**
+ * 更新時期が来たカードを、更新間隔に対する経過の割合（遅れ）が大きい順に返す。優先カードは間隔が短いぶん先に来やすいが、
+ * それ以外のカードも遅れが大きくなれば先に来るため、1回で取り切れない日が続いても取り残されない。
+ * 前回の確認日時は checks（取得したがどの項目も変わらなかった場合も記録）と updatedAt・yahooUpdatedAt の最も新しいもの
+ */
+export function scheduleCards(cards, checks, priority, now = Date.now()) {
+  const lastChecked = (c) => Math.max(Date.parse(checks[c.id] ?? '') || 0, Date.parse(c.updatedAt ?? '') || 0, Date.parse(c.yahooUpdatedAt ?? '') || 0);
+  return cards
+    .map((c) => ({ c, lag: (now - lastChecked(c)) / (priority.has(c.id) ? PRIORITY_INTERVAL_MS : ROTATION_INTERVAL_MS) }))
+    .filter(({ lag }) => lag >= 1)
+    .sort((a, b) => b.lag - a.lag)
+    .map(({ c }) => c);
 }
 
 async function main() {
@@ -383,28 +452,46 @@ async function main() {
   const yahooAppId = process.env.YAHOO_APP_ID;
   if (!yahooAppId) console.warn('⚠ YAHOO_APP_ID が未設定のため、Yahoo!ショッピングの価格取得をスキップします。');
 
-  const { ids, limit, dryRun } = parseArgs(process.argv.slice(2));
+  const { ids, limit, dryRun, all, budgetMs } = parseArgs(process.argv.slice(2));
+  const startedAt = Date.now();
   const raw = await readFile(CARDS_PATH, 'utf8');
   const cards = JSON.parse(raw);
+  const checks = await readJsonFile(CHECKS_PATH, {});
 
-  let targets = ids ? cards.filter((c) => ids.includes(c.id)) : cards;
+  // --ids / --all 以外は、更新時期が来たカードだけを優先度順に取得する（差分更新）
+  const scheduled = !ids && !all;
+  let targets = ids ? cards.filter((c) => ids.includes(c.id)) : all ? cards : scheduleCards(cards, checks, await priorityCardIds(), startedAt);
   if (limit !== undefined) targets = targets.slice(0, limit);
   if (ids) {
     const unknown = ids.filter((id) => !cards.some((c) => c.id === id));
     if (unknown.length) console.warn(`⚠ 見つからないID: ${unknown.join(', ')}`);
   }
-  console.log(`対象: ${targets.length}枚${dryRun ? '（dry-run: 保存しません）' : ''}\n`);
+  console.log(
+    `対象: ${targets.length}枚${scheduled ? `（全${cards.length}枚のうち更新時期が来たカード）` : ''}${budgetMs ? `・時間の上限 ${budgetMs / 1000}秒` : ''}${dryRun ? '（dry-run: 保存しません）' : ''}\n`,
+  );
 
   const updated = new Map();
   let failed = 0;
   let yahooFailed = 0;
   let unchanged = 0;
+  let checked = 0;
+  let yahooSkipped = 0;
   const yen = (n) => `¥${n.toLocaleString()}`;
   // 楽天・Yahoo! それぞれで価格・在庫・リンク等に変化があった項目だけを更新する（更新日時も変化した側のみ）
   for (const [i, card] of targets.entries()) {
+    // 時間の上限（--budget）を過ぎたら新しいカードは始めない。残りは確認日時が古いまま残るので、次回の先頭で取得される
+    if (budgetMs && !ids && Date.now() - startedAt > budgetMs) {
+      console.log(`\n⏱ 時間の上限（${budgetMs / 1000}秒）に達したため打ち切り、残り ${targets.length - i}枚は次回に回します`);
+      break;
+    }
+    checked++;
     const label = `[${i + 1}/${targets.length}] ${cardDisplayName(card)}`;
     const lines = [label];
     let next = card;
+    // 楽天と Yahoo! は別々の呼び出し制限のため並行して取得する（Yahoo! の結果は楽天の処理のあとで使う）
+    const yahooResult = yahooAppId ? findYahooCheapest(card, yahooAppId).then((value) => ({ value }), (error) => ({ error })) : null;
+    let rakutenOk = false;
+    let yahooOk = !yahooAppId;
 
     // ── 楽天市場 ──
     try {
@@ -422,7 +509,8 @@ async function main() {
         let imageNote = imageUrl
           ? `${imageUrl}${imageItem && imageItem !== best ? `（宣伝帯のない ${imageItem.shopName} の画像）` : keepCleanExisting ? '（クリーンな画像がないため既存の画像を維持）' : ''}`
           : '（商品画像なし → 既存の値を維持）';
-        if (imageUrl && !(await isImageAvailable(imageUrl))) {
+        // 画像が前回と同じなら確認済みなので、取得できるかの確認（画像のダウンロード）は省く
+        if (imageUrl && imageUrl !== card.imageUrl && !(await isImageAvailable(imageUrl))) {
           // 新しい画像が取得できない場合、既存の画像が有効ならそれを維持し、無効なら空にしてプレースホルダー表示にする
           const keepExisting = card.imageUrl !== '' && card.imageUrl !== imageUrl && (await isImageAvailable(card.imageUrl));
           imageNote = `（取得できない画像のため保存しません → ${keepExisting ? '既存の画像を維持' : 'プレースホルダー表示'}）`;
@@ -437,15 +525,18 @@ async function main() {
       } else {
         lines.push('          = 楽天は変化なし');
       }
+      rakutenOk = true;
     } catch (error) {
       failed++;
       lines.push(`  楽天  : ✗ エラー: ${error.message} → 変更しません`);
     }
 
     // ── Yahoo!ショッピング ──
-    if (yahooAppId) {
+    if (yahooResult) {
       try {
-        const { best, matches, tried } = await findYahooCheapest(card, yahooAppId);
+        const { value, error } = await yahooResult;
+        if (error) throw error;
+        const { best, matches, tried } = value;
         const fields = yahooFields(best);
         // 楽天に宣伝帯のない画像がなかった（代表画像が宣伝帯入り・または空の）カードは、Yahoo!のクリーンな商品画像に差し替える
         if (next.imageUrl === '' || isBannerImageUrl(next.imageUrl)) {
@@ -466,11 +557,19 @@ async function main() {
         } else {
           lines.push('          = Yahoo!は変化なし');
         }
+        yahooOk = true;
       } catch (error) {
-        yahooFailed++;
-        lines.push(`  Yahoo!: ✗ エラー: ${error.message} → 変更しません`);
+        if (error instanceof YahooSkipped) {
+          yahooSkipped++;
+          lines.push(`  Yahoo!: ⏸ ${error.message} → 今回は取得せず、次回取り直します`);
+        } else {
+          yahooFailed++;
+          lines.push(`  Yahoo!: ✗ エラー: ${error.message} → 変更しません`);
+        }
       }
     }
+    // 楽天・Yahoo! の両方を取得できたときだけ確認日時を記録する（どちらかが取れなかったカードは次回また取得する）
+    if (rakutenOk && yahooOk) checks[card.id] = nowJst();
 
     // 買取目安が未設定（0）のカード（add-cards で追加した直後など）は、販売最安値の約62%を目安として設定する
     const estimate = estimateBuyback(next);
@@ -485,11 +584,17 @@ async function main() {
   }
 
   console.log(
-    `\n更新: ${updated.size}枚 / 変化なし: ${unchanged}枚 / 楽天エラー: ${failed}枚${yahooAppId ? ` / Yahoo!エラー: ${yahooFailed}枚` : '（Yahoo!はスキップ）'}`,
+    `\n取得: ${checked}枚 / 更新: ${updated.size}枚 / 変化なし: ${unchanged}枚 / 楽天エラー: ${failed}枚${yahooAppId ? ` / Yahoo!エラー: ${yahooFailed}枚・休止で後回し: ${yahooSkipped}枚` : '（Yahoo!はスキップ）'}（${Math.round((Date.now() - startedAt) / 1000)}秒）`,
   );
   // 全件エラー（キーの失効・API障害など）は異常終了にして、GitHub Actions の失敗通知で気づけるようにする
-  if (targets.length > 0 && (failed === targets.length || (yahooAppId && yahooFailed === targets.length))) process.exitCode = 1;
-  if (dryRun || updated.size === 0) return;
+  if (checked > 0 && (failed === checked || (yahooAppId && yahooFailed === checked))) process.exitCode = 1;
+  if (dryRun) return;
+  // 確認日時は価格に変化がなくても保存する（次回の差分更新で同じカードを取り直さないため）
+  if (checked > 0) {
+    mkdirSync(dirname(CHECKS_PATH), { recursive: true });
+    await writeFile(CHECKS_PATH, `${JSON.stringify(checks)}\n`, 'utf8');
+  }
+  if (updated.size === 0) return;
 
   const next = cards.map((c) => orderKeys(updated.get(c.id) ?? c));
   const tmp = `${CARDS_PATH}.tmp`;

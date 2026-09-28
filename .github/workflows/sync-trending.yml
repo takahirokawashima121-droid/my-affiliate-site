@@ -21,7 +21,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,7 +32,16 @@ jobs:
           node-version: 24 # scripts/*.js は .ts を直接 import するため Node 22.18 以降が必要
           cache: npm
 
+      # node_modules を package-lock.json の内容ごとにキャッシュし、依存関係が変わっていなければ npm ci を省く
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('package-lock.json') }}
+
       - name: Install dependencies
+        if: steps.node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
       # 公式のデッキページ・カード詳細（内容が変わらないもの）を実行間で使い回し、相手サイトへのリクエストを減らす
@@ -50,9 +59,7 @@ jobs:
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
           YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
 
-      # 追加したカードでサイトが壊れないことを確認してからコミットする（スタンダード外のカードが入るとビルドが失敗する）
-      - name: Build check
-        run: npm run build
+      # サイトのビルドはここでは行わない（main への push で Vercel がビルドする。失敗した場合は Vercel が前回のデプロイのまま公開を続ける）
 
       - name: Commit and push if cards.json changed
         run: |

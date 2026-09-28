@@ -30,7 +30,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    # 新着がない日は RSS を1回見るだけで終わる。新着があってもカード追加・価格取得は新しいカードの分だけ
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,7 +42,16 @@ jobs:
           node-version: 24 # scripts/*.js は .ts を直接 import するため Node 22.18 以降が必要
           cache: npm
 
+      # node_modules を package-lock.json の内容ごとにキャッシュし、依存関係が変わっていなければ npm ci を省く
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('package-lock.json') }}
+
       - name: Install dependencies
+        if: steps.node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
       # 公式のデッキページ・カード詳細（内容が変わらないもの）を実行間で使い回し、相手サイトへのリクエストを減らす
@@ -59,9 +69,7 @@ jobs:
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
           YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
 
-      # 生成した記事・追加したカードでサイトが壊れないことを確認してから PR にする
-      - name: Build check
-        run: npm run build
+      # サイトのビルドはここでは行わない（PR のプレビュー・main へのマージ時に Vercel がビルドするため、壊れていればそこで分かる）
 
       # 差分があるときだけ PR を作成（同じブランチの PR があれば更新）。差分がなければ何もしない
       - name: Create pull request

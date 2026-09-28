@@ -1,5 +1,6 @@
-# 楽天市場の販売最安値・商品画像を毎日取得し、src/data/cards.json に差分があればコミットする
-# （main への push で Vercel が自動デプロイし、サイトに反映される）
+# 楽天市場・Yahoo!ショッピングの販売最安値・商品画像を毎日取得し、src/data/cards.json に差分があればコミットする
+# （main への push で Vercel が自動デプロイし、サイトに反映される。ここではサイトのビルドは行わない）
+# 取得するのは更新時期が来たカードだけ（優先カードは毎日・それ以外は4日ごと）。詳しくは scripts/update-prices.js の冒頭
 #
 # 事前設定: リポジトリの Settings → Secrets and variables → Actions に以下を登録
 #   RAKUTEN_APP_ID      楽天ウェブサービスのアプリID
@@ -12,7 +13,8 @@ name: Update prices
 # なお GITHUB_TOKEN による push は他のワークフローも起動しないが、Vercel のデプロイは通常どおり行われる。
 on:
   schedule:
-    - cron: '7 19 * * *' # 毎日 19:07 UTC = 日本時間 午前4時7分（毎時0分の混雑を避けて負荷分散）
+    # 1日2回（1回あたり約80枚・3〜4分。更新時期が来たカードだけを取得するため、2回で優先カードの毎日更新と残りの4日ごとの更新をまかなう）
+    - cron: '7 7,19 * * *' # 07:07 / 19:07 UTC = 日本時間 16時7分 / 午前4時7分（毎時0分の混雑を避けて負荷分散）
   workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
 
 permissions:
@@ -25,22 +27,28 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 25 # 楽天・Yahoo! とも1.5秒間隔で全カードを取得するため余裕を持たせる
+    # 差分更新（更新時期が来たカードだけ）＋ 210秒で打ち切るため、通常は3〜4分で終わる。異常時の上限として8分
+    timeout-minutes: 8
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # update-prices.js は Node の標準機能だけで動く（npm パッケージを使わない）ため、npm ci は行わない
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24 # scripts/update-prices.js は .ts を直接 import するため Node 22.18 以降が必要
-          cache: npm
 
-      - name: Install dependencies
-        run: npm ci
+      # カードごとの前回の確認日時（.cache/price-checks.json）を次回に引き継ぐ。消えた場合も updatedAt から判断して動く
+      - name: Restore price check history
+        uses: actions/cache@v4
+        with:
+          path: .cache/price-checks.json
+          key: price-checks-${{ github.run_id }}
+          restore-keys: price-checks-
 
       - name: Update prices
-        run: npm run update-prices
+        run: node scripts/update-prices.js --budget=210
         env:
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}

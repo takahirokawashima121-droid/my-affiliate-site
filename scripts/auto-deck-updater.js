@@ -54,6 +54,8 @@ const SOURCES = {
 const CITY_RANKS = ['優勝', '準優勝', 'TOP4'];
 /** シティリーグで1回に見るまとめ記事の数（新しい順） */
 const CITY_ARTICLES = 2;
+/** ジムバトルで1回に見るまとめ記事の数の上限（新しい順。処理済みの記事に着いたらそこで止める） */
+const GYM_ARTICLES = 3;
 const PROCESSED_PATH = path('scripts/cache/processed-decks.json');
 const COLUMNS_PATH = path('src/data/deck-columns.json');
 const DECKS_PATH = path('src/data/official-decks.json');
@@ -234,7 +236,9 @@ async function main() {
   console.log(`■ 取得元: ${source.label}（${source.feed}）`);
   const items = (await feedItems(source.feed)).filter((it) => source.title.test(it.title));
   // シティリーグの期間まとめ記事は同じタイトルのまま会場が追記されていくため、記事単位ではなくデッキコード単位で処理済みを判定する
-  const fresh = opts.source === 'city' ? items.slice(0, CITY_ARTICLES) : items.filter((it) => !doneArticles.has(articleKey(it)));
+  // ジムバトルは新しい順に最大 GYM_ARTICLES 件を見て、処理済みの記事に着いた時点で打ち切る（新着がない日は RSS 1回だけで終わる）
+  const firstDone = items.findIndex((it) => doneArticles.has(articleKey(it)));
+  const fresh = opts.source === 'city' ? items.slice(0, CITY_ARTICLES) : items.slice(0, Math.min(firstDone === -1 ? items.length : firstDone, GYM_ARTICLES));
   const decksOf = (it) => (opts.source === 'city' ? cityArticleDecks(it.link, it.title) : articleDecks(it.link));
   console.log(`■ RSS: 対象記事 ${items.length}件 / 未処理 ${fresh.length}件`);
   for (const it of fresh) console.log(`  - ${it.title}（${it.link}）`);
@@ -262,6 +266,8 @@ async function main() {
     console.log(`
 ■ ${it.title}: 新しいデッキ ${decks.length}件`);
     for (const d of decks) candidates.push({ ...d, article: it });
+    // シティリーグ：最新の記事に新しいデッキがなければ、それより古い記事も取得済みなので見に行かない
+    if (opts.source === 'city' && decks.length === 0) break;
   }
   if (opts.source === 'city' && candidates.length === 0) return console.log('新着はありません。');
   // 優先順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）

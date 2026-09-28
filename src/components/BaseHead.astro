@@ -28,6 +28,8 @@ const {
   jsonLd,
 } = Astro.props;
 
+// ヒーローのタイトル用の丸ゴシック。使う文字（サイト名）だけを text= で取得し、ダウンロードを数KBに抑える
+const roundedFontUrl = `https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800&display=swap&text=${encodeURIComponent(SITE.title)}`;
 const fullTitle = title ? (titleSuffix ? `${title} | ${SITE.title}` : title) : `${SITE.title}（${SITE.shortName}）｜${SITE.tagline}`;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const ogImage = new URL(image, Astro.site);
@@ -43,6 +45,9 @@ const ogImage = new URL(image, Astro.site);
 <meta name="generator" content={Astro.generator} />
 {SITE.googleSiteVerification.map((code) => <meta name="google-site-verification" content={code} />)}
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href={roundedFontUrl} />
 <link rel="sitemap" href="/sitemap-index.xml" />
 <link rel="alternate" type="application/rss+xml" title={SITE.title} href={new URL('rss.xml', Astro.site)} />
 

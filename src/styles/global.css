@@ -4,6 +4,8 @@
 @theme {
   --font-sans: system-ui, -apple-system, 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', Meiryo, sans-serif;
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  /* ヒーローのタイトル（看板）用の丸ゴシック。読み込めない環境では通常のゴシックで表示 */
+  --font-rounded: 'M PLUS Rounded 1c', var(--font-sans);
   /* ブランドカラー = ポケモンブルー（blue-50〜700）。本文中のリンク等に使う */
   --color-brand-50: #eff6ff;
   --color-brand-100: #dbeafe;
@@ -77,17 +79,17 @@ html {
   @apply inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 font-mono text-[11px] font-bold tracking-wider;
 }
 
-/* 工業製品の銘板プレート風バッジ（ビス留めの点つき） */
+/* 工業製品の銘板プレート風バッジ（ビス留めの点つき）。配色（bg / border / text）は使う側で指定する */
 @utility nameplate {
-  @apply inline-flex items-center gap-2 rounded-sm border border-slate-300 bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider text-slate-800 shadow-[inset_0_1px_0_#fff,0_1px_2px_rgb(15_23_42/0.08)];
+  @apply inline-flex items-center gap-2 rounded-sm border px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider shadow-[inset_0_1px_0_#fff,0_1px_2px_rgb(15_23_42/0.08)];
   &::before,
   &::after {
     content: '';
     width: 4px;
     height: 4px;
     border-radius: 9999px;
-    background: #94a3b8;
-    box-shadow: inset 0 1px 0 rgb(15 23 42 / 0.3);
+    background: currentColor;
+    opacity: 0.45;
   }
 }
 

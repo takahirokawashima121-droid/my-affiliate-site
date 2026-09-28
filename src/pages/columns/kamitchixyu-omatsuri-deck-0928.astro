@@ -1,7 +1,7 @@
 ---
 // このページは scripts/auto-deck-updater.js が 2026-09-28 に自動生成しました（出典: 公式デッキコード）。
 // デッキ名は「カジッチュ」と推定されたものを「カミッチュ（おまつりおんど）」に修正。
-// 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
+// 立ち回り（序盤・中盤・終盤）は deck-columns.json の gamePlan（丸数字ステップ表示）。「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
 import KeyCardEffect from '../../components/KeyCardEffect.astro';
@@ -59,26 +59,6 @@ import KeyCardEffect from '../../components/KeyCardEffect.astro';
   <h2>デッキの特徴</h2>
   <p>
     アタッカーの <CardLink id="kamitchixyu-u-sv6-012" />・<CardLink id="tosakinto-c-sv6-026" />・<CardLink id="azumaou-sv8a-029" /> は、どれも特性「おまつりおんど」を持っています。場に <CardLink id="omatsurikaijixyou-u-sv6-099" /> が出ていれば、持っているワザを2回連続で使えるため、ダメージを上げるカードの効果も2回分乗ります。ポケモンexを1匹も採用していない「ルールを持たないポケモン」だけの構成で、相手にとられるサイドは1匹1枚。サイドレースで相手より1枚ずつ得をしながら、2回攻撃でポケモンexを1ターンで倒していくデッキです。
-  </p>
-
-  <h2>回し方</h2>
-  <h3>序盤（1〜2ターン目）：たねポケモンを並べ、お祭り会場を確保する</h3>
-  <p>
-    <CardLink id="buddy-buddy-poffin-u-sv5k-063" />（HP70以下のたねポケモンを2枚までベンチへ）と <CardLink id="bug-catching-set-u-sv6-094" />（山札の上7枚から草ポケモン・基本草エネルギーを2枚まで）で、<CardLink id="kajitchixyu-c-sv7-010" /> と <CardLink id="sarunori-c-sv6-008" /> を並べます。「おまつりおんど」は場にお祭り会場がないと使えないため、4枚採用のスタジアムは攻撃する番に必ず出せるよう、手札に1枚は残しておきましょう。
-  </p>
-  <h3>中盤：バチンキーで毎ターン好きなカードを集め、カミッチュで2回攻撃</h3>
-  <p>
-    <CardLink id="bachinki-c-sv6-009" /> の特性「ドンドンだいこ」は、自分のバトルポケモンが「おまつりおんど」を持っていれば使え、山札から好きなカードを1枚手札に加えます。バチンキーを並べた数だけ、足りないスタジアム・エネルギー・<CardLink id="bosunoshireigechisu-r-sv1a-069" /> などをピンポイントで集められます。
-  </p>
-  <p>
-    <CardLink id="kamitchixyu-u-sv6-012" /> の「ともだちのわ」（草1個）は、自分のベンチポケモンの数×20ダメージ。ベンチが5匹なら100ダメージを2回で合計200です。<CardLink id="bureibubanguru-u-sv11w-082" />（ルールを持たないポケモンのワザの、相手のバトル場のポケモンexへのダメージ+30）や <CardLink id="kieran-u-sv6-096" />（この番、相手のバトル場のポケモンex・Vへのダメージ+30）も1回ごとに乗るので、ポケモンex相手には1枚で+60の効果になります。
-  </p>
-  <h3>終盤：グラジオの決戦で1ターンに400超え</h3>
-  <p>
-    <CardLink id="gurajionokessen-u-m5-076" /> は手札がこのカード1枚のときにしか使えませんが、ルールを持たないポケモンのワザのダメージを+80します。ベンチ5匹なら (100＋80)×2＝360、ブレイブバングルもつけていればポケモンex相手に420ダメージ。バチンキーで集めたカードを使い切ってから出しましょう。1回目のワザで相手のバトルポケモンをきぜつさせた場合は、次に出てきたポケモンに2回目のワザを使えるので、HPの低いポケモンを <CardLink id="bosunoshireigechisu-r-sv1a-069" /> で呼び出して倒し、2回目で次のポケモンにダメージを与える動きもできます。
-  </p>
-  <p>
-    <CardLink id="tosakinto-c-sv6-026" /> の「うずしお」（無色2個・10ダメージ）は、コインがオモテなら相手のバトルポケモンのエネルギーを1個トラッシュ。2回使えるので、エネルギーを多く使う相手の攻撃を遅らせられます。<CardLink id="azumaou-sv8a-029" /> の「クイックドロー」（無色1個・60ダメージ＋山札を2枚引く）は、2回使えば攻撃しながら4枚引けます。
   </p>
 
   <Fragment slot="custom">

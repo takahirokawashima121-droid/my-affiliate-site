@@ -1,6 +1,6 @@
 ---
 // このページは scripts/auto-deck-updater.js が 2026-09-28 に自動生成しました（出典: 公式デッキコード）。
-// 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
+// 立ち回り（序盤・中盤・終盤）は deck-columns.json の gamePlan（丸数字ステップ表示）。「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
 import KeyCardEffect from '../../components/KeyCardEffect.astro';
@@ -59,20 +59,6 @@ import KeyCardEffect from '../../components/KeyCardEffect.astro';
   <h2>デッキの特徴</h2>
   <p>
     <CardLink id="mdorixyuuzuex-rr-m5-063" /> の「マキシマムドリル」（鋼3個・200）は、ワザに必要な数より2個多く（合計5個）エネルギーがついていれば130ダメージ追加で330ダメージ。この大量のエネルギーを <CardLink id="metangu-c-sv5m-047" /> の特性「メタルメーカー」でまかない、進化ポケモンは <CardLink id="genosekutoex-rr-sv11b-069" /> の特性「メタルシグナル」で集める構成です。基本鋼エネルギーを16枚採用し、メタルメーカーで山札の上から鋼エネルギーを拾いやすくしています。
-  </p>
-
-  <h2>回し方</h2>
-  <h3>序盤（1〜2ターン目）：プレシャスキャリーで一気に並べる</h3>
-  <p>
-    この型の特徴が <CardLink id="pureshixyasukixyari-mc-658" />。山札からたねポケモンを好きなだけベンチに出せるため、1枚で <CardLink id="mogurixyu-c-m5-044" />・<CardLink id="danbaru-c-m4-057" />・ゲノセクトexをまとめてそろえられます。ACE SPEC のため1枚しか入りませんが、<CardLink id="rokettodannoramuda-u-sv10-094" />（山札からトレーナーズを1枚手札へ）を4枚採用しているので、1ターン目から持ってきやすくなっています。足りない分はモグリューの「なかまをよぶ」（無色1個・たねポケモン2枚をベンチへ）や <CardLink id="buddy-buddy-poffin-u-sv5k-063" /> で補います。
-  </p>
-  <h3>中盤：メタルシグナルで進化し、メタルメーカーでエネルギーをためる</h3>
-  <p>
-    ゲノセクトexの「メタルシグナル」で、山札からメタングとメガドリュウズexを手札に加えて進化します（鋼タイプの進化ポケモンを2枚まで）。メタングの「メタルメーカー」は山札の上4枚から基本鋼エネルギーを好きなだけ選び、好きなポケモンにつけられるので、メタングを複数並べれば1ターンで5個そろえるのも現実的です。メガドリュウズexが前に出るまでは、「ほりくずす」（鋼2個・90ダメージ＋相手の山札を2枚トラッシュ）でも戦えます。
-  </p>
-  <h3>終盤：マキシマムドリル330で1匹ずつ倒し、ジャンボアイスで耐える</h3>
-  <p>
-    エネルギーが5個ついたメガドリュウズexで、マキシマムドリル330ダメージ。<CardLink id="jixyanboaisu-u-m2-073" /> はエネルギーが3個以上ついたバトルポケモンのHPを80回復するので、エネルギーを多くつけるこのデッキと相性がよく、倒されずにもう1回攻撃する時間を作れます。<CardLink id="gurabiteimaunten-u-sv8-106" /> はおたがいの場の2進化ポケモンの最大HPを30下げるスタジアムで、ドラパルトexなど2進化のポケモンexを倒しやすくします（自分の <CardLink id="metagurosu-u-m4-059" /> のHPも下がる点に注意）。
   </p>
 
   <Fragment slot="custom">

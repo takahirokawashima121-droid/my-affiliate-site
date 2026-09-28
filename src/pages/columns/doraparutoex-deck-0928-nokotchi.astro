@@ -1,6 +1,6 @@
 ---
 // このページは scripts/auto-deck-updater.js が 2026-09-28 に自動生成しました（出典: 公式デッキコード）。
-// 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
+// 立ち回り（序盤・中盤・終盤）は deck-columns.json の gamePlan（丸数字ステップ表示）。「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
 import KeyCardEffect from '../../components/KeyCardEffect.astro';
@@ -60,23 +60,6 @@ import KeyCardEffect from '../../components/KeyCardEffect.astro';
   <h2>デッキの特徴</h2>
   <p>
     <CardLink id="dragapult-ex-rr-sv6-081" /> の「ファントムダイブ」（炎・超の2個）は、200ダメージに加えてダメカン6個を相手のベンチに好きなようにのせるワザ。バトル場とベンチを同時に削り、複数のポケモンを一度に倒す準備ができます。この型は <CardLink id="nokotchi-c-sv9-078" /> と <CardLink id="dunsparce-c-sv5k-056" /> を1枚ずつ（合計2枚）採用し、<CardLink id="dudunsparce-r-sv5k-057" /> と <CardLink id="nokokotchiex-rr-sv9-079" /> に進化させて、手札の補充とポケモンex対策をこなします。
-  </p>
-
-  <h2>回し方</h2>
-  <h3>序盤（1〜2ターン目）：ドラメシヤを並べ、ドロンチに進化する</h3>
-  <p>
-    <CardLink id="buddy-buddy-poffin-u-sv5k-063" /> で <CardLink id="dreepy-c-sv6-079" /> を2匹以上ベンチに出し、<CardLink id="drakloak-c-sv6-080" /> に進化させます。ドロンチの特性「ていさつしれい」（山札の上2枚から1枚を手札へ）を毎ターン使い、ドラパルトexへの進化とエネルギーを集めます。<CardLink id="crispin-u-sv7-097" /> は山札から炎と超の基本エネルギーを1枚ずつ選び、1枚を手札に、もう1枚をポケモンにつけるので、ファントムダイブに必要な2色を一度にそろえられます。
-  </p>
-  <h3>中盤：ファントムダイブでベンチを削り、ノココッチで手札を補充する</h3>
-  <p>
-    ファントムダイブのダメカン6個は、HPの低いベンチポケモンや、次に育つ進化前のポケモンに分けてのせ、次の番にまとめて倒せるように配置します。<CardLink id="mashimashira-r-sv6-055" /> は悪エネルギーがついていれば、自分の場のダメカンを3個まで相手のポケモンにのせ替えられます。<CardLink id="abunaihaikixyo-u-m1l-063" /> が出ていると、たねポケモン（悪ポケモン以外）をベンチに出すたびにダメカンが2個のるため、そのダメカンを相手に移して、あと少しで倒せるポケモンにとどめを刺しましょう。
-  </p>
-  <p>
-    手札が足りないときは、ノココッチの特性「にげあしドロー」で山札を3枚引きます（使ったあとノココッチは山札にもどる）。<CardLink id="nokotchi-c-sv9-078" /> の「いれかわる」（無色1個）はベンチと入れ替わる技で、ドラパルトexを前に出す手段にもなります。
-  </p>
-  <h3>終盤：ノココッチexとリーリエのピッピexで相手に合わせて倒す</h3>
-  <p>
-    ノココッチexの「ぎゃっきょうテール」（無色1個）は、相手の場のポケモンexの数×60ダメージ。ポケモンexを並べる相手には1エネルギーで大ダメージを出せます。<CardLink id="lillies-clefairy-ex-rr-sv9-033" /> の特性「フェアリーゾーン」は、相手の場の竜ポケモンの弱点をすべて超タイプにする効果で、同じドラパルトexとのミラー戦では、ピッピexの「フルムーンロンド」（超・無色の2個、おたがいのベンチの数×20追加）が弱点で2倍になります。サイドで負けているときは <CardLink id="meinohagemashi-u-m3-075" /> でトラッシュの基本エネルギー2枚をドラパルトexにつけ、すぐに攻撃を再開しましょう。
   </p>
 
   <Fragment slot="custom">

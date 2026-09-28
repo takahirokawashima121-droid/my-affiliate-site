@@ -19,7 +19,8 @@
 // - APIエラーのカードは一切変更しない
 // - 価格・在庫・購入リンク・商品画像のいずれかに変化があったカードだけを更新する（変化がなければ updatedAt も変えない）
 // - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）と商品画像（imageUrl）以外の項目は変更しない
-// - 商品画像は最安商品の1枚目を 300x300 に変換して保存。画像がない商品の場合は既存の imageUrl を維持する
+// - 商品画像は、宣伝帯を焼き込む出品者（BANNER_IMAGE_SHOP_CODES）を除いた最安商品の1枚目を 300x300 に変換して保存。
+//   該当する商品がなければ既存のクリーンな画像を維持し、画像がない商品の場合も既存の imageUrl を維持する
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
 // - API ごとに呼び出し間隔を空ける（楽天・Yahoo! とも 1.5秒。Yahoo! の 429 は 5→15→30秒待って再試行）
 // - Yahoo! は yahooPrice（該当なしは null）/ yahooUrl（もしも経由）/ yahooUpdatedAt を更新する
@@ -79,11 +80,11 @@ export function mentionsOtherRarity(card, rawTitle) {
   return card.rarity !== '-' && tokens.length > 0 && !tokens.includes(card.rarity);
 }
 
-/** 検索結果から、カード名とカード番号の両方を商品名に含む最安の商品を選ぶ（別の弾・別のレアリティと明記された商品は除く） */
-export function pickCheapest(card, items) {
+/** 検索結果から、カード名とカード番号の両方を商品名に含む商品を返す（別の弾・別のレアリティと明記された商品・除外語を含む商品は除く） */
+export function matchingItems(card, items) {
   const name = normalize(card.name);
   const number = normalize(card.cardNumber);
-  const matches = items.filter((item) => {
+  return items.filter((item) => {
     const rawTitle = item.itemName ?? '';
     const title = normalize(rawTitle);
     return (
@@ -98,6 +99,11 @@ export function pickCheapest(card, items) {
       item.itemPrice > 0
     );
   });
+}
+
+/** 該当商品のうち最安の商品を選ぶ */
+export function pickCheapest(card, items) {
+  const matches = matchingItems(card, items);
   if (matches.length === 0) return undefined;
   return matches.reduce((min, item) => (item.itemPrice < min.itemPrice ? item : min));
 }
@@ -159,7 +165,8 @@ export const IMAGE_SIZE = '300x300';
  * API の mediumImageUrls は ?_ex=128x128（formatVersion=2 は文字列、1 は { imageUrl } の配列）。
  */
 export function pickImageUrl(item) {
-  const first = item.mediumImageUrls?.[0] ?? item.smallImageUrls?.[0];
+  // Yahoo!の商品は searchYahoo で imageUrl（300x300）に変換済み
+  const first = item.mediumImageUrls?.[0] ?? item.smallImageUrls?.[0] ?? item.imageUrl;
   const raw = typeof first === 'string' ? first : first?.imageUrl;
   if (!raw) return undefined;
   try {
@@ -170,6 +177,42 @@ export function pickImageUrl(item) {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * 商品画像に「送料無料」の文字帯やショップロゴを大きく焼き込んでいる出品者。
+ * カードの代表画像（imageUrl）には使わない（価格・購入リンクの判定には影響しない）。
+ * 楽天のショップコード（商品URL・画像URLの /@0_mall/{code}/ の部分）と、ショップ名で判定する
+ */
+export const BANNER_IMAGE_SHOP_CODES = ['card-museum', 'cardmuseum'];
+const BANNER_IMAGE_SHOP_NAME = /カードミュージアム|card\s*-?\s*museum/i;
+
+/** 楽天の画像URL・商品URL、Yahoo!の画像URL（/i/j/{ストアID}_{商品コード}）からショップコードを取り出す */
+function shopCodeOf(url) {
+  return (
+    url?.match(/@0_mall\/([^/?#]+)\//)?.[1] ??
+    url?.match(/item\.rakuten\.co\.jp\/([^/?#]+)\//)?.[1] ??
+    url?.match(/item-shopping\.c\.yimg\.jp\/i\/[a-z]\/([^_/?#]+)_/)?.[1]
+  );
+}
+
+/** 宣伝帯入りの画像URLか（既存の imageUrl の判定にも使う） */
+export function isBannerImageUrl(url) {
+  return BANNER_IMAGE_SHOP_CODES.includes(shopCodeOf(url) ?? '');
+}
+
+/** 商品画像に宣伝帯を焼き込んでいる出品者の商品か */
+export function isBannerImageItem(item) {
+  const code = item.shopCode ?? shopCodeOf(item.itemUrl) ?? shopCodeOf(pickImageUrl(item));
+  return BANNER_IMAGE_SHOP_CODES.includes(code ?? '') || BANNER_IMAGE_SHOP_NAME.test(item.shopName ?? '');
+}
+
+/**
+ * カードの代表画像に使う商品を選ぶ。価格の最安ではなく「宣伝帯のない出品者のうち最も安い商品」を優先する
+ * （安い順に見ていき、画像のある最初のクリーンな商品）。クリーンな商品がなければ undefined
+ */
+export function pickCleanImageItem(matches) {
+  return [...matches].sort((a, b) => a.itemPrice - b.itemPrice).find((item) => !isBannerImageItem(item) && pickImageUrl(item));
 }
 
 /** 画像URLが実際に画像を返すか確認する（API が存在しない画像のURLを返すことがあるため） */
@@ -241,8 +284,9 @@ async function findCheapest(card, credentials) {
   for (const [i, keyword] of cardSearchKeywords(card).entries()) {
     const items = await searchRakuten(keyword, credentials);
     tried.push(`「${keyword}」${items.length}件`);
+    const matches = matchingItems(card, items);
     const best = pickCheapest(card, items);
-    if (best) return { best, keyword, fallback: i > 0, tried };
+    if (best) return { best, matches, keyword, fallback: i > 0, tried };
   }
   return { best: undefined, tried };
 }
@@ -271,9 +315,17 @@ async function searchYahoo(keyword, appid) {
     // 楽天と同じ判定関数（pickCheapest）を使えるよう項目名をそろえる
     return (body.hits ?? [])
       .filter((h) => h.inStock !== false)
-      .map((h) => ({ itemName: h.name ?? '', itemPrice: h.price, itemUrl: h.url, shopName: h.seller?.name ?? '' }));
+      .map((h) => ({ itemName: h.name ?? '', itemPrice: h.price, itemUrl: h.url, shopName: h.seller?.name ?? '', imageUrl: yahooImageUrl(h.image?.medium) }));
   }
   throw new Error('Yahoo HTTP 429: リクエスト数の上限を超えました');
+}
+
+/**
+ * Yahoo!の商品画像URLを 300x300 に変換する（API の image.medium は /i/g/ = 146x146。/i/j/ = 300x300、/i/l/ = 600x600）
+ */
+export function yahooImageUrl(url) {
+  if (!url?.startsWith('https://item-shopping.c.yimg.jp/i/')) return undefined;
+  return url.replace(/\/i\/[a-z]\//, '/i/j/');
 }
 
 /** Yahoo!ショッピングで、楽天と同じキーワード候補・同じ判定条件の最安商品を探す */
@@ -283,9 +335,9 @@ async function findYahooCheapest(card, appid) {
     const items = await searchYahoo(keyword, appid);
     tried.push(`「${keyword}」${items.length}件`);
     const best = pickCheapest(card, items);
-    if (best) return { best, tried };
+    if (best) return { best, matches: matchingItems(card, items), tried };
   }
-  return { best: undefined, tried };
+  return { best: undefined, matches: [], tried };
 }
 
 /** Yahoo!の取得結果を cards.json の項目に変換（該当なしは yahooPrice: null） */
@@ -356,15 +408,20 @@ async function main() {
 
     // ── 楽天市場 ──
     try {
-      const { best, fallback, tried } = await findCheapest(card, { appId, accessKey });
+      const { best, matches, fallback, tried } = await findCheapest(card, { appId, accessKey });
       let rakuten;
       if (!best) {
         rakuten = markOutOfStock(card);
         lines.push(`  楽天  : 在庫のある該当商品なし（${tried.join(' → ')}）→「在庫なし」`);
       } else {
         if (fallback) lines.push(`  楽天  : ↻ フォールバック検索（${tried.join(' → ')}）`);
-        let imageUrl = pickImageUrl(best);
-        let imageNote = imageUrl ?? '（商品画像なし → 既存の値を維持）';
+        // 代表画像：宣伝帯のない出品者の商品を優先。なければ既存のクリーンな画像を維持し、それもなければ最安商品の画像
+        const imageItem = pickCleanImageItem(matches);
+        const keepCleanExisting = !imageItem && card.imageUrl !== '' && !isBannerImageUrl(card.imageUrl);
+        let imageUrl = imageItem ? pickImageUrl(imageItem) : keepCleanExisting ? card.imageUrl : pickImageUrl(best);
+        let imageNote = imageUrl
+          ? `${imageUrl}${imageItem && imageItem !== best ? `（宣伝帯のない ${imageItem.shopName} の画像）` : keepCleanExisting ? '（クリーンな画像がないため既存の画像を維持）' : ''}`
+          : '（商品画像なし → 既存の値を維持）';
         if (imageUrl && !(await isImageAvailable(imageUrl))) {
           // 新しい画像が取得できない場合、既存の画像が有効ならそれを維持し、無効なら空にしてプレースホルダー表示にする
           const keepExisting = card.imageUrl !== '' && card.imageUrl !== imageUrl && (await isImageAvailable(card.imageUrl));
@@ -388,8 +445,16 @@ async function main() {
     // ── Yahoo!ショッピング ──
     if (yahooAppId) {
       try {
-        const { best, tried } = await findYahooCheapest(card, yahooAppId);
+        const { best, matches, tried } = await findYahooCheapest(card, yahooAppId);
         const fields = yahooFields(best);
+        // 楽天に宣伝帯のない画像がなかった（代表画像が宣伝帯入り・または空の）カードは、Yahoo!のクリーンな商品画像に差し替える
+        if (next.imageUrl === '' || isBannerImageUrl(next.imageUrl)) {
+          const imageItem = pickCleanImageItem(matches);
+          if (imageItem && (await isImageAvailable(imageItem.imageUrl))) {
+            next = { ...next, imageUrl: imageItem.imageUrl };
+            lines.push(`          画像: ${imageItem.imageUrl}（楽天に宣伝帯のない画像がないため Yahoo!の ${imageItem.shopName} の画像）`);
+          }
+        }
         const before = typeof card.yahooPrice === 'number' ? yen(card.yahooPrice) : card.yahooPrice === null ? 'なし' : '未取得';
         lines.push(
           best

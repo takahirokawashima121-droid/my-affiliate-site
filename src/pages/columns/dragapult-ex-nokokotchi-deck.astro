@@ -3,6 +3,7 @@
 // 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに執筆。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="dragapult-ex-nokokotchi-deck">
@@ -15,40 +16,51 @@ import CardLink from '../../components/CardLink.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
-  <h3><CardLink id="dragapult-ex-rr-sv6-081" />（3枚）</h3>
-  <ul>
-      <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
-      <li><strong>ワザ「ジェットヘッド」</strong>（無・70）</li>
-      <li><strong>ワザ「ファントムダイブ」</strong>（炎超・200）：ダメカン6個を、相手のベンチポケモンに好きなようにのせる。</li>
-  </ul>
+  <KeyCardEffect id="dragapult-ex-rr-sv6-081" qty={3}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>ワザ「ジェットヘッド」</strong>（無・70）</li>
+        <li><strong>ワザ「ファントムダイブ」</strong>（炎超・200）：ダメカン6個を、相手のベンチポケモンに好きなようにのせる。</li>
+    </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="drakloak-c-sv6-080" />（4枚）</h3>
-  <ul>
-      <li><strong>特性「ていさつしれい」</strong>：自分の番に1回使える。自分の山札を上から2枚見て、どちらか1枚を選び、手札に加える。残りのカードは、山札の下にもどす。</li>
-      <li><strong>ワザ「リューズヘッド」</strong>（炎超・70）</li>
-  </ul>
+  <KeyCardEffect id="drakloak-c-sv6-080" qty={4}>
+    <ul>
+        <li><strong>特性「ていさつしれい」</strong>：自分の番に1回使える。自分の山札を上から2枚見て、どちらか1枚を選び、手札に加える。残りのカードは、山札の下にもどす。</li>
+        <li><strong>ワザ「リューズヘッド」</strong>（炎超・70）</li>
+    </ul>
 
-  <h3><CardLink id="nokokotchiex-rr-sv9-079" />（1枚）</h3>
-  <ul>
-      <li><strong>ワザ「ぎゃっきょうテール」</strong>（無・60×）：相手の場の「ポケモンex」の数×60ダメージ。</li>
-      <li><strong>ワザ「ドリルブレイク」</strong>（無無無・150）：このワザのダメージは、相手のバトルポケモンにかかっている効果を計算しない。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="mashimashira-r-sv6-055" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「アドレナブレイン」</strong>：このポケモンに悪エネルギーがついているなら、自分の番に1回使える。自分の場のポケモン1匹にのっているダメカンを3個まで選び、相手の場のポケモン1匹にのせ替える。</li>
-      <li><strong>ワザ「サイコトリップ」</strong>（超無・60）：相手のバトルポケモンをこんらんにする。</li>
-  </ul>
+  <KeyCardEffect id="nokokotchiex-rr-sv9-079" qty={1}>
+    <ul>
+        <li><strong>ワザ「ぎゃっきょうテール」</strong>（無・60×）：相手の場の「ポケモンex」の数×60ダメージ。</li>
+        <li><strong>ワザ「ドリルブレイク」</strong>（無無無・150）：このワザのダメージは、相手のバトルポケモンにかかっている効果を計算しない。</li>
+    </ul>
 
-  <h3><CardLink id="kurasshixyuhanma-mc-644" />（4枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：コインを1回投げオモテなら、相手の場のポケモンについているエネルギーを1個選び、トラッシュする。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="abunaihaikixyo-u-m1l-063" />（2枚）</h3>
-  <ul>
-      <li><strong>スタジアム</strong>：おたがいのプレイヤーは、それぞれ、自分の番に、たねポケモン（悪ポケモンをのぞく）をベンチに出すたび、そのポケモンにダメカンを2個のせる。</li>
-  </ul>
+  <KeyCardEffect id="mashimashira-r-sv6-055" qty={2}>
+    <ul>
+        <li><strong>特性「アドレナブレイン」</strong>：このポケモンに悪エネルギーがついているなら、自分の番に1回使える。自分の場のポケモン1匹にのっているダメカンを3個まで選び、相手の場のポケモン1匹にのせ替える。</li>
+        <li><strong>ワザ「サイコトリップ」</strong>（超無・60）：相手のバトルポケモンをこんらんにする。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="kurasshixyuhanma-mc-644" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：コインを1回投げオモテなら、相手の場のポケモンについているエネルギーを1個選び、トラッシュする。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="abunaihaikixyo-u-m1l-063" qty={2}>
+    <ul>
+        <li><strong>スタジアム</strong>：おたがいのプレイヤーは、それぞれ、自分の番に、たねポケモン（悪ポケモンをのぞく）をベンチに出すたび、そのポケモンにダメカンを2個のせる。</li>
+    </ul>
+
+  </KeyCardEffect>
 
   <h2>回し方</h2>
   <h3>序盤（1〜2ターン目）：ドラメシヤを並べ、シェイミでベンチを守る</h3>

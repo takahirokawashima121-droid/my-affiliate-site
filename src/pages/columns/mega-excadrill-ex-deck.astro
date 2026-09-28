@@ -3,6 +3,7 @@
 // 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに執筆。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="mega-excadrill-ex-deck">
@@ -15,40 +16,51 @@ import CardLink from '../../components/CardLink.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
-  <h3><CardLink id="mdorixyuuzuex-rr-m5-063" />（2枚）</h3>
-  <ul>
-      <li><strong>ワザ「ほりくずす」</strong>（鋼鋼・90）：相手の山札を上から2枚トラッシュする。</li>
-      <li><strong>ワザ「マキシマムドリル」</strong>（鋼鋼鋼・200＋）：このワザを使うためのエネルギーより、2個多くエネルギーがついているなら、130ダメージ追加。</li>
-  </ul>
+  <KeyCardEffect id="mdorixyuuzuex-rr-m5-063" qty={2}>
+    <ul>
+        <li><strong>ワザ「ほりくずす」</strong>（鋼鋼・90）：相手の山札を上から2枚トラッシュする。</li>
+        <li><strong>ワザ「マキシマムドリル」</strong>（鋼鋼鋼・200＋）：このワザを使うためのエネルギーより、2個多くエネルギーがついているなら、130ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="metangu-c-sv5m-047" />（4枚）</h3>
-  <ul>
-      <li><strong>特性「メタルメーカー」</strong>：自分の番に1回使える。自分の山札を上から4枚見て、その中から「基本鋼エネルギー」を好きなだけ選び、自分のポケモンに好きなようにつける。残りのカードはすべてウラにして切り、山札の下にもどす。</li>
-      <li><strong>ワザ「ビーム」</strong>（鋼無無・60）</li>
-  </ul>
+  <KeyCardEffect id="metangu-c-sv5m-047" qty={4}>
+    <ul>
+        <li><strong>特性「メタルメーカー」</strong>：自分の番に1回使える。自分の山札を上から4枚見て、その中から「基本鋼エネルギー」を好きなだけ選び、自分のポケモンに好きなようにつける。残りのカードはすべてウラにして切り、山札の下にもどす。</li>
+        <li><strong>ワザ「ビーム」</strong>（鋼無無・60）</li>
+    </ul>
 
-  <h3><CardLink id="genosekutoex-rr-sv11b-069" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「メタルシグナル」</strong>：自分の番に1回使える。自分の山札から鋼タイプの進化ポケモンを2枚まで選び、相手に見せて、手札に加える。そして山札を切る。</li>
-      <li><strong>ワザ「プロテクトチャージ」</strong>（鋼鋼無・150）：次の相手の番、このポケモンが受けるワザのダメージは「-30」される。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="mogurixyu-c-m5-044" />（3枚）</h3>
-  <ul>
-      <li><strong>ワザ「なかまをよぶ」</strong>（無）：自分の山札からたねポケモンを2枚まで選び、ベンチに出す。そして山札を切る。</li>
-      <li><strong>ワザ「ツメをたてる」</strong>（無無無・50）</li>
-  </ul>
+  <KeyCardEffect id="genosekutoex-rr-sv11b-069" qty={2}>
+    <ul>
+        <li><strong>特性「メタルシグナル」</strong>：自分の番に1回使える。自分の山札から鋼タイプの進化ポケモンを2枚まで選び、相手に見せて、手札に加える。そして山札を切る。</li>
+        <li><strong>ワザ「プロテクトチャージ」</strong>（鋼鋼無・150）：次の相手の番、このポケモンが受けるワザのダメージは「-30」される。</li>
+    </ul>
 
-  <h3><CardLink id="mixyuuiekkusu-rr-m6a-057" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「きおくのらせん」</strong>：このポケモンは、自分のベンチポケモンが持つワザを、すべて使える。［ワザを使うためのエネルギーは必要。］</li>
-      <li><strong>ワザ「テレポートブレイク」</strong>（超・30）：のぞむなら、このポケモンをベンチポケモンと入れ替える。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="rokettodannoramuda-u-sv10-094" />（4枚）</h3>
-  <ul>
-      <li><strong>サポート</strong>：自分の山札からトレーナーズを1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
-  </ul>
+  <KeyCardEffect id="mogurixyu-c-m5-044" qty={3}>
+    <ul>
+        <li><strong>ワザ「なかまをよぶ」</strong>（無）：自分の山札からたねポケモンを2枚まで選び、ベンチに出す。そして山札を切る。</li>
+        <li><strong>ワザ「ツメをたてる」</strong>（無無無・50）</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="mixyuuiekkusu-rr-m6a-057" qty={2}>
+    <ul>
+        <li><strong>特性「きおくのらせん」</strong>：このポケモンは、自分のベンチポケモンが持つワザを、すべて使える。［ワザを使うためのエネルギーは必要。］</li>
+        <li><strong>ワザ「テレポートブレイク」</strong>（超・30）：のぞむなら、このポケモンをベンチポケモンと入れ替える。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="rokettodannoramuda-u-sv10-094" qty={4}>
+    <ul>
+        <li><strong>サポート</strong>：自分の山札からトレーナーズを1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
+    </ul>
+
+  </KeyCardEffect>
 
   <h2>回し方</h2>
   <h3>序盤（1〜2ターン目）：たねポケモンを並べ、ゲノセクトexで進化先を集める</h3>

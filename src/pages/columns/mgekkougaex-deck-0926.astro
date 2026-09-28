@@ -3,6 +3,7 @@
 // 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="mgekkougaex-deck-0926">
@@ -15,34 +16,43 @@ import CardLink from '../../components/CardLink.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
-  <h3><CardLink id="mgekkougaex-rr-m4-022" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「ひっさつしゅりけん」</strong>：このポケモンがバトル場にいて、自分の番に、自分の手札から「基本水エネルギー」を1枚トラッシュするなら、1回使える。相手のポケモン1匹に、ダメカンを6個のせる。</li>
-      <li><strong>ワザ「ニンジャスピナー」</strong>（水水・120＋）：のぞむなら、このポケモンについている水エネルギーを1個手札にもどし、80ダメージ追加。</li>
-  </ul>
+  <KeyCardEffect id="mgekkougaex-rr-m4-022" qty={2}>
+    <ul>
+        <li><strong>特性「ひっさつしゅりけん」</strong>：このポケモンがバトル場にいて、自分の番に、自分の手札から「基本水エネルギー」を1枚トラッシュするなら、1回使える。相手のポケモン1匹に、ダメカンを6個のせる。</li>
+        <li><strong>ワザ「ニンジャスピナー」</strong>（水水・120＋）：のぞむなら、このポケモンについている水エネルギーを1個手札にもどし、80ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="gekkougaex-rr-sv5a-045" />（1枚）</h3>
-  <ul>
-      <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
-      <li><strong>ワザ「しのびのやいば」</strong>（水・170）：のぞむなら、自分の山札から好きなカードを1枚選び、手札に加える。そして山札を切る。</li>
-      <li><strong>ワザ「ぶんしんれんだ」</strong>（水無無）：このポケモンについているエネルギーを2個トラッシュし、相手のポケモン2匹に、それぞれ120ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
-  </ul>
+  <KeyCardEffect id="gekkougaex-rr-sv5a-045" qty={1}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>ワザ「しのびのやいば」</strong>（水・170）：のぞむなら、自分の山札から好きなカードを1枚選び、手札に加える。そして山札を切る。</li>
+        <li><strong>ワザ「ぶんしんれんだ」</strong>（水無無）：このポケモンについているエネルギーを2個トラッシュし、相手のポケモン2匹に、それぞれ120ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
+    </ul>
 
-  <h3><CardLink id="nokokotchiex-rr-sv9-079" />（1枚）</h3>
-  <ul>
-      <li><strong>ワザ「ぎゃっきょうテール」</strong>（無・60×）：相手の場の「ポケモンex」の数×60ダメージ。</li>
-      <li><strong>ワザ「ドリルブレイク」</strong>（無無無・150）：このワザのダメージは、相手のバトルポケモンにかかっている効果を計算しない。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="naminoribichi-u-m1s-062" />（3枚）</h3>
-  <ul>
-      <li><strong>スタジアム</strong>：おたがいのプレイヤーは、自分の番ごとに1回、自分のバトル場の水ポケモンを、ベンチの水ポケモンと入れ替えてよい。</li>
-  </ul>
+  <KeyCardEffect id="nokokotchiex-rr-sv9-079" qty={1}>
+    <ul>
+        <li><strong>ワザ「ぎゃっきょうテール」</strong>（無・60×）：相手の場の「ポケモンex」の数×60ダメージ。</li>
+        <li><strong>ワザ「ドリルブレイク」</strong>（無無無・150）：このワザのダメージは、相手のバトルポケモンにかかっている効果を計算しない。</li>
+    </ul>
 
-  <h3><CardLink id="fuusen-u-sv11b-082" />（2枚）</h3>
-  <ul>
-      <li><strong>ポケモンのどうぐ</strong>：このカードをつけているポケモンは、にげるためのエネルギーが2個ぶん少なくなる。</li>
-  </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="naminoribichi-u-m1s-062" qty={3}>
+    <ul>
+        <li><strong>スタジアム</strong>：おたがいのプレイヤーは、自分の番ごとに1回、自分のバトル場の水ポケモンを、ベンチの水ポケモンと入れ替えてよい。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="fuusen-u-sv11b-082" qty={2}>
+    <ul>
+        <li><strong>ポケモンのどうぐ</strong>：このカードをつけているポケモンは、にげるためのエネルギーが2個ぶん少なくなる。</li>
+    </ul>
+
+  </KeyCardEffect>
 
   <h2>回し方</h2>
   <h3>序盤（1〜2ターン目）：ケロマツを並べ、偉大な大樹で一気に進化</h3>

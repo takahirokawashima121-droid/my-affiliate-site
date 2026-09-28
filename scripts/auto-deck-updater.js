@@ -126,13 +126,15 @@ async function renderPage(column, recipe) {
       const cost = e.cost ? `（${e.cost}${e.damage ? `・${e.damage}` : ''}）` : e.damage ? `（${e.damage}）` : '';
       return `      <li><strong>${esc(head)}</strong>${esc(cost)}${e.text ? `：${esc(e.text).replace(/\n/g, '')}` : ''}</li>`;
     });
-    effectBlocks.push(`  <h3><CardLink id="${entry.cardId}" />（${entry.qty}枚）</h3>\n  <ul>\n${items.join('\n')}\n  </ul>`);
+    // 左にカード画像、右にカード名（枚数）と効果を並べる（src/components/KeyCardEffect.astro）
+    effectBlocks.push(`  <KeyCardEffect id="${entry.cardId}" qty={${entry.qty}}>\n    <ul>\n  ${items.join('\n  ')}\n    </ul>\n  </KeyCardEffect>`);
   }
   return `---
 // このページは scripts/auto-deck-updater.js が ${column.pubDate} に自動生成しました（出典: 公式デッキコード）。
 // 公開前に「回し方」と「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="${column.slug}">

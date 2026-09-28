@@ -3,6 +3,7 @@
 // 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="mraiborutoex-deck-0926">
@@ -15,39 +16,50 @@ import CardLink from '../../components/CardLink.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
-  <h3><CardLink id="mraiborutoex-rr-m1s-032" />（2枚）</h3>
-  <ul>
-      <li><strong>ワザ「フラッシュレイ」</strong>（雷雷・120）：次の相手の番、このポケモンはたねポケモンからワザのダメージを受けない。</li>
-      <li><strong>ワザ「ライオットブラスター」</strong>（雷雷雷・200＋）：のぞむなら、このポケモンについているエネルギーをすべてトラッシュし、130ダメージ追加。</li>
-  </ul>
+  <KeyCardEffect id="mraiborutoex-rr-m1s-032" qty={2}>
+    <ul>
+        <li><strong>ワザ「フラッシュレイ」</strong>（雷雷・120）：次の相手の番、このポケモンはたねポケモンからワザのダメージを受けない。</li>
+        <li><strong>ワザ「ライオットブラスター」</strong>（雷雷雷・200＋）：のぞむなら、このポケモンについているエネルギーをすべてトラッシュし、130ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="raiboruto-u-m5-023" />（2枚）</h3>
-  <ul>
-      <li><strong>ワザ「フラッシュバリア」</strong>（雷雷・50）：次の相手の番、このポケモンは進化ポケモンからワザのダメージを受けない。</li>
-      <li><strong>ワザ「ソニックエッジ」</strong>（雷雷雷・110）：このワザのダメージは、相手のバトルポケモンにかかっている効果を計算しない。</li>
-  </ul>
+  <KeyCardEffect id="raiboruto-u-m5-023" qty={2}>
+    <ul>
+        <li><strong>ワザ「フラッシュバリア」</strong>（雷雷・50）：次の相手の番、このポケモンは進化ポケモンからワザのダメージを受けない。</li>
+        <li><strong>ワザ「ソニックエッジ」</strong>（雷雷雷・110）：このワザのダメージは、相手のバトルポケモンにかかっている効果を計算しない。</li>
+    </ul>
 
-  <h3><CardLink id="mixyuuiekkusu-rr-m6a-057" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「きおくのらせん」</strong>：このポケモンは、自分のベンチポケモンが持つワザを、すべて使える。［ワザを使うためのエネルギーは必要。］</li>
-      <li><strong>ワザ「テレポートブレイク」</strong>（超・30）：のぞむなら、このポケモンをベンチポケモンと入れ替える。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="mshibirudonex-rr-m2a-049" />（1枚）</h3>
-  <ul>
-      <li><strong>ワザ「ばくれつだん」</strong>（雷雷）：相手のポケモン2匹に、それぞれ60ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
-      <li><strong>ワザ「ディザスターショック」</strong>（雷雷雷・190）：のぞむなら、このポケモンについている雷エネルギーを2個トラッシュし、相手のバトルポケモンをマヒにする。</li>
-  </ul>
+  <KeyCardEffect id="mixyuuiekkusu-rr-m6a-057" qty={2}>
+    <ul>
+        <li><strong>特性「きおくのらせん」</strong>：このポケモンは、自分のベンチポケモンが持つワザを、すべて使える。［ワザを使うためのエネルギーは必要。］</li>
+        <li><strong>ワザ「テレポートブレイク」</strong>（超・30）：のぞむなら、このポケモンをベンチポケモンと入れ替える。</li>
+    </ul>
 
-  <h3><CardLink id="battle-colosseum-u-m2-079" />（2枚）</h3>
-  <ul>
-      <li><strong>スタジアム</strong>：おたがいのベンチポケモン全員は、相手のワザや特性の効果で、ダメカンがのらない。［ワザのダメージは受ける。］</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="borutokaminarienerugi-r-m5-080" />（2枚）</h3>
-  <ul>
-      <li><strong>特殊エネルギー</strong>：このカードは、ポケモンについているかぎり、雷エネルギー1個ぶんとしてはたらく。このカードをつけている雷ポケモンが使うワザの、相手のバトルポケモンへのダメージは「+20」される。</li>
-  </ul>
+  <KeyCardEffect id="mshibirudonex-rr-m2a-049" qty={1}>
+    <ul>
+        <li><strong>ワザ「ばくれつだん」</strong>（雷雷）：相手のポケモン2匹に、それぞれ60ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
+        <li><strong>ワザ「ディザスターショック」</strong>（雷雷雷・190）：のぞむなら、このポケモンについている雷エネルギーを2個トラッシュし、相手のバトルポケモンをマヒにする。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="battle-colosseum-u-m2-079" qty={2}>
+    <ul>
+        <li><strong>スタジアム</strong>：おたがいのベンチポケモン全員は、相手のワザや特性の効果で、ダメカンがのらない。［ワザのダメージは受ける。］</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="borutokaminarienerugi-r-m5-080" qty={2}>
+    <ul>
+        <li><strong>特殊エネルギー</strong>：このカードは、ポケモンについているかぎり、雷エネルギー1個ぶんとしてはたらく。このカードをつけている雷ポケモンが使うワザの、相手のバトルポケモンへのダメージは「+20」される。</li>
+    </ul>
+
+  </KeyCardEffect>
 
   <h2>回し方</h2>
   <h3>序盤（1〜2ターン目）：カナリィでライン一式をそろえる</h3>

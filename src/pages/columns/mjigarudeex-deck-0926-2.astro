@@ -3,6 +3,7 @@
 // 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="mjigarudeex-deck-0926-2">
@@ -15,37 +16,48 @@ import CardLink from '../../components/CardLink.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
-  <h3><CardLink id="mjigarudeex-rr-m3-046" />（2枚）</h3>
-  <ul>
-      <li><strong>ワザ「ガイアウェーブ」</strong>（闘闘闘・200）：次の相手の番、このポケモンが受けるワザのダメージは「-30」される。</li>
-      <li><strong>ワザ「ムニキスゼロ」</strong>（闘闘闘闘闘）：相手のポケモン全員に対して、それぞれ1回ずつコインを投げ、オモテが出たポケモン全員に、それぞれ150ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
-  </ul>
+  <KeyCardEffect id="mjigarudeex-rr-m3-046" qty={2}>
+    <ul>
+        <li><strong>ワザ「ガイアウェーブ」</strong>（闘闘闘・200）：次の相手の番、このポケモンが受けるワザのダメージは「-30」される。</li>
+        <li><strong>ワザ「ムニキスゼロ」</strong>（闘闘闘闘闘）：相手のポケモン全員に対して、それぞれ1回ずつコインを投げ、オモテが出たポケモン全員に、それぞれ150ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
+    </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="esuban-r-m1l-017" />（4枚）</h3>
-  <ul>
-      <li><strong>特性「しゅんぱつりょく」</strong>：対戦準備でポケモンをバトル場に出すとき、このカードが手札にあるなら、ウラにしてバトル場に出してよい。</li>
-      <li><strong>ワザ「フレアターボ」</strong>（無・50）：自分の山札から基本エネルギーを3枚まで選び、ベンチポケモンに好きなようにつける。そして山札を切る。</li>
-  </ul>
+  <KeyCardEffect id="esuban-r-m1l-017" qty={4}>
+    <ul>
+        <li><strong>特性「しゅんぱつりょく」</strong>：対戦準備でポケモンをバトル場に出すとき、このカードが手札にあるなら、ウラにしてバトル場に出してよい。</li>
+        <li><strong>ワザ「フレアターボ」</strong>（無・50）：自分の山札から基本エネルギーを3枚まで選び、ベンチポケモンに好きなようにつける。そして山札を切る。</li>
+    </ul>
 
-  <h3><CardLink id="fuaitogongu-u-m1l-059" />（4枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：自分の山札から闘タイプのたねポケモンまたは「基本闘エネルギー」を1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="enerugitsukekae-mc-638" />（4枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：自分の場のポケモンについている基本エネルギーを1個選び、自分の別のポケモンにつけ替える。</li>
-  </ul>
+  <KeyCardEffect id="fuaitogongu-u-m1l-059" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：自分の山札から闘タイプのたねポケモンまたは「基本闘エネルギー」を1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
+    </ul>
 
-  <h3><CardLink id="pokemon-catcher-u-sv5a-057" />（4枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：コインを1回投げオモテなら、相手のベンチポケモンを1匹選び、バトルポケモンと入れ替える。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="enerugikoin-u-sv11b-079" />（4枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：コインを2回投げ、すべてオモテなら、自分の山札から基本エネルギーを1枚選び、自分のポケモンにつける。そして山札を切る。</li>
-  </ul>
+  <KeyCardEffect id="enerugitsukekae-mc-638" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：自分の場のポケモンについている基本エネルギーを1個選び、自分の別のポケモンにつけ替える。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="pokemon-catcher-u-sv5a-057" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：コインを1回投げオモテなら、相手のベンチポケモンを1匹選び、バトルポケモンと入れ替える。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="enerugikoin-u-sv11b-079" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：コインを2回投げ、すべてオモテなら、自分の山札から基本エネルギーを1枚選び、自分のポケモンにつける。そして山札を切る。</li>
+    </ul>
+
+  </KeyCardEffect>
 
   <h2>回し方</h2>
   <h3>序盤（1〜2ターン目）：エースバーンのフレアターボでエネルギーを加速</h3>

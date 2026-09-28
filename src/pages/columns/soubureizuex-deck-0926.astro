@@ -3,6 +3,7 @@
 // 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="soubureizuex-deck-0926">
@@ -15,38 +16,49 @@ import CardLink from '../../components/CardLink.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
-  <h3><CardLink id="soubureizuex-rr-m2a-031" />（3枚）</h3>
-  <ul>
-      <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
-      <li><strong>ワザ「しんえんほむら」</strong>（炎・30＋）：自分のトラッシュにあるエネルギーの枚数×20ダメージ追加。</li>
-      <li><strong>ワザ「アメジストレイジ」</strong>（炎超鋼・280）：このポケモンについているエネルギーを、すべてトラッシュする。</li>
-  </ul>
+  <KeyCardEffect id="soubureizuex-rr-m2a-031" qty={3}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>ワザ「しんえんほむら」</strong>（炎・30＋）：自分のトラッシュにあるエネルギーの枚数×20ダメージ追加。</li>
+        <li><strong>ワザ「アメジストレイジ」</strong>（炎超鋼・280）：このポケモンについているエネルギーを、すべてトラッシュする。</li>
+    </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="karubou-m2a-030" />（4枚）</h3>
-  <ul>
-      <li><strong>ワザ「おにび」</strong>（炎・20）</li>
-  </ul>
+  <KeyCardEffect id="karubou-m2a-030" qty={4}>
+    <ul>
+        <li><strong>ワザ「おにび」</strong>（炎・20）</li>
+    </ul>
 
-  <h3><CardLink id="runaton-r-m1l-026" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「ルナサイクル」</strong>：自分の場に「ソルロック」がいて、自分の番に、自分の手札から「基本闘エネルギー」を1枚トラッシュするなら、1回使える。自分の山札を3枚引く。この特性は別の「ルナサイクル」を使った番は使えない。</li>
-      <li><strong>ワザ「パワージェム」</strong>（闘闘・50）</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="sorurokku-u-m1l-027" />（2枚）</h3>
-  <ul>
-      <li><strong>ワザ「コスモビーム」</strong>（闘・70）：自分のベンチに「ルナトーン」がいないなら、このワザは失敗。このワザのダメージは弱点・抵抗力を計算しない。</li>
-  </ul>
+  <KeyCardEffect id="runaton-r-m1l-026" qty={2}>
+    <ul>
+        <li><strong>特性「ルナサイクル」</strong>：自分の場に「ソルロック」がいて、自分の番に、自分の手札から「基本闘エネルギー」を1枚トラッシュするなら、1回使える。自分の山札を3枚引く。この特性は別の「ルナサイクル」を使った番は使えない。</li>
+        <li><strong>ワザ「パワージェム」</strong>（闘闘・50）</li>
+    </ul>
 
-  <h3><CardLink id="carmine-u-sv6-097" />（4枚）</h3>
-  <ul>
-      <li><strong>サポート</strong>：このカードは、先攻プレイヤーの最初の番でも使える。自分の手札をすべてトラッシュし、山札を5枚引く。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="fuaitogongu-u-m1l-059" />（3枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：自分の山札から闘タイプのたねポケモンまたは「基本闘エネルギー」を1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
-  </ul>
+  <KeyCardEffect id="sorurokku-u-m1l-027" qty={2}>
+    <ul>
+        <li><strong>ワザ「コスモビーム」</strong>（闘・70）：自分のベンチに「ルナトーン」がいないなら、このワザは失敗。このワザのダメージは弱点・抵抗力を計算しない。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="carmine-u-sv6-097" qty={4}>
+    <ul>
+        <li><strong>サポート</strong>：このカードは、先攻プレイヤーの最初の番でも使える。自分の手札をすべてトラッシュし、山札を5枚引く。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="fuaitogongu-u-m1l-059" qty={3}>
+    <ul>
+        <li><strong>グッズ</strong>：自分の山札から闘タイプのたねポケモンまたは「基本闘エネルギー」を1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
+    </ul>
+
+  </KeyCardEffect>
 
   <h2>回し方</h2>
   <h3>序盤（1〜2ターン目）：ゼイユとモグリューでトラッシュにエネルギーをためる</h3>

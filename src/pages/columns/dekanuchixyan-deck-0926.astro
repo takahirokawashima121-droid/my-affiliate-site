@@ -3,6 +3,7 @@
 // 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに追記済み。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="dekanuchixyan-deck-0926">
@@ -15,37 +16,48 @@ import CardLink from '../../components/CardLink.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
-  <h3><CardLink id="dekanuchixyan-u-m1l-050" />（4枚）</h3>
-  <ul>
-      <li><strong>ワザ「おおぶりスイング」</strong>（鋼・240－）：相手のバトルポケモンについているエネルギーの数×60ダメージぶん、このワザのダメージは小さくなる。</li>
-  </ul>
+  <KeyCardEffect id="dekanuchixyan-u-m1l-050" qty={4}>
+    <ul>
+        <li><strong>ワザ「おおぶりスイング」</strong>（鋼・240－）：相手のバトルポケモンについているエネルギーの数×60ダメージぶん、このワザのダメージは小さくなる。</li>
+    </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="kanuchixyan-c-m1l-048" />（4枚）</h3>
-  <ul>
-      <li><strong>ワザ「たたく」</strong>（鋼・20）</li>
-  </ul>
+  <KeyCardEffect id="kanuchixyan-c-m1l-048" qty={4}>
+    <ul>
+        <li><strong>ワザ「たたく」</strong>（鋼・20）</li>
+    </ul>
 
-  <h3><CardLink id="daigonometagurosuex-svod-007" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「エクスブート」</strong>：自分の番に1回使える。自分の山札から「基本超エネルギー」と「基本鋼エネルギー」をそれぞれ1枚まで選び、自分の超または鋼ポケモンに好きなようにつける。そして山札を切る。</li>
-      <li><strong>ワザ「メタルスタンプ」</strong>（鋼無無・200）</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="genosekutoex-rr-sv11b-069" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「メタルシグナル」</strong>：自分の番に1回使える。自分の山札から鋼タイプの進化ポケモンを2枚まで選び、相手に見せて、手札に加える。そして山札を切る。</li>
-      <li><strong>ワザ「プロテクトチャージ」</strong>（鋼鋼無・150）：次の相手の番、このポケモンが受けるワザのダメージは「-30」される。</li>
-  </ul>
+  <KeyCardEffect id="daigonometagurosuex-svod-007" qty={2}>
+    <ul>
+        <li><strong>特性「エクスブート」</strong>：自分の番に1回使える。自分の山札から「基本超エネルギー」と「基本鋼エネルギー」をそれぞれ1枚まで選び、自分の超または鋼ポケモンに好きなようにつける。そして山札を切る。</li>
+        <li><strong>ワザ「メタルスタンプ」</strong>（鋼無無・200）</li>
+    </ul>
 
-  <h3><CardLink id="enerugirisaikuru-mc-640" />（1枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：自分のトラッシュから基本エネルギーを5枚まで選び、相手に見せて、山札にもどして切る。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="aiandeifuenda-u-m1l-057" />（1枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：次の相手の番、自分の鋼ポケモン全員が、相手のポケモンから受けるワザのダメージは「-30」される。（新しく場に出したポケモンもふくむ。）</li>
-  </ul>
+  <KeyCardEffect id="genosekutoex-rr-sv11b-069" qty={2}>
+    <ul>
+        <li><strong>特性「メタルシグナル」</strong>：自分の番に1回使える。自分の山札から鋼タイプの進化ポケモンを2枚まで選び、相手に見せて、手札に加える。そして山札を切る。</li>
+        <li><strong>ワザ「プロテクトチャージ」</strong>（鋼鋼無・150）：次の相手の番、このポケモンが受けるワザのダメージは「-30」される。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="enerugirisaikuru-mc-640" qty={1}>
+    <ul>
+        <li><strong>グッズ</strong>：自分のトラッシュから基本エネルギーを5枚まで選び、相手に見せて、山札にもどして切る。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="aiandeifuenda-u-m1l-057" qty={1}>
+    <ul>
+        <li><strong>グッズ</strong>：次の相手の番、自分の鋼ポケモン全員が、相手のポケモンから受けるワザのダメージは「-30」される。（新しく場に出したポケモンもふくむ。）</li>
+    </ul>
+
+  </KeyCardEffect>
 
   <h2>回し方</h2>
   <h3>序盤（1〜2ターン目）：カヌチャンとダイゴのダンバルを並べる</h3>

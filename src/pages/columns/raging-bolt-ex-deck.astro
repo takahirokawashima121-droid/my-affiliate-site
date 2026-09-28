@@ -3,6 +3,7 @@
 // 「回し方」「代替カード・カスタマイズ案」は公式のカードテキストとレシピをもとに執筆。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
 <DeckColumn slug="raging-bolt-ex-deck">
@@ -15,41 +16,52 @@ import CardLink from '../../components/CardLink.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
-  <h3><CardLink id="raging-bolt-ex-rr-sv5k-053" />（2枚）</h3>
-  <ul>
-      <li><strong>ワザ「はじけるほうこう」</strong>（無）：自分の手札をすべてトラッシュし、山札を6枚引く。</li>
-      <li><strong>ワザ「きょくらいごう」</strong>（雷闘・70×）：自分の場のポケモンについている基本エネルギーを好きなだけトラッシュし、その枚数×70ダメージ。</li>
-  </ul>
+  <KeyCardEffect id="raging-bolt-ex-rr-sv5k-053" qty={2}>
+    <ul>
+        <li><strong>ワザ「はじけるほうこう」</strong>（無）：自分の手札をすべてトラッシュし、山札を6枚引く。</li>
+        <li><strong>ワザ「きょくらいごう」</strong>（雷闘・70×）：自分の場のポケモンについている基本エネルギーを好きなだけトラッシュし、その枚数×70ダメージ。</li>
+    </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="ogerpon-teal-ex-rr-sv6-016" />（3枚）</h3>
-  <ul>
-      <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
-      <li><strong>特性「みどりのまい」</strong>：自分の番に1回使える。自分の手札から「基本草エネルギー」を1枚選び、このポケモンにつける。その後、自分の山札を1枚引く。</li>
-      <li><strong>ワザ「まんようしぐれ」</strong>（草草草・30＋）：おたがいのバトルポケモンについているエネルギーの数×30ダメージ追加。</li>
-  </ul>
+  <KeyCardEffect id="ogerpon-teal-ex-rr-sv6-016" qty={3}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>特性「みどりのまい」</strong>：自分の番に1回使える。自分の手札から「基本草エネルギー」を1枚選び、このポケモンにつける。その後、自分の山札を1枚引く。</li>
+        <li><strong>ワザ「まんようしぐれ」</strong>（草草草・30＋）：おたがいのバトルポケモンについているエネルギーの数×30ダメージ追加。</li>
+    </ul>
 
-  <h3><CardLink id="mega-kangaskhan-ex-rr-m1s-051" />（3枚）</h3>
-  <ul>
-      <li><strong>特性「おつかいダッシュ」</strong>：このポケモンがバトル場にいるなら、自分の番に1回使える。自分の山札を2枚引く。この特性は別の「おつかいダッシュ」を使った番は使えない。</li>
-      <li><strong>ワザ「マシンガンコンボ」</strong>（無無無・200＋）：ウラが出るまでコインを投げ、オモテの数×50ダメージ追加。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="talonflame-ex-rr-m6-062" />（2枚）</h3>
-  <ul>
-      <li><strong>特性「エキサイトダイブ」</strong>：自分の番に、このカードが手札にあり、自分の場に無タイプの「メガシンカex」がいるなら、1回使える。このカードをベンチに出す。</li>
-      <li><strong>ワザ「かぎづめハント」</strong>（無無・150）：のぞむなら、自分の山札から好きなカードを2枚まで選び、手札に加える。そして山札を切る。</li>
-  </ul>
+  <KeyCardEffect id="mega-kangaskhan-ex-rr-m1s-051" qty={3}>
+    <ul>
+        <li><strong>特性「おつかいダッシュ」</strong>：このポケモンがバトル場にいるなら、自分の番に1回使える。自分の山札を2枚引く。この特性は別の「おつかいダッシュ」を使った番は使えない。</li>
+        <li><strong>ワザ「マシンガンコンボ」</strong>（無無無・200＋）：ウラが出るまでコインを投げ、オモテの数×50ダメージ追加。</li>
+    </ul>
 
-  <h3><CardLink id="tetsunoisahaex-rr-sv5m-016" />（1枚）</h3>
-  <ul>
-      <li><strong>特性「ラピッドバーニア」</strong>：自分の番に、このカードを手札からベンチに出したとき、1回使える。このポケモンをバトルポケモンと入れ替える。入れ替えた場合、自分の場のポケモンについているエネルギーを好きなだけ選び、このポケモンにつけ替える。</li>
-      <li><strong>ワザ「プリズムエッジ」</strong>（草草無・180）：次の自分の番、このポケモンはワザが使えない。</li>
-  </ul>
+  </KeyCardEffect>
 
-  <h3><CardLink id="enerugitsukekae-mc-638" />（4枚）</h3>
-  <ul>
-      <li><strong>グッズ</strong>：自分の場のポケモンについている基本エネルギーを1個選び、自分の別のポケモンにつけ替える。</li>
-  </ul>
+  <KeyCardEffect id="talonflame-ex-rr-m6-062" qty={2}>
+    <ul>
+        <li><strong>特性「エキサイトダイブ」</strong>：自分の番に、このカードが手札にあり、自分の場に無タイプの「メガシンカex」がいるなら、1回使える。このカードをベンチに出す。</li>
+        <li><strong>ワザ「かぎづめハント」</strong>（無無・150）：のぞむなら、自分の山札から好きなカードを2枚まで選び、手札に加える。そして山札を切る。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="tetsunoisahaex-rr-sv5m-016" qty={1}>
+    <ul>
+        <li><strong>特性「ラピッドバーニア」</strong>：自分の番に、このカードを手札からベンチに出したとき、1回使える。このポケモンをバトルポケモンと入れ替える。入れ替えた場合、自分の場のポケモンについているエネルギーを好きなだけ選び、このポケモンにつけ替える。</li>
+        <li><strong>ワザ「プリズムエッジ」</strong>（草草無・180）：次の自分の番、このポケモンはワザが使えない。</li>
+    </ul>
+
+  </KeyCardEffect>
+
+  <KeyCardEffect id="enerugitsukekae-mc-638" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：自分の場のポケモンについている基本エネルギーを1個選び、自分の別のポケモンにつけ替える。</li>
+    </ul>
+
+  </KeyCardEffect>
 
   <h2>回し方</h2>
   <h3>序盤（1〜2ターン目）：ガルーラで引き、ファイアローexで攻める</h3>

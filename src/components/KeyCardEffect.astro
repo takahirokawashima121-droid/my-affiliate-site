@@ -1,0 +1,34 @@
+---
+// デッキ解説の「主力カードの効果」の1枚分：左にカード画像、右にカード名（採用枚数）と効果の箇条書き（slot の <ul>）
+// 画像・カード名のどちらを押しても、そのカードの最安値・買取相場ページへ移動する
+import CardImage from './CardImage.astro';
+import { cardPath, getCards } from '../utils/cards';
+
+interface Props {
+  /** cards.json の id */
+  id: string;
+  /** デッキでの採用枚数 */
+  qty: number;
+}
+
+const { id, qty } = Astro.props;
+const card = (await getCards()).find((c) => c.id === id);
+if (!card) throw new Error(`KeyCardEffect: cards.json に「${id}」がありません`);
+const href = cardPath(card);
+---
+
+<div class="not-prose my-4 flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+  <!-- 画像はカード名と同じリンク先。読み上げではカード名のリンクと重複するため、画像側はタブ移動・読み上げの対象から外す -->
+  <a href={href} class="block w-14 shrink-0 overflow-hidden rounded-md border border-slate-300 transition hover:border-blue-400 hover:shadow-md sm:w-20" tabindex="-1" aria-hidden="true">
+    <CardImage card={card} sizes="(min-width: 640px) 80px, 56px" class="rounded-none" />
+  </a>
+  <div class="min-w-0 flex-1">
+    <h3 class="text-base font-black leading-snug text-slate-900 sm:text-lg">
+      <a href={href} class="text-blue-600 underline decoration-blue-200 underline-offset-2 hover:decoration-blue-600">{card.data.name}</a>
+      <span class="ml-1 text-sm font-bold text-slate-500">（{qty}枚）</span>
+    </h3>
+    <div class="mt-2 text-[13px] leading-relaxed text-slate-700 sm:text-sm [&_li]:mt-1.5 [&_li]:pl-0.5 [&_li:first-child]:mt-0 [&_li::marker]:text-slate-400 [&_strong]:font-bold [&_strong]:text-slate-900 [&_ul]:list-disc [&_ul]:pl-4">
+      <slot />
+    </div>
+  </div>
+</div>

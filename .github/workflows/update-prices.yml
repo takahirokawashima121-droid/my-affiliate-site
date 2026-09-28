@@ -1,6 +1,6 @@
 # 楽天市場・Yahoo!ショッピングの販売最安値・商品画像を毎日取得し、src/data/cards.json に差分があればコミットする
 # （main への push で Vercel が自動デプロイし、サイトに反映される。ここではサイトのビルドは行わない）
-# 取得するのは更新時期が来たカードだけ（優先カードは毎日・それ以外は4日ごと）。詳しくは scripts/update-prices.js の冒頭
+# 取得するのは更新時期が来たカードだけ（優先カードは毎日・それ以外は2日ごと）。詳しくは scripts/update-prices.js の冒頭
 #
 # 事前設定: リポジトリの Settings → Secrets and variables → Actions に以下を登録
 #   RAKUTEN_APP_ID      楽天ウェブサービスのアプリID
@@ -13,7 +13,7 @@ name: Update prices
 # なお GITHUB_TOKEN による push は他のワークフローも起動しないが、Vercel のデプロイは通常どおり行われる。
 on:
   schedule:
-    # 1日2回（1回あたり約80枚・3〜4分。更新時期が来たカードだけを取得するため、2回で優先カードの毎日更新と残りの4日ごとの更新をまかなう）
+    # 1日2回（更新時期が来たカードだけを取得。2回で優先カードの毎日更新と、残りのカードの2日ごとの更新をまかなう）
     - cron: '7 7,19 * * *' # 07:07 / 19:07 UTC = 日本時間 16時7分 / 午前4時7分（毎時0分の混雑を避けて負荷分散）
   workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
 
@@ -27,8 +27,9 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    # 差分更新（更新時期が来たカードだけ）＋ 210秒で打ち切るため、通常は3〜4分で終わる。異常時の上限として8分
-    timeout-minutes: 8
+    # 差分更新（更新時期が来たカードだけ）。1回あたり600秒（約230枚）までで、2回の実行で全カードを2日以内に更新できる
+    # （Public リポジトリのため実行時間の上限はないが、楽天・Yahoo! の呼び出し制限を守る間隔は維持する）
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,7 +49,7 @@ jobs:
           restore-keys: price-checks-
 
       - name: Update prices
-        run: node scripts/update-prices.js --budget=210
+        run: node scripts/update-prices.js --budget=600
         env:
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}

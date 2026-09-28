@@ -1,15 +1,12 @@
-# ポケカブックのシティリーグ結果RSSから最新開催日の上位入賞デッキ（優勝・準優勝・TOP4）を検知し、カード追加・デッキ解説コラムの
-# 自動生成を行って Pull Request を作成する（npm run auto-city。ジムバトルの auto-deck-sync.yml とは別の PR にする）
+# シティリーグだけを手動で取得したいとき用（npm run auto-city）。定期実行は auto-deck-sync.yml がジムバトルとまとめて行う
+# ポケカブックのシティリーグ結果から優勝・準優勝のデッキを検知し、カード追加・デッキ解説コラムの自動生成を行って Pull Request を作成する
 # デッキ名はレシピから推定するため、PR で元記事の画像と見比べて確認してからマージする
 #
 # 事前設定は auto-deck-sync.yml と共通（Secrets・「Allow GitHub Actions to create and approve pull requests」）
-name: Auto city league sync
+name: Auto city league sync (manual)
 
 on:
-  schedule:
-    # 1日1回。シティリーグの結果が出そろう夜に実行し、auto-deck-sync（09:06 / 21:06 UTC）・価格更新（19:07 UTC）と重ならない時刻にする
-    - cron: '36 13 * * *' # 13:36 UTC = 日本時間 22:36
-  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
+  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行（定期実行はしない）
     inputs:
       max_columns:
         description: '1回に生成する記事数の上限'

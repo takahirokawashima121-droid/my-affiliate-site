@@ -1,0 +1,64 @@
+---
+// デッキ解説の「立ち回り・対戦の手順」：序盤・中盤・終盤の3ステップ（deck-columns.json の gamePlan。scripts/lib/game-plan.js が自動生成）
+// 文中の [[カード名]] は、レシピで使われている版のカード詳細ページ（最安値・買取相場）へのリンクとして強調表示する
+import { cardPath, type Card } from '../utils/cards';
+import { getRecipe } from '../utils/decks';
+import type { DeckColumn } from '../data/deck-columns';
+
+interface Props {
+  column: DeckColumn;
+  cards: Card[];
+}
+
+const { column, cards } = Astro.props;
+const plan = column.gamePlan;
+const recipe = plan ? getRecipe(column.deckKey).cards : [];
+const byId = new Map(cards.map((c) => [c.id, c]));
+/** 段落を「文字」と「カード名」の並びに分ける（カード名はレシピの版の詳細ページへ。見つからなければ強調だけ） */
+const segments = (text: string) =>
+  text.split(/(\[\[[^\]]+\]\])/).map((part) => {
+    const name = part.match(/^\[\[(.+)\]\]$/)?.[1];
+    if (!name) return { text: part };
+    const entry = recipe.find((e) => e.name === name && e.cardId && byId.has(e.cardId));
+    return { text: name, href: entry ? cardPath(byId.get(entry.cardId!)!) : undefined };
+  });
+const steps = plan
+  ? [
+      { no: 1, label: '序盤', sub: '1〜2ターン目', tone: 'bg-emerald-600', paragraphs: plan.early },
+      { no: 2, label: '中盤', sub: '2〜4ターン目', tone: 'bg-amber-500', paragraphs: plan.mid },
+      { no: 3, label: '終盤', sub: 'サイドを取りきる', tone: 'bg-red-600', paragraphs: plan.end },
+    ]
+  : [];
+---
+
+{plan && (
+  <section aria-labelledby="game-plan" class="mt-10">
+    <h2 id="game-plan" class="border-b border-slate-200 pb-2 text-xl font-bold text-slate-900 sm:text-2xl">立ち回り・対戦の手順</h2>
+    <p class="mt-2 text-xs text-slate-500">60枚の構成と公式のカードテキストから、各フェーズで使うカードと動きをまとめています。カード名をタップすると最安値・買取相場ページへ移動します。</p>
+    <ol class="mt-4 space-y-3">
+      {steps.map((s) => (
+        <li class="relative rounded-lg border border-slate-200 bg-slate-50 p-4 sm:pl-16">
+          <span class:list={['mb-2 inline-flex h-9 w-9 items-center justify-center rounded-full text-base font-black text-white shadow-sm sm:absolute sm:left-4 sm:top-4 sm:mb-0', s.tone]} aria-hidden="true">{s.no}</span>
+          <h3 class="text-base font-black text-slate-900">
+            {s.no}. {s.label}<span class="ml-2 text-xs font-bold text-slate-500">{s.sub}</span>
+          </h3>
+          <div class="mt-2 space-y-2 text-sm leading-relaxed text-slate-700">
+            {s.paragraphs.map((p) => (
+              <p>
+                {segments(p).map((seg) =>
+                  seg.href ? (
+                    <a href={seg.href} class="font-bold text-blue-700 underline decoration-blue-200 underline-offset-2 hover:decoration-blue-600">{seg.text}</a>
+                  ) : 'href' in seg ? (
+                    <strong class="font-bold text-slate-900">{seg.text}</strong>
+                  ) : (
+                    seg.text
+                  ),
+                )}
+              </p>
+            ))}
+          </div>
+        </li>
+      ))}
+    </ol>
+  </section>
+)}

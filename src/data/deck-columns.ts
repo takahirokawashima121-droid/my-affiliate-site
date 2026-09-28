@@ -27,6 +27,11 @@ export type DeckColumn = {
   eventName?: string;
   /** 会場（シティリーグの開催店舗など） */
   venue?: string;
+  /**
+   * 立ち回り（序盤・中盤・終盤の段落。文中の [[カード名]] はカード詳細ページへのリンクになる）。
+   * scripts/lib/game-plan.js が60枚の構成と公式のカードテキストから自動生成する。手書きの「回し方」がある記事にはない
+   */
+  gamePlan?: { early: string[]; mid: string[]; end: string[] };
   /** 開催日（YYYY-MM-DD）。省略時は result の「M/D」と公開年から求める */
   eventDate?: string;
 };

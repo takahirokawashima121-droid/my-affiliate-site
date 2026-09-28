@@ -10,7 +10,8 @@
 //
 // シティリーグ（--source=city）:
 //   RSS（https://pokecabook.com/archives/category/tournament/city-league/feed）の新しい2記事から、会場（見出し）ごとの
-//   「優勝・準優勝・TOP4」の公式デッキコードを取り出し、最新の開催日のデッキだけを 優勝 → 準優勝 → TOP4 の順に選ぶ。
+//   「優勝・準優勝」の公式デッキコードを取り出し、最新の開催日から3日以内のデッキを 新しい日付 → 優勝 → 準優勝 の順に選ぶ
+//   （選ばなかったデッキは処理済みにせず、次回以降に記事にする）。
 //   まとめ記事はデッキ名を画像でしか載せていないため、デッキ名はレシピから推定する（既存の記事のデッキ名 → メガシンカ → ex の順）。
 //   推定したデッキ名は PR で確認・修正してからマージする。記事には eventType: 'city'・rank・eventName・venue・eventDate を付ける
 //
@@ -23,7 +24,8 @@
 //    （現行スタンダードの版がないカードを含む・60枚でないデッキは飛ばす。未登録カードは最低レアリティで追加し価格を取得）
 // 4. src/data/deck-columns.json に記事情報を追記し、src/pages/columns/{slug}.astro を生成する。
 //    本文は公式のカードテキストから作る「デッキの構成」「主力カードの効果」と、最安値つき60枚レシピ・代替案の枠。
-//    回し方・カスタマイズ案は自動では書かないため、Pull Request で追記してから公開する
+//    序盤・中盤・終盤の立ち回り（gamePlan）は60枚の構成と公式のカードテキストから自動生成する（scripts/lib/game-plan.js）。
+//    代替カード・カスタマイズ案は自動では書かないため、Pull Request で追記してから公開する
 // 5. Pull Request の本文（.cache/auto-deck-pr.md）を書き出す（GitHub Actions の auto-deck-sync.yml が使う）
 //
 // マナー: ポケカブック・公式サイトへのリクエストは1.5秒以上あける（scripts/lib/official.js）
@@ -37,6 +39,7 @@ import { cardEffects, deckCards, fetchText, norm, romaji } from './lib/official.
 import { importDecks } from './import-official-decks.js';
 import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
 import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
+import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
@@ -51,7 +54,9 @@ const SOURCES = {
   },
 };
 /** シティリーグで記事にする成績（上位入賞のみ。並び順が優先順） */
-const CITY_RANKS = ['優勝', '準優勝', 'TOP4'];
+const CITY_RANKS = ['優勝', '準優勝'];
+/** シティリーグで候補にする開催日の幅（最新の開催日から何日前まで）。これより古いデッキは記事にせず処理済みにする */
+const CITY_WINDOW_DAYS = 3;
 /** シティリーグで1回に見るまとめ記事の数（新しい順） */
 const CITY_ARTICLES = 2;
 /** ジムバトルで1回に見るまとめ記事の数の上限（新しい順。処理済みの記事に着いたらそこで止める） */
@@ -99,7 +104,9 @@ async function articleDecks(url) {
     $(el).find('a[href*="deckID/"]').addBack('a[href*="deckID/"]').each((_, a) => {
       const deckId = $(a).attr('href').match(/https:\/\/www\.pokemon-card\.com\/deck\/(?:result|confirm)\.html\/deckID\/([A-Za-z0-9-]+)/)?.[1];
       const date = ($(a).text() + $(el).text()).match(/(\d{1,2}\/\d{1,2})/)?.[1];
-      if (deckId && archetype && !decks.some((d) => d.deckId === deckId)) decks.push({ deckId, archetype, date });
+      // 成績はリンクの文字（「9/27【日】ジムバトル優勝」など）から読む。準優勝の掲載があれば準優勝として扱う
+      const rank = /準優勝/.test($(a).text()) ? '準優勝' : '優勝';
+      if (deckId && archetype && !decks.some((d) => d.deckId === deckId)) decks.push({ deckId, archetype, date, rank });
     });
   });
   return decks;
@@ -194,7 +201,7 @@ async function renderPage(column, recipe) {
   }
   return `---
 // このページは scripts/auto-deck-updater.js が ${column.pubDate} に自動生成しました（出典: 公式デッキコード）。
-// 公開前に「回し方」と「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
 import DeckColumn from '../../layouts/DeckColumn.astro';
 import CardLink from '../../components/CardLink.astro';
 import KeyCardEffect from '../../components/KeyCardEffect.astro';
@@ -211,8 +218,6 @@ import KeyCardEffect from '../../components/KeyCardEffect.astro';
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
 ${effectBlocks.join('\n\n')}
-
-  {/* TODO: 回し方（序盤・中盤・終盤）を追記する */}
 
   <Fragment slot="custom">
     <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
@@ -266,8 +271,7 @@ async function main() {
     console.log(`
 ■ ${it.title}: 新しいデッキ ${decks.length}件`);
     for (const d of decks) candidates.push({ ...d, article: it });
-    // シティリーグ：最新の記事に新しいデッキがなければ、それより古い記事も取得済みなので見に行かない
-    if (opts.source === 'city' && decks.length === 0) break;
+    // シティリーグは、最新の記事に新しいデッキがなくても1つ前の記事まで見る（前回選ばれなかったデッキが残っていることがあるため）
   }
   if (opts.source === 'city' && candidates.length === 0) return console.log('新着はありません。');
   // 優先順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）
@@ -282,16 +286,25 @@ async function main() {
       return { ...d, nth };
     })
     .sort((a, b) => rank(a) - rank(b));
-  // シティリーグ: 最新の開催日のデッキだけを、成績順（優勝 → 準優勝 → TOP4）・会場の掲載順に並べる。
+  // シティリーグ: 最新の開催日から CITY_WINDOW_DAYS 日以内のデッキを、新しい日付 → 成績（優勝 → 準優勝）→ 会場の掲載順に並べる。
+  // 今回選ばなかったデッキは処理済みにしないので、次回以降に順番に記事になる（取りこぼさない）。
   // デッキ名はレシピから推定するため、ここで公式のデッキページを取得して名前を付け、同じ回に同じデッキ名が重ならないようにする
   const latest = Math.max(...candidates.map((d) => dateKey(d.date)));
+  const dayOf = (date) => {
+    const [m, d] = (date ?? '').split('/').map(Number);
+    return m && d ? Date.UTC(2000, m - 1, d) / 86400e3 : 0;
+  };
+  const latestDay = Math.max(...candidates.map((d) => dayOf(d.date)));
+  const inWindow = (d) => latestDay - dayOf(d.date) <= CITY_WINDOW_DAYS;
   const pool =
     opts.source === 'city'
-      ? candidates.filter((d) => dateKey(d.date) === latest).sort((a, b) => CITY_RANKS.indexOf(a.rank) - CITY_RANKS.indexOf(b.rank))
+      ? candidates.filter(inWindow).sort((a, b) => dateKey(b.date) - dateKey(a.date) || CITY_RANKS.indexOf(a.rank) - CITY_RANKS.indexOf(b.rank))
       : ordered;
-  if (opts.source === 'city') console.log(`\n■ 最新の開催日 ${candidates.find((d) => dateKey(d.date) === latest)?.date}：上位入賞 ${pool.length}件（${CITY_RANKS.join('・')}）`);
+  if (opts.source === 'city')
+    console.log(`\n■ 最新の開催日 ${candidates.find((d) => dateKey(d.date) === latest)?.date}から${CITY_WINDOW_DAYS}日以内：${CITY_RANKS.join('・')} ${pool.length}件（未処理）`);
   // 取り込めないデッキ（60枚でない・現行スタンダード外のカードを含む）は飛ばして次の候補で埋める
   const selected = [];
+  const checkedIds = new Set(); // 今回確認したデッキ（記事にした・取り込めなかった）。シティリーグはこれだけを処理済みにする
   for (const d of pool) {
     if (selected.length >= opts.maxColumns) break;
     if (opts.source === 'city') {
@@ -299,6 +312,7 @@ async function main() {
       if (selected.some((o) => norm(o.archetype) === norm(d.archetype))) continue;
     }
     const check = await importDecks([{ slug: `check-${d.deckId}`, deckId: d.deckId }], { dryRun: true, skipInvalid: true });
+    checkedIds.add(d.deckId);
     if (check.decks.length > 0) selected.push(d);
   }
   console.log(`\n■ 記事を生成するデッキ（最大 ${opts.maxColumns}件）`);
@@ -330,8 +344,9 @@ async function main() {
     const recipe = recipes[d.slug].cards;
     const keyCards = pickKeyCards(recipe, d.archetype);
     const isCity = opts.source === 'city';
-    const label = isCity ? `${d.date ?? ''} シティリーグ${d.rank}`.trim() : `${d.date ?? ''} ジムバトル優勝`.trim();
-    const placed = { 優勝: '優勝した', 準優勝: '準優勝した', TOP4: 'TOP4に入賞した' }[d.rank] ?? '優勝した';
+    const rank = d.rank ?? '優勝';
+    const label = `${d.date ?? ''} ${isCity ? 'シティリーグ' : 'ジムバトル'}${rank}`.trim();
+    const placed = { 優勝: '優勝した', 準優勝: '準優勝した', TOP4: 'TOP4に入賞した' }[rank] ?? '優勝した';
     const deckName = d.variant ? `${d.archetype}（${d.variant.text}型）` : d.archetype;
     // 型名のない既存の同名記事にも、新しいデッキとの差分から型名を付ける（一覧・タイトルで区別できるように）
     for (const c of columns.filter((c) => c.deckName === d.archetype && recipes[c.deckKey])) {
@@ -349,21 +364,23 @@ async function main() {
       title: `【${label}】${deckName}デッキレシピ！採用カード最安値・代替パーツ提案`,
       description: isCity
         ? `${d.date ? `${d.date}の` : ''}シティリーグ（${d.venue}）で${placed}${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`
-        : `${d.date ? `${d.date}の` : ''}ジムバトルで優勝した${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`,
+        : `${d.date ? `${d.date}の` : ''}ジムバトルで${placed}${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`,
       result: label,
       // 大会の種類・成績（トップページの特集・一覧の大会バッジと絞り込みに使う）
       ...(isCity
         ? {
             eventType: 'city',
-            rank: d.rank,
+            rank,
             eventName: 'シティリーグ',
             venue: d.venue,
             ...(d.date && { eventDate: `${todayJst().slice(0, 4)}-${d.date.split('/').map((n) => n.padStart(2, '0')).join('-')}` }),
           }
-        : { eventType: 'gym', rank: '優勝', eventName: 'ジムバトル' }),
+        : { eventType: 'gym', rank, eventName: 'ジムバトル' }),
       pubDate: todayJst(),
       highlight: `${keyCards.slice(0, 2).join('・')}を採用した${d.archetype}デッキ。主力カードの効果と最安値をまとめて確認`,
       keyCards,
+      // 序盤・中盤・終盤の立ち回り（60枚の構成と公式のカードテキストから自動生成。ページの「立ち回り・対戦の手順」に表示）
+      gamePlan: buildGamePlan(recipe, await recipeProfiles(recipe), keyCards[0]),
     };
     await writeFile(path(`src/pages/columns/${d.slug}.astro`), await renderPage(column, recipe), 'utf8');
     columns.push(column);
@@ -374,7 +391,8 @@ async function main() {
 
   // 処理済みを記録（選ばなかったデッキ・無効だったデッキも記録し、次回は新しい記事のデッキだけを見る）
   for (const it of fresh) {
-    const ids = candidates.filter((c) => c.article === it).map((c) => c.deckId);
+    // シティリーグは今回確認したデッキと、候補の期間より古いデッキだけを処理済みにする（残りは次回の候補）
+    const ids = candidates.filter((c) => c.article === it && (opts.source !== 'city' || checkedIds.has(c.deckId) || !inWindow(c))).map((c) => c.deckId);
     // シティリーグは同じ記事を毎回見るため、新しいデッキがなかった記事は記録しない（処理済みの判定はデッキコードで行う）
     if (opts.source === 'city' && ids.length === 0) continue;
     processed.articles.push({ key: articleKey(it), link: it.link, title: it.title, processedAt: todayJst(), decks: ids, columns: generated.filter((g) => selected.some((s) => s.slug === g.slug && s.article === it)).map((g) => g.slug) });
@@ -417,7 +435,8 @@ async function main() {
     ...(xSection.length ? ['### 📱 X（Twitter）投稿用コピペ文', 'マージして公開されたあとに投稿してください（見どころを書き直した場合は、公開後の記事末尾「Xシェア用テキスト」の文面を使うと最新になります）。', '', ...xSection] : []),
     '### マージ前に確認すること',
     ...(opts.source === 'city' ? ['- [ ] 推定したデッキ名が元記事の画像のデッキ名と合っている'] : []),
-    '- [ ] 各記事の TODO（回し方・代替カード / カスタマイズ案）を追記した',
+    '- [ ] 自動生成の立ち回り（序盤・中盤・終盤）をプレビューで読み、不自然な箇所があれば deck-columns.json の gamePlan を直した',
+    '- [ ] 各記事の TODO（代替カード / カスタマイズ案）を追記した',
     '- [ ] 追加したカードの型番・レギュレーションマークに誤りがない',
     '- [ ] トップページの特集（優勝日が新しい順に自動で選ばれる）に載る記事の見どころ（highlight）を確認した',
     '',

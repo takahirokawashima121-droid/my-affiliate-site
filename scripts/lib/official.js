@@ -121,6 +121,23 @@ const ENERGY = { grass: '草', fire: '炎', water: '水', electric: '雷', psych
  * 例: [{ kind: '特性', name: 'にげあしドロー', cost: '', damage: '', text: '自分の番に1回使える。…' },
  *      { kind: 'ワザ', name: 'ランドクラッシュ', cost: '無無無', damage: '90', text: '' }]
  */
+/**
+ * カードの進化段階・HP・進化ライン・効果（立ち回りの自動生成に使う）。
+ * stage は「たね」「1進化」「2進化」（トレーナーズ・エネルギーは null）、line は公式ページの進化図に並ぶ名前
+ */
+export async function cardProfile(cardId) {
+  const html = await fetchText(`${OFFICIAL}/card-search/details.php/card/${cardId}/regu/XY`, { cache: true });
+  const $ = cheerio.load(html);
+  const top = $('.TopInfo').first().text().normalize('NFKC').replace(/\s+/g, ' ');
+  const stage = top.match(/たね|1\s*進化|2\s*進化/)?.[0].replace(/\s+/g, '') ?? null;
+  const hp = Number(top.match(/HP\s*(\d+)/)?.[1] ?? 0) || null;
+  const line = $('.evolution a, .evolution span')
+    .map((_, el) => $(el).text().trim())
+    .get()
+    .filter(Boolean);
+  return { stage, hp, line: [...new Set(line)], effects: await cardEffects(cardId) };
+}
+
 export async function cardEffects(cardId) {
   const html = await fetchText(`${OFFICIAL}/card-search/details.php/card/${cardId}/regu/XY`, { cache: true });
   const $ = cheerio.load(html);

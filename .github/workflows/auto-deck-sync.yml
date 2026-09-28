@@ -1,5 +1,6 @@
-# ポケカブックのデッキレシピRSSから新着のジムバトル優勝デッキを検知し、カード追加・デッキ解説コラムの自動生成を行って
-# Pull Request を作成する（npm run auto-decks。記事は PR で「回し方」等を追記してからマージする）
+# ポケカブックのRSSから新着の大会入賞デッキ（ジムバトル優勝・シティリーグ優勝/準優勝）を検知し、
+# 未登録カードの追加・価格取得（楽天/Yahoo!・宣伝帯なしの画像）、デッキ解説コラムと立ち回り（序盤・中盤・終盤）の自動生成を行って
+# 1つの Pull Request にまとめる（npm run auto-decks → npm run auto-city。PR で内容を確認してからマージする）
 #
 # 事前設定:
 #   - Secrets は update-prices.yml と共通（RAKUTEN_APP_ID / RAKUTEN_ACCESS_KEY / YAHOO_APP_ID）
@@ -9,12 +10,13 @@ name: Auto deck sync
 
 on:
   schedule:
-    # 1日2回。正時を避け、価格更新（19:07 UTC）・sync-trending（日曜 20:23 UTC）とも重ならない時刻にする
-    - cron: '6 9,21 * * *' # 09:06 / 21:06 UTC = 日本時間 18:06 / 翌 06:06
+    # 1日2回。毎時0分のアクセス集中・キュー待ちを避けて端数の分にする（価格更新 19:07 / 07:07 UTC とも重ならない）
+    - cron: '18 23 * * *' # 23:18 UTC = 日本時間 朝 08:18（前夜・未明に追加された大会結果のチェック）
+    - cron: '23 14 * * *' # 14:23 UTC = 日本時間 夜 23:23（当日開催の大会結果の収集・未登録カード追加・記事生成）
   workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
     inputs:
       max_columns:
-        description: '1回に生成する記事数の上限'
+        description: '1回に生成する記事数の上限（ジムバトル・シティリーグそれぞれ）'
         required: false
         default: '4'
 
@@ -30,8 +32,8 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    # 新着がない日は RSS を1回見るだけで終わる。新着があってもカード追加・価格取得は新しいカードの分だけ
-    timeout-minutes: 15
+    # 新着がない日は RSS とまとめ記事を見るだけで数十秒で終わる。新着があるときは新しいカードの価格取得も行う
+    timeout-minutes: 40
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -62,25 +64,39 @@ jobs:
           key: trending-${{ github.run_id }}
           restore-keys: trending-
 
-      - name: Detect new decks and generate columns
+      - name: Gym battle winners
         run: npm run auto-decks -- --max-columns=${{ github.event.inputs.max_columns || '4' }}
         env:
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
           YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
 
+      - name: City league winners and runners-up
+        run: npm run auto-city -- --max-columns=${{ github.event.inputs.max_columns || '4' }}
+        env:
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
+          YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
+
+      # ジムバトル・シティリーグの PR 本文を1つにまとめる（どちらも新着がなければ本文を作らず、PR も作らない）
+      - name: Combine pull request body
+        run: |
+          for f in .cache/auto-deck-pr.md .cache/auto-city-pr.md; do
+            if [ -f "$f" ]; then cat "$f" >> .cache/auto-sync-pr.md; printf '\n---\n\n' >> .cache/auto-sync-pr.md; fi
+          done
+
       # サイトのビルドはここでは行わない（PR のプレビュー・main へのマージ時に Vercel がビルドするため、壊れていればそこで分かる）
 
-      # 差分があるときだけ PR を作成（同じブランチの PR があれば更新）。差分がなければ何もしない
+      # 差分があるときだけ PR を作成（同じブランチの PR があれば更新）
       - name: Create pull request
-        if: hashFiles('.cache/auto-deck-pr.md') != '' # 新着がなかった回は PR 本文が作られないので何もしない
+        if: hashFiles('.cache/auto-sync-pr.md') != ''
         uses: peter-evans/create-pull-request@v7
         with:
           branch: auto/deck-sync
           delete-branch: true
-          title: 'feat: 新着優勝デッキ記事の自動生成'
-          commit-message: 'feat: 新着優勝デッキ記事の自動生成'
-          body-path: .cache/auto-deck-pr.md
+          title: 'feat: 新着大会入賞デッキ記事の自動生成（ジムバトル・シティリーグ）'
+          commit-message: 'feat: 新着大会入賞デッキ記事の自動生成'
+          body-path: .cache/auto-sync-pr.md
           labels: auto-deck
           add-paths: |
             src/data/cards.json

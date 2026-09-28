@@ -10,7 +10,7 @@
 //
 // 差分更新（--ids / --all 以外）:
 // - 前回の確認日時（.cache/price-checks.json。GitHub Actions ではキャッシュで引き継ぐ）と updatedAt の新しい方から、
-//   優先カード（環境Tier1〜2のデッキ・新着のデッキ記事12本のレシピに入っているカード）は約1日（20時間）、それ以外は約4日（90時間）
+//   優先カード（環境Tier1〜2のデッキ・新着のデッキ記事12本のレシピに入っているカード）は約1日（20時間）、それ以外は約2日（44時間）
 //   たったものだけを取得する
 // - 更新間隔に対する遅れが大きいものから取得する。--budget の時間を過ぎたら打ち切り、残りは次回に回す
 //
@@ -49,10 +49,10 @@ const DECKS_PATH = fileURLToPath(new URL('../src/data/official-decks.json', impo
 const CHECKS_PATH = fileURLToPath(new URL('../.cache/price-checks.json', import.meta.url));
 /**
  * 更新間隔：優先カードは毎日（20時間。毎日同じ時刻の実行で「24時間に数分足りない」ために1日飛ばさないよう短めにする）、
- * それ以外は約4日（90時間）ごと
+ * それ以外は約2日（44時間）ごと
  */
 const PRIORITY_INTERVAL_MS = 20 * 3600e3;
-const ROTATION_INTERVAL_MS = 90 * 3600e3;
+const ROTATION_INTERVAL_MS = 44 * 3600e3;
 /** 「注目カード」とみなす新着デッキ記事の数（トップページの特集に載る最新の記事） */
 const FEATURED_COLUMNS = 12;
 const ENV_PATH = fileURLToPath(new URL('../.env', import.meta.url));

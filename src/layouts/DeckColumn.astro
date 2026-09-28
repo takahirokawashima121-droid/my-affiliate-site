@@ -7,6 +7,7 @@ import Breadcrumbs from '../components/Breadcrumbs.astro';
 import DeckRecipe from '../components/DeckRecipe.astro';
 import CardImage from '../components/CardImage.astro';
 import EventBadge from '../components/EventBadge.astro';
+import GamePlan from '../components/GamePlan.astro';
 import AffiliatePixels from '../components/AffiliatePixels.astro';
 import { SITE } from '../consts';
 import { SHOPS } from '../config/affiliate';
@@ -113,6 +114,9 @@ const jsonLd = {
       <div class="prose prose-slate max-w-none prose-headings:scroll-mt-20 prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-2 prose-a:text-blue-600">
         <slot />
       </div>
+
+      <!-- 立ち回り（自動生成）：手書きの「回し方」がない記事だけ gamePlan を持つ -->
+      <GamePlan column={column} cards={cards} />
 
       <DeckRecipe deck={deck} title={`${column.deckName}デッキレシピ（60枚）`} />
 

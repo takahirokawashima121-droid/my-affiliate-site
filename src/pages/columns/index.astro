@@ -17,14 +17,14 @@ const counts = Object.fromEntries(DECK_FILTERS.map((f) => [f.key, f.key === 'all
 const title = 'デッキ解説コラム一覧';
 const description = 'ジムバトルなどで結果を残した現行スタンダードのデッキを、60枚レシピ・回し方・採用カードの最安値つきで解説するコラムの一覧です。';
 const tab =
-  'deck-filter shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-600 bg-slate-900 text-slate-400 hover:border-sky-500/60 hover:text-sky-400 aria-pressed:border-amber-500/70 aria-pressed:bg-amber-500/90 aria-pressed:font-black aria-pressed:text-slate-950 aria-pressed:shadow-sm';
+  'deck-filter shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 aria-pressed:border-amber-500 aria-pressed:bg-amber-500/90 aria-pressed:font-black aria-pressed:text-slate-950 aria-pressed:shadow-sm';
 ---
 
 <BaseLayout title={title} description={description}>
   <div class="mx-auto max-w-5xl">
     <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: 'デッキ解説', href: '/columns/' }]} />
-    <h1 class="text-xl font-bold text-slate-100 sm:text-3xl">{title}</h1>
-    <p class="mt-2 text-xs leading-relaxed text-slate-400 sm:text-sm">{description}</p>
+    <h1 class="text-xl font-bold text-slate-900 sm:text-3xl">{title}</h1>
+    <p class="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">{description}</p>
 
     <div class="mt-6" role="group" aria-label="デッキの種類で絞り込む">
       <div class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
@@ -34,7 +34,7 @@ const tab =
           </button>
         ))}
       </div>
-      <p class="mt-2 text-xs text-slate-400">
+      <p class="mt-2 text-xs text-slate-600">
         「非ex / 低予算」は、主役が ex 以外のデッキと、60枚の概算が{formatYen(BUDGET_LIMIT)}未満のデッキです。<span id="deck-count" aria-live="polite"></span>
       </p>
     </div>
@@ -42,28 +42,28 @@ const tab =
     <ul class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3" id="deck-list">
       {columns.map((c) => (
         <li class="deck-item" data-categories={c.categories.join(' ')}>
-          <a href={columnPath(c)} class="group flex h-full gap-3 rounded-2xl border border-slate-700/60 bg-slate-900 p-3 shadow-sm transition hover:border-sky-500/50 hover:shadow-md sm:p-4">
+          <a href={columnPath(c)} class="group flex h-full gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm transition hover:border-blue-400 hover:shadow-md sm:p-4">
             {c.mainCard && <span class="block w-14 shrink-0 sm:w-20"><CardImage card={c.mainCard} sizes="80px" /></span>}
             <span class="flex min-w-0 flex-1 flex-col">
               <span class="flex flex-wrap items-center gap-1">
-                <span class="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-bold text-slate-100">🏆 {c.result}</span>
+                <span class="rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-bold text-white">🏆 {c.result}</span>
                 {c.badges.map((b) => <span class={`rounded-full px-2 py-0.5 text-[10px] font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
               </span>
-              <span class="mt-1 text-base font-black leading-snug text-slate-100 group-hover:text-sky-400">{c.deckName}</span>
-              <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-400">{c.highlight}</span>
+              <span class="mt-1 text-base font-black leading-snug text-slate-900 group-hover:text-blue-600">{c.deckName}</span>
+              <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{c.highlight}</span>
               <span class="mt-auto flex flex-wrap items-baseline justify-between gap-x-2 pt-2 text-xs">
-                {c.estimate > 0 ? <span class="text-slate-400">60枚の概算 <span class="font-bold tabular-nums text-rose-400">{formatYen(c.estimate)}</span></span> : <span></span>}
-                <span class="font-bold text-sky-400">レシピ・最安パーツを見る →</span>
+                {c.estimate > 0 ? <span class="text-slate-600">60枚の概算 <span class="font-bold tabular-nums text-rose-600">{formatYen(c.estimate)}</span></span> : <span></span>}
+                <span class="font-bold text-blue-600">レシピ・最安パーツを見る →</span>
               </span>
             </span>
           </a>
         </li>
       ))}
     </ul>
-    <p id="deck-empty" class="mt-6 rounded-xl bg-slate-900 p-6 text-center text-sm text-slate-400" hidden>該当するデッキ解説はまだありません。</p>
+    <p id="deck-empty" class="mt-6 rounded-xl bg-white p-6 text-center text-sm text-slate-600" hidden>該当するデッキ解説はまだありません。</p>
 
-    <p class="mt-10 text-sm text-slate-400">
-      カードの買い方・売り方のコラムは <a href="/blog/" class="text-sky-400 underline">コラム一覧</a> をご覧ください。
+    <p class="mt-10 text-sm text-slate-600">
+      カードの買い方・売り方のコラムは <a href="/blog/" class="text-blue-600 underline">コラム一覧</a> をご覧ください。
     </p>
   </div>
 </BaseLayout>

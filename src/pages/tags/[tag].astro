@@ -23,7 +23,7 @@ const { posts } = Astro.props;
 
 <BaseLayout title={`「${tag}」の記事一覧`} description={`「${tag}」に関する記事の一覧です。`}>
   <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: 'タグ一覧', href: '/tags/' }, { name: `#${tag}`, href: Astro.url.pathname }]} />
-  <h1 class="mb-8 text-2xl font-bold text-slate-100 sm:text-3xl">#{tag} の記事（{posts.length}件）</h1>
+  <h1 class="mb-8 text-2xl font-bold text-slate-900 sm:text-3xl">#{tag} の記事（{posts.length}件）</h1>
   <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
     {posts.map((post) => <PostCard post={post} />)}
   </div>

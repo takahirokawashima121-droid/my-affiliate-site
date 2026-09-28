@@ -28,7 +28,7 @@ const model = cardModel(card);
 
 <article
   data-ga-item={card.data.name}
-  class="card-item flex flex-col overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+  class="card-item flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
   data-search={`${name} ${rarity} ${expansionCode} ${cardNumber}`}
   data-rarity={rarity}
   data-regulation={card.data.regulationMark ?? ''}
@@ -37,51 +37,51 @@ const model = cardModel(card);
   data-updated={updatedAt.valueOf()}
 >
   <!-- 上部（画像・カード情報）をクリックで詳細ページへ -->
-  <a href={cardPath(card)} class="group flex gap-4 p-4 transition hover:bg-slate-800">
+  <a href={cardPath(card)} class="group flex gap-4 p-4 transition hover:bg-slate-50">
     <div class="w-24 shrink-0 sm:w-28">
       <CardImage card={card} eager={eager} />
     </div>
 
     <div class="flex min-w-0 flex-1 flex-col">
       <CardTags card={card} cheapest={cheapest} />
-      <h3 class="mt-1.5 text-base font-bold leading-snug text-slate-100 group-hover:text-sky-400 sm:text-lg">
-        {nameWithRarity(card.data)} <span class="mt-0.5 block font-mono text-xs font-semibold text-slate-400">[{model}]</span>
+      <h3 class="mt-1.5 text-base font-bold leading-snug text-slate-900 group-hover:text-blue-600 sm:text-lg">
+        {nameWithRarity(card.data)} <span class="mt-0.5 block font-mono text-xs font-semibold text-slate-600">[{model}]</span>
       </h3>
-      <p class="mt-3 text-xs text-slate-400">
-        差額 {gap.valid ? <span class="font-semibold text-slate-300">{formatYen(gap.spread)}</span> : inStock ? <span class="font-semibold text-amber-400">相場確認中</span> : <span class="font-semibold text-slate-400">—</span>}
+      <p class="mt-3 text-xs text-slate-600">
+        差額 {gap.valid ? <span class="font-semibold text-slate-700">{formatYen(gap.spread)}</span> : inStock ? <span class="font-semibold text-amber-700">相場確認中</span> : <span class="font-semibold text-slate-600">—</span>}
       </p>
-      <p class="mt-1 text-[11px] text-slate-400">
+      <p class="mt-1 text-[11px] text-slate-600">
         更新: <time datetime={updatedAt.toISOString()}>{formatDateTime(updatedAt)}</time>
       </p>
-      <span class="mt-auto pt-2 text-xs font-medium text-sky-400">詳細・相場を見る →</span>
+      <span class="mt-auto pt-2 text-xs font-medium text-blue-600">詳細・相場を見る →</span>
     </div>
   </a>
 
   <!-- 価格比較 -->
-  <dl class="grid grid-cols-2 divide-x divide-slate-700/60 border-y border-slate-700/60 bg-slate-800/60 text-center">
+  <dl class="grid grid-cols-2 divide-x divide-slate-200 border-y border-slate-200 bg-slate-50 text-center">
     <div class="px-3 py-3">
-      <dt class="text-[11px] font-medium text-slate-400">販売最安値</dt>
+      <dt class="text-[11px] font-medium text-slate-600">販売最安値</dt>
       {best ? (
-        <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-rose-400 sm:text-2xl">{formatYen(best.price)}</dd>
+        <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-rose-600 sm:text-2xl">{formatYen(best.price)}</dd>
       ) : (
-        <dd class="mt-1.5 text-base font-bold text-slate-400 sm:text-lg">在庫なし</dd>
+        <dd class="mt-1.5 text-base font-bold text-slate-600 sm:text-lg">在庫なし</dd>
       )}
-      <dd class="truncate text-[11px] text-slate-400">{best ? best.shop : '楽天・Yahoo!'}</dd>
+      <dd class="truncate text-[11px] text-slate-600">{best ? best.shop : '楽天・Yahoo!'}</dd>
       {/* 2大モールの価格をコンパクトに併記（安い方を強調） */}
-      <dd class="mt-1 flex justify-center gap-2 text-[10px] tabular-nums text-slate-400">
+      <dd class="mt-1 flex justify-center gap-2 text-[10px] tabular-nums text-slate-600">
         {([['楽天', offers.rakuten], ['Yahoo!', offers.yahoo]] as const).map(([label, o]) => (
-          <span class:list={[o && best && o.price === best.price && 'font-bold text-rose-400']}>{label} {o ? formatYen(o.price) : '—'}</span>
+          <span class:list={[o && best && o.price === best.price && 'font-bold text-rose-600']}>{label} {o ? formatYen(o.price) : '—'}</span>
         ))}
       </dd>
     </div>
     <div class="px-3 py-3">
-      <dt class="text-[11px] font-medium text-slate-400">買取最高値</dt>
+      <dt class="text-[11px] font-medium text-slate-600">買取最高値</dt>
       {buybackShown ? (
-        <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-emerald-400 sm:text-2xl">{formatYen(buybackPrice)}</dd>
+        <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-emerald-600 sm:text-2xl">{formatYen(buybackPrice)}</dd>
       ) : (
-        <dd class="mt-1.5 text-base font-bold text-slate-400 sm:text-lg">要査定</dd>
+        <dd class="mt-1.5 text-base font-bold text-slate-600 sm:text-lg">要査定</dd>
       )}
-      <dd class="truncate text-[11px] text-slate-400">{buybackShop}{buybackUnverified && <span class="ml-1 rounded bg-amber-500/15 px-1 text-amber-300">相場確認中</span>}</dd>
+      <dd class="truncate text-[11px] text-slate-600">{buybackShop}{buybackUnverified && <span class="ml-1 rounded bg-amber-100 px-1 text-amber-800">相場確認中</span>}</dd>
     </div>
   </dl>
 

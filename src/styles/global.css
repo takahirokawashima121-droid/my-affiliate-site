@@ -9,59 +9,44 @@
   --color-brand-100: #dbeafe;
   --color-brand-600: #2563eb;
   --color-brand-700: #1d4ed8;
-  /* 工房（ラボ）テーマ：ダークスレートの下地 + 作業灯のアンバー + 計器のシアン */
-  --color-lab-950: #0b0f19;
-  --color-lab-900: #0e131d;
-  --color-lab-800: #161d2a;
-  --color-lab-700: #232d3f;
-  --color-lab-600: #33405a;
-  /* 眩しすぎない作業灯のアンバー・計器のシアン（amber-400/cyan-400 より彩度と明度を少し落とす） */
-  --color-lamp: #f0a830;
-  --color-gauge: #3fc1d6;
+  /* ホワイトラボ（精密機器研究所）テーマ：青灰ホワイトの床 + 作業灯のアンバー + 計器のシアン */
+  --color-lamp: #f59e0b;
+  --color-gauge: #0891b2;
 }
 
 html {
-  /* フォーム部品・スクロールバーもダークで描画する */
-  color-scheme: dark;
+  color-scheme: light;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
 
-/* 工房の床：ダークスレートに薄い方眼（ページ全体の背景） */
+/* 研究所の床：まぶしすぎない青灰ホワイトに、設計図・方眼紙風の極薄グリッド（ページ全体の背景） */
 @utility bg-lab-floor {
-  background-color: var(--color-lab-950);
+  background-color: #f8fafc;
   background-image:
-    linear-gradient(rgb(148 163 184 / 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(148 163 184 / 0.06) 1px, transparent 1px);
-  background-size: 28px 28px;
+    linear-gradient(rgb(100 116 139 / 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(100 116 139 / 0.07) 1px, transparent 1px),
+    linear-gradient(rgb(100 116 139 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(100 116 139 / 0.035) 1px, transparent 1px);
+  background-size: 96px 96px, 96px 96px, 24px 24px, 24px 24px;
 }
 
-/* 作業台：本文を載せるパネル。床と同じダークトーンで、方眼だけ少し濃くして面を区切る（明度差で目が疲れないように） */
-@utility bg-workbench {
-  background-color: rgb(15 23 42 / 0.55);
-  background-image:
-    linear-gradient(rgb(148 163 184 / 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(148 163 184 / 0.045) 1px, transparent 1px);
-  background-size: 24px 24px;
-}
-
-/* 計器パネル：ダークの装飾ブロック（ヒーロー・特集など）。方眼 + 上端に作業灯のにじみ */
+/* 計器パネル：白い独立カード（ヒーロー・Tier表・特集）。うっすら方眼 + 右上に作業灯のにじみ */
 @utility bg-lab-panel {
-  background-color: var(--color-lab-900);
+  background-color: #fff;
   background-image:
-    radial-gradient(ellipse 60% 50% at 85% 0%, rgb(251 191 36 / 0.14), transparent 70%),
-    radial-gradient(ellipse 50% 60% at 0% 100%, rgb(34 211 238 / 0.08), transparent 70%),
-    linear-gradient(rgb(148 163 184 / 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(148 163 184 / 0.07) 1px, transparent 1px);
-  background-size: auto, auto, 22px 22px, 22px 22px;
+    radial-gradient(ellipse 55% 45% at 90% 0%, rgb(245 158 11 / 0.08), transparent 70%),
+    linear-gradient(rgb(100 116 139 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(100 116 139 / 0.05) 1px, transparent 1px);
+  background-size: auto, 20px 20px, 20px 20px;
 }
 
-/* 注意喚起のハザードストライプ（黄×黒）。ヘッダー下や作業台の上端のライン */
+/* コーション用のハザードストライプ（アンバー × スレート）。ヘッダー下・重要セクションのアクセント */
 @utility bg-hazard {
-  background-image: repeating-linear-gradient(-45deg, var(--color-lamp) 0 10px, #111827 10px 20px);
+  background-image: repeating-linear-gradient(-45deg, var(--color-lamp) 0 8px, #1e293b 8px 16px);
 }
 
-/* 四隅のブラケット（メカニカルな枠）。relative な要素に付ける */
+/* 四隅の L 字ブラケット（精密機器の枠）。relative な要素に付ける */
 @utility lab-corners {
   position: relative;
   &::before,
@@ -71,7 +56,7 @@ html {
     width: 14px;
     height: 14px;
     pointer-events: none;
-    border-color: var(--color-lamp);
+    border-color: #94a3b8;
   }
   &::before {
     top: 6px;
@@ -92,7 +77,26 @@ html {
   @apply inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 font-mono text-[11px] font-bold tracking-wider;
 }
 
+/* 工業製品の銘板プレート風バッジ（ビス留めの点つき） */
+@utility nameplate {
+  @apply inline-flex items-center gap-2 rounded-sm border border-slate-300 bg-slate-100 px-2.5 py-1 font-mono text-[11px] font-bold tracking-wider text-slate-800 shadow-[inset_0_1px_0_#fff,0_1px_2px_rgb(15_23_42/0.08)];
+  &::before,
+  &::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    border-radius: 9999px;
+    background: #94a3b8;
+    box-shadow: inset 0 1px 0 rgb(15 23 42 / 0.3);
+  }
+}
+
+/* セクション角の等幅英字ラベル（「SYSTEM SPEC」「DATA UNIT」など） */
+@utility unit-label {
+  @apply font-mono text-[10px] font-bold tracking-[0.2em] text-slate-500;
+}
+
 /* 記事内のアフィリエイトボタン: <a class="btn-affiliate" href="..." rel="sponsored nofollow noopener" target="_blank"> */
 @utility btn-affiliate {
-  @apply inline-block rounded-lg bg-amber-500 px-6 py-3 font-bold text-slate-950 no-underline shadow-[inset_0_1px_0_rgb(255_255_255/0.18),0_2px_0_rgb(0_0_0/0.45)] transition hover:bg-amber-400 active:translate-y-px;
+  @apply inline-block rounded-lg bg-amber-500 px-6 py-3 font-bold text-white no-underline shadow-sm transition hover:bg-amber-600;
 }

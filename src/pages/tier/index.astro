@@ -32,25 +32,25 @@ const description =
 // Tier ごとの配色（Tier1: ゴールド/レッド、Tier2: シルバー/ブルー、Tier3: ブロンズ/グリーン）
 const theme = {
   1: {
-    badge: 'bg-gradient-to-br from-amber-400 via-amber-400 to-red-500 text-slate-100 ring-amber-500/30',
-    section: 'border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-slate-900 to-red-500/10',
-    card: 'hover:border-red-500/40',
-    button: 'bg-gradient-to-r from-amber-400 to-red-500 text-slate-100 hover:from-amber-400 hover:to-red-400',
-    chip: 'border-amber-500/40 bg-amber-500/10 text-red-300',
+    badge: 'bg-gradient-to-br from-amber-400 via-amber-400 to-red-500 text-white ring-amber-200',
+    section: 'border-amber-300 bg-gradient-to-br from-amber-50 via-white to-red-50',
+    card: 'hover:border-red-300',
+    button: 'bg-gradient-to-r from-amber-400 to-red-500 text-white hover:from-amber-400 hover:to-red-400',
+    chip: 'border-amber-300 bg-amber-50 text-red-700',
   },
   2: {
-    badge: 'bg-gradient-to-br from-slate-700 via-slate-400 to-blue-600 text-slate-100 ring-slate-700/60',
-    section: 'border-slate-600 bg-gradient-to-br from-slate-800 via-slate-900 to-sky-500/10',
-    card: 'hover:border-sky-500/50',
-    button: 'bg-gradient-to-r from-slate-500 to-blue-600 text-slate-100 hover:from-slate-400 hover:to-blue-500',
-    chip: 'border-sky-500/30 bg-sky-500/10 text-sky-300',
+    badge: 'bg-gradient-to-br from-slate-200 via-slate-400 to-blue-600 text-white ring-slate-200',
+    section: 'border-slate-300 bg-gradient-to-br from-slate-50 via-white to-blue-50',
+    card: 'hover:border-blue-400',
+    button: 'bg-gradient-to-r from-slate-500 to-blue-600 text-white hover:from-slate-400 hover:to-blue-500',
+    chip: 'border-blue-200 bg-blue-50 text-blue-700',
   },
   3: {
-    badge: 'bg-gradient-to-br from-orange-400 via-amber-700 to-emerald-600 text-slate-100 ring-orange-500/30',
-    section: 'border-emerald-500/30 bg-gradient-to-br from-orange-500/10 via-slate-900 to-emerald-500/10',
-    card: 'hover:border-emerald-500/40',
-    button: 'bg-gradient-to-r from-amber-700 to-emerald-600 text-slate-100 hover:from-amber-600 hover:to-emerald-500',
-    chip: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
+    badge: 'bg-gradient-to-br from-orange-400 via-amber-700 to-emerald-600 text-white ring-orange-200',
+    section: 'border-emerald-200 bg-gradient-to-br from-orange-50 via-white to-emerald-50',
+    card: 'hover:border-emerald-300',
+    button: 'bg-gradient-to-r from-amber-700 to-emerald-600 text-white hover:from-amber-600 hover:to-emerald-500',
+    chip: 'border-emerald-200 bg-emerald-50 text-emerald-600',
   },
 } as const;
 
@@ -88,18 +88,18 @@ const jsonLd = [
     <Breadcrumbs items={[{ name: 'ホーム', href: '/' }, { name: '環境Tier表', href: '/tier/' }]} />
 
     <header class="mb-8">
-      <p class="text-xs font-black tracking-widest text-amber-400">META TIER LIST / REGULATION H・I・J</p>
-      <h1 class="mt-2 text-2xl font-black leading-tight text-slate-100 sm:text-3xl">【最新】ポケカ環境Tier表・デッキランキング（H・I・J環境）</h1>
-      <p class="mt-3 text-sm leading-relaxed text-slate-400">
+      <p class="text-xs font-black tracking-widest text-amber-700">META TIER LIST / REGULATION H・I・J</p>
+      <h1 class="mt-2 text-2xl font-black leading-tight text-slate-900 sm:text-3xl">【最新】ポケカ環境Tier表・デッキランキング（H・I・J環境）</h1>
+      <p class="mt-3 text-sm leading-relaxed text-slate-600">
         {TIER_SOURCES.length}つの攻略サイト・大会結果まとめの Tier 評価を突き合わせ、{TIER_LIST.environment}の主要デッキを Tier1〜Tier3 に整理しました。各デッキは大会で結果を残した60枚レシピ・回し方・採用カードの最安値つきで解説しています。
       </p>
-      <p class="mt-2 text-xs text-slate-400">更新日: <time datetime={updated.toISOString()}>{formatDate(updated)}</time>・60枚の概算は楽天市場・Yahoo!ショッピングの最安値（基本エネルギーを除く・毎日自動更新）</p>
+      <p class="mt-2 text-xs text-slate-600">更新日: <time datetime={updated.toISOString()}>{formatDate(updated)}</time>・60枚の概算は楽天市場・Yahoo!ショッピングの最安値（基本エネルギーを除く・毎日自動更新）</p>
     </header>
 
     <!-- 早見表：Tier ごとのデッキ名（各セクションへのページ内リンク） -->
-    <nav aria-label="Tier表の早見表" class="mb-10 overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900 shadow-sm">
+    <nav aria-label="Tier表の早見表" class="mb-10 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
       {tiers.map((t) => (
-        <div class="flex flex-col gap-2 border-b border-slate-700/60 p-3 last:border-b-0 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
+        <div class="flex flex-col gap-2 border-b border-slate-200 p-3 last:border-b-0 sm:flex-row sm:items-center sm:gap-4 sm:p-4">
           <a href={`#tier${t.rank}`} class={`inline-flex w-fit shrink-0 items-center rounded-lg px-3 py-1 text-sm font-black shadow-sm ring-2 sm:w-20 sm:justify-center ${theme[t.rank].badge}`}>{t.label}</a>
           <ul class="flex flex-wrap gap-2">
             {t.decks.map((d) => (
@@ -114,33 +114,33 @@ const jsonLd = [
       <section id={`tier${t.rank}`} aria-labelledby={`tier${t.rank}-heading`} class={`mb-10 scroll-mt-20 rounded-3xl border-2 p-4 sm:p-6 ${theme[t.rank].section}`}>
         <div class="flex flex-wrap items-center gap-3">
           <span class={`rounded-xl px-4 py-1.5 text-lg font-black shadow-md ring-2 sm:text-xl ${theme[t.rank].badge}`}>{t.label}</span>
-          <h2 id={`tier${t.rank}-heading`} class="text-lg font-black text-slate-100 sm:text-xl">{t.title}</h2>
+          <h2 id={`tier${t.rank}-heading`} class="text-lg font-black text-slate-900 sm:text-xl">{t.title}</h2>
         </div>
-        <p class="mt-2 text-xs leading-relaxed text-slate-400 sm:text-sm">{t.description}</p>
+        <p class="mt-2 text-xs leading-relaxed text-slate-600 sm:text-sm">{t.description}</p>
 
         <ul class="mt-5 grid gap-4 sm:grid-cols-2">
           {t.decks.map((d) => (
-            <li id={d.slug} class={`flex scroll-mt-20 flex-col rounded-2xl border border-slate-700/60 bg-slate-900 p-4 shadow-sm transition ${theme[t.rank].card}`}>
+            <li id={d.slug} class={`flex scroll-mt-20 flex-col rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition ${theme[t.rank].card}`}>
               <div class="flex gap-3">
                 {d.mainCard && <a href={columnPath(d.column)} class="block w-20 shrink-0 sm:w-24" tabindex="-1" aria-hidden="true"><CardImage card={d.mainCard} sizes="96px" /></a>}
                 <div class="min-w-0 flex-1">
                   <span class={`inline-block rounded-md px-2 py-0.5 text-[11px] font-black shadow-sm ring-1 ${theme[t.rank].badge}`}>{t.label}</span>
-                  <h3 class="mt-1 text-base font-black leading-snug text-slate-100 sm:text-lg">
-                    <a href={columnPath(d.column)} class="hover:text-sky-400">{d.column.deckName}</a>
+                  <h3 class="mt-1 text-base font-black leading-snug text-slate-900 sm:text-lg">
+                    <a href={columnPath(d.column)} class="hover:text-blue-600">{d.column.deckName}</a>
                   </h3>
-                  <p class="mt-1 line-clamp-3 text-xs leading-relaxed text-slate-400 sm:text-sm">{d.summary}</p>
+                  <p class="mt-1 line-clamp-3 text-xs leading-relaxed text-slate-600 sm:text-sm">{d.summary}</p>
                 </div>
               </div>
-              <dl class="mt-3 flex flex-wrap items-baseline justify-between gap-2 border-t border-slate-700/60 pt-3">
+              <dl class="mt-3 flex flex-wrap items-baseline justify-between gap-2 border-t border-slate-200 pt-3">
                 <div>
-                  <dt class="text-[11px] font-medium text-slate-400">60枚の最安パーツ概算</dt>
-                  <dd class="text-xl font-black tabular-nums text-rose-400">{d.estimate > 0 ? formatYen(d.estimate) : '集計中'}</dd>
+                  <dt class="text-[11px] font-medium text-slate-600">60枚の最安パーツ概算</dt>
+                  <dd class="text-xl font-black tabular-nums text-rose-600">{d.estimate > 0 ? formatYen(d.estimate) : '集計中'}</dd>
                 </div>
                 <div class="text-right">
-                  <dt class="text-[11px] font-medium text-slate-400">各サイトの評価</dt>
+                  <dt class="text-[11px] font-medium text-slate-600">各サイトの評価</dt>
                   <dd class="mt-0.5 flex flex-wrap justify-end gap-1">
                     {Object.entries(d.ratings).map(([key, rank]) => (
-                      <span class="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">{sourceName.get(key)} {rank}</span>
+                      <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">{sourceName.get(key)} {rank}</span>
                     ))}
                   </dd>
                 </div>
@@ -154,18 +154,18 @@ const jsonLd = [
       </section>
     ))}
 
-    <section aria-labelledby="tier-method" class="rounded-2xl border border-slate-700/60 bg-slate-900 p-5 text-sm leading-relaxed text-slate-400">
-      <h2 id="tier-method" class="text-base font-bold text-slate-100">Tierの決め方・参考にした情報</h2>
+    <section aria-labelledby="tier-method" class="rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-relaxed text-slate-600">
+      <h2 id="tier-method" class="text-base font-bold text-slate-900">Tierの決め方・参考にした情報</h2>
       <p class="mt-2">
         下記の Tier 表（使用率・大会入賞数を基準にしたもの）を突き合わせ、複数のサイトで上位に評価されているデッキほど上の Tier に置いています。サイトによって評価が分かれるデッキは、より新しい大会結果を反映した評価を重視しました。各デッキのレシピは、大会で優勝・入賞した構築の公式デッキコードから取り込んでいます。
       </p>
       <ul class="mt-3 list-disc space-y-1 pl-5">
         {TIER_SOURCES.map((s) => (
-          <li><a href={s.url} target="_blank" rel="noopener" class="text-sky-400 underline">{s.name}</a>（{s.updated.replaceAll('-', '/')} 時点）</li>
+          <li><a href={s.url} target="_blank" rel="noopener" class="text-blue-600 underline">{s.name}</a>（{s.updated.replaceAll('-', '/')} 時点）</li>
         ))}
       </ul>
-      <p class="mt-3 text-xs text-slate-400">※ Tier は環境の変化で入れ替わります。大会前には最新の結果もあわせて確認してください。</p>
-      <p class="mt-4"><a href="/columns/" class="font-bold text-sky-400 hover:underline">ジムバトル優勝デッキ解説の一覧を見る →</a></p>
+      <p class="mt-3 text-xs text-slate-600">※ Tier は環境の変化で入れ替わります。大会前には最新の結果もあわせて確認してください。</p>
+      <p class="mt-4"><a href="/columns/" class="font-bold text-blue-600 hover:underline">ジムバトル優勝デッキ解説の一覧を見る →</a></p>
     </section>
 
     <XShareBox posts={xPosts} />

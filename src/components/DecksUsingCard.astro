@@ -13,21 +13,21 @@ const decks = decksUsingCard(card.id);
 ---
 
 {decks.length > 0 && (
-  <section aria-labelledby="used-in-decks" class="mt-8 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5">
-    <h2 id="used-in-decks" class="text-lg font-bold text-slate-100">🏆 このカードが採用されている優勝デッキ（{decks.length}件）</h2>
-    <p class="mt-1 text-xs text-slate-400">デッキ名をタップすると、60枚レシピ・回し方・採用カードの最安値を解説した記事へ移動します。</p>
+  <section aria-labelledby="used-in-decks" class="mt-8 rounded-2xl border border-rose-300 bg-rose-50 p-5">
+    <h2 id="used-in-decks" class="text-lg font-bold text-slate-900">🏆 このカードが採用されている優勝デッキ（{decks.length}件）</h2>
+    <p class="mt-1 text-xs text-slate-600">デッキ名をタップすると、60枚レシピ・回し方・採用カードの最安値を解説した記事へ移動します。</p>
     <ul class="mt-4 grid gap-2 sm:grid-cols-2">
       {decks.map(({ column, qty }) => (
         <li>
-          <a href={columnPath(column)} class="group flex h-full items-center gap-3 rounded-xl border border-rose-500/25 bg-slate-900 p-3 transition hover:border-sky-500/50 hover:shadow-sm">
-            <span class="shrink-0 rounded-lg bg-rose-600 px-2 py-1 text-center text-xs font-black leading-tight text-slate-100">
+          <a href={columnPath(column)} class="group flex h-full items-center gap-3 rounded-xl border border-rose-200 bg-white p-3 transition hover:border-blue-400 hover:shadow-sm">
+            <span class="shrink-0 rounded-lg bg-rose-600 px-2 py-1 text-center text-xs font-black leading-tight text-white">
               {qty}枚<span class="block text-[10px] font-bold">採用</span>
             </span>
             <span class="min-w-0 flex-1">
-              <span class="block text-[11px] font-bold text-rose-400">{column.result}</span>
-              <span class="block text-sm font-bold leading-snug text-slate-100 group-hover:text-sky-400">{column.deckName}</span>
+              <span class="block text-[11px] font-bold text-rose-600">{column.result}</span>
+              <span class="block text-sm font-bold leading-snug text-slate-900 group-hover:text-blue-600">{column.deckName}</span>
             </span>
-            <span class="shrink-0 text-xs font-bold text-sky-400">記事へ →</span>
+            <span class="shrink-0 text-xs font-bold text-blue-600">記事へ →</span>
           </a>
         </li>
       ))}

@@ -64,82 +64,88 @@ const jsonLd = [
 ];
 
 const chip =
-  'filter-chip rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-600 bg-slate-900 text-slate-400 hover:border-sky-500/60 hover:text-sky-400 aria-pressed:border-amber-500/70 aria-pressed:bg-amber-500/90 aria-pressed:font-black aria-pressed:text-slate-950 aria-pressed:shadow-md aria-pressed:hover:border-amber-500/70 aria-pressed:hover:text-slate-950';
+  'filter-chip rounded-full border px-3.5 py-1.5 text-sm font-medium transition border-slate-300 bg-white text-slate-600 hover:border-blue-400 hover:text-blue-600 aria-pressed:border-amber-500 aria-pressed:bg-amber-500/90 aria-pressed:font-black aria-pressed:text-slate-950 aria-pressed:shadow-md aria-pressed:hover:border-amber-500 aria-pressed:hover:text-slate-950';
 ---
 
 <BaseLayout jsonLd={jsonLd}>
-  <!-- ヒーロー：現行スタンダード（H・I・J）で対戦するプレイヤー向けのデッキ研究＆パーツ調達工房 -->
-  <section class="bg-lab-panel lab-corners relative mb-8 overflow-hidden rounded-2xl border border-lab-600 px-5 py-8 text-slate-100 shadow-xl shadow-black/25 sm:px-10 sm:py-12">
-    <!-- 装飾：工房の歯車（計器のシアン・作業灯のアンバー） -->
-    <svg class="pointer-events-none absolute -right-10 -top-10 h-40 w-40 text-lamp/15 sm:-right-6 sm:-top-6 sm:h-64 sm:w-64 sm:text-lamp/20" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" aria-hidden="true">
+  <!-- ヒーロー：現行スタンダード（H・I・J）で対戦するプレイヤー向けのデッキ研究＆パーツ調達ラボ -->
+  <section class="bg-lab-panel lab-corners relative mb-8 overflow-hidden rounded-2xl border border-slate-300 px-5 pb-8 pt-10 text-slate-900 shadow-md sm:px-10 sm:pb-12 sm:pt-14">
+    <div class="bg-hazard absolute inset-x-0 top-0 h-1.5" aria-hidden="true"></div>
+    <p class="unit-label absolute right-5 top-4 sm:right-8" aria-hidden="true">SYSTEM SPEC // LAB-01</p>
+    <!-- 装飾：研究所の歯車 -->
+    <svg class="pointer-events-none absolute -right-10 -top-6 h-40 w-40 text-slate-300/60 sm:-right-4 sm:top-4 sm:h-64 sm:w-64" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" aria-hidden="true">
       <path d="M50 8v12M50 80v12M8 50h12M80 50h12M20.3 20.3l8.5 8.5M71.2 71.2l8.5 8.5M20.3 79.7l8.5-8.5M71.2 28.8l8.5-8.5" stroke-linecap="square" stroke-width="9"></path>
       <circle cx="50" cy="50" r="28"></circle>
       <circle cx="50" cy="50" r="11"></circle>
     </svg>
-    <svg class="pointer-events-none absolute bottom-6 right-24 hidden h-20 w-20 text-gauge/20 sm:block" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" aria-hidden="true">
+    <svg class="pointer-events-none absolute bottom-6 right-24 hidden h-20 w-20 text-amber-400/30 sm:block" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" aria-hidden="true">
       <path d="M50 10v14M50 76v14M10 50h14M76 50h14M21.7 21.7l9.9 9.9M68.4 68.4l9.9 9.9M21.7 78.3l9.9-9.9M68.4 31.6l9.9-9.9" stroke-linecap="square" stroke-width="10"></path>
       <circle cx="50" cy="50" r="24"></circle>
     </svg>
 
     <ul class="relative flex flex-wrap gap-2" aria-label="対象">
-      <li class="spec-tag border-lamp/70 bg-lamp/10 text-lamp">競技プレイヤー専用</li>
-      <li class="spec-tag border-gauge/60 bg-gauge/10 text-gauge">現行レギュレーション H・I・J 特化</li>
+      <li class="nameplate">競技プレイヤー専用</li>
+      <li class="nameplate">現行レギュレーション H・I・J 特化</li>
     </ul>
-    <h1 class="relative mt-4 text-3xl font-black tracking-tight sm:text-5xl">
+    <h1 class="relative mt-5 text-3xl font-black tracking-tight text-slate-900 sm:text-5xl">
       {SITE.title}
       <span class="mt-2 block h-1 w-24 bg-hazard sm:w-32" aria-hidden="true"></span>
     </h1>
-    <p class="relative mt-4 max-w-2xl text-base font-bold leading-relaxed text-slate-100 sm:text-xl">バトルに勝つためのデッキ研究＆パーツ調達サポートサイト</p>
+    <p class="relative mt-4 max-w-2xl text-base font-bold leading-relaxed text-slate-700 sm:text-xl">バトルに勝つためのデッキ研究＆パーツ調達サポートサイト</p>
 
     <!-- 当工房の特徴 -->
-    <h2 class="relative mt-8 font-mono text-[11px] font-bold tracking-widest text-slate-400">当工房の特徴 / FEATURES</h2>
+    <h2 class="unit-label relative mt-8">当工房の特徴 / FEATURES</h2>
     <ul class="relative mt-2 grid gap-3 md:grid-cols-3">
       {[
-        { icon: '🛠️', no: '01', title: 'ジムバトル優勝レシピの分析', body: '勝率を高める60枚の採用理由と立ち回りを研究' },
-        { icon: '⚡', no: '02', title: '最安パーツ一括調達', body: '不足しているカードの最安値をショップ横断で即時チェック' },
-        { icon: '🛡️', no: '03', title: 'スタン落ち完全排除', body: 'H・I・J規格のみ掲載。使えないカードを買ってしまう事故を防止' },
+        // アイコン：レンチ（研究）・電球（ひらめき＝最安の発見）・シールド（スタン落ち防止）
+        { no: '01', title: 'ジムバトル優勝レシピの分析', body: '勝率を高める60枚の採用理由と立ち回りを研究', icon: 'M14.7 6.3a4 4 0 0 0-5.4 5.1L3.5 17.2a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.1-5.4l-2.4 2.4-2.2-.4-.4-2.2 2.4-2.4Z' },
+        { no: '02', title: '最安パーツ一括調達', body: '不足しているカードの最安値をショップ横断で即時チェック', icon: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2V16h5v-.2c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3Z' },
+        { no: '03', title: 'スタン落ち完全排除', body: 'H・I・J規格のみ掲載。使えないカードを買ってしまう事故を防止', icon: 'M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Zm-3.2 9 2.3 2.3 4.3-4.6' },
       ].map((f) => (
-        <li class="rounded-lg border border-lab-600 bg-lab-800/80 p-4">
+        <li class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
           <span class="flex items-center justify-between">
-            <span class="text-2xl" aria-hidden="true">{f.icon}</span>
-            <span class="font-mono text-[10px] font-bold tracking-widest text-slate-400">SPEC-{f.no}</span>
+            <span class="grid h-10 w-10 place-items-center rounded-md border border-slate-300 bg-slate-100 text-amber-600 shadow-[inset_0_1px_0_#fff]" aria-hidden="true">
+              <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d={f.icon}></path></svg>
+            </span>
+            <span class="unit-label">SPEC-{f.no}</span>
           </span>
-          <span class="mt-2 block text-sm font-black text-lamp sm:text-base">{f.title}</span>
-          <span class="mt-1 block text-xs leading-relaxed text-slate-300 sm:text-sm">{f.body}</span>
+          <span class="mt-3 block text-sm font-black text-slate-900 sm:text-base">{f.title}</span>
+          <span class="mt-1 block text-xs leading-relaxed text-slate-600 sm:text-sm">{f.body}</span>
         </li>
       ))}
     </ul>
 
-    <p class="relative mt-6 border-l-2 border-lamp/70 pl-3 text-xs leading-relaxed text-slate-300 sm:text-sm">
+    <p class="relative mt-6 rounded-r-md border-l-4 border-amber-500 bg-amber-50/70 py-2 pl-3 pr-2 text-xs leading-relaxed text-slate-700 sm:text-sm">
       ※当サイトは対戦プレイヤー専用のデッキ構築サポートサイトです。レアリティ相場・投資・PSA価値の追跡は一切行いません。実戦に必要な最安パーツを無駄なく揃えたいプレイヤーのために設計されています。
     </p>
-    <p class="relative mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-slate-400">
-      <span>PARTS: <span class="font-bold tabular-nums text-gauge">{cards.length}</span>種</span>
-      <span>UPDATED: <span class="text-slate-300">{updated ? formatDateTime(updated) : '-'}</span></span>
+    <p class="relative mt-4 flex flex-wrap gap-x-4 gap-y-1 font-mono text-[11px] text-slate-500">
+      <span>PARTS: <span class="font-bold tabular-nums text-cyan-700">{cards.length}</span>種</span>
+      <span>UPDATED: <span class="text-slate-700">{updated ? formatDateTime(updated) : '-'}</span></span>
     </p>
   </section>
 
   <!-- 環境Tier表への導線：戦況分析モニター（Tier1・Tier2 のデッキをチップで並べ、各デッキ解説へ直接飛べる） -->
-  <section aria-labelledby="tier-monitor" class="bg-lab-panel lab-corners mb-8 rounded-2xl border border-lab-600 p-4 text-slate-100 shadow-xl shadow-black/25 ring-1 ring-inset ring-gauge/10 sm:p-6">
-    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-slate-700/80 pb-3">
-      <p class="flex items-center gap-2 font-mono text-[11px] font-bold tracking-widest text-gauge">
+  <section aria-labelledby="tier-monitor" class="bg-lab-panel lab-corners relative mb-8 overflow-hidden rounded-2xl border border-slate-300 p-4 pt-6 text-slate-900 shadow-md sm:p-6 sm:pt-7">
+    <div class="bg-hazard absolute inset-x-0 top-0 h-1" aria-hidden="true"></div>
+    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-dashed border-slate-300 pb-3">
+      <p class="flex items-center gap-2 font-mono text-[11px] font-bold tracking-widest text-cyan-700">
         <span class="relative flex h-2 w-2" aria-hidden="true">
-          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-gauge/60 motion-reduce:animate-none"></span>
-          <span class="relative inline-flex h-2 w-2 rounded-full bg-gauge"></span>
+          <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400/60 motion-reduce:animate-none"></span>
+          <span class="relative inline-flex h-2 w-2 rounded-full bg-cyan-500"></span>
         </span>
-        TACTICAL RADAR / ENVIRONMENT MONITOR
+        TACTICAL BOARD / ENVIRONMENT MONITOR
       </p>
-      <p class="font-mono text-[11px] text-slate-400">UPDATED {TIER_LIST.updated.replaceAll('-', '.')} ・ SRC ×{TIER_SOURCES.length}</p>
+      <p class="unit-label">DATA UNIT · UPDATED {TIER_LIST.updated.replaceAll('-', '.')} ・ SRC ×{TIER_SOURCES.length}</p>
     </div>
     <h2 id="tier-monitor" class="mt-3 text-lg font-black sm:text-2xl"><span aria-hidden="true">📊</span> 最新環境Tier表（H・I・J）</h2>
-    <p class="mt-1 text-xs text-slate-400 sm:text-sm">攻略サイト{TIER_SOURCES.length}社のTier評価と大会結果を突き合わせた、いま勝っているデッキの一覧です。デッキ名をタップするとレシピ解説へ。</p>
+    <p class="mt-1 text-xs text-slate-600 sm:text-sm">攻略サイト{TIER_SOURCES.length}社のTier評価と大会結果を突き合わせた、いま勝っているデッキの一覧です。デッキ名をタップするとレシピ解説へ。</p>
 
     <div class="mt-4 space-y-3">
       {tierPreview.map((t) => (
-        <div class:list={['rounded-xl border p-3 sm:flex sm:items-start sm:gap-4 sm:p-4', t.rank === 1 ? 'border-amber-500/50 bg-amber-500/[0.07] shadow-[inset_3px_0_0_var(--color-lamp)]' : 'border-slate-700/70 bg-slate-900/60 shadow-[inset_3px_0_0_var(--color-gauge)]']}>
+        <div class:list={['rounded-xl border p-3 sm:flex sm:items-start sm:gap-4 sm:p-4', t.rank === 1 ? 'border-2 border-amber-400 bg-amber-50/60 shadow-[inset_4px_0_0_var(--color-lamp)]' : 'border-slate-200 bg-white shadow-[inset_4px_0_0_var(--color-gauge)]']}>
           <div class="mb-2 flex shrink-0 items-center gap-2 sm:mb-0 sm:w-40 sm:flex-col sm:items-start sm:gap-1">
-            <span class:list={['rounded-md px-2.5 py-1 font-mono text-sm font-black tracking-wider', t.rank === 1 ? 'bg-amber-500 text-slate-950 shadow-[0_0_14px_rgb(245_158_11/0.35)]' : 'border border-gauge/60 bg-gauge/10 text-gauge']}>{t.label.toUpperCase()}</span>
-            <span class:list={['text-xs font-bold', t.rank === 1 ? 'text-amber-400' : 'text-slate-300']}>{t.rank === 1 ? '環境トップ・勝率最上位' : t.title}</span>
+            <span class:list={['rounded-md px-2.5 py-1 font-mono text-sm font-black tracking-wider', t.rank === 1 ? 'bg-amber-500 text-white shadow-sm' : 'border border-cyan-300 bg-cyan-50 text-cyan-800']}>{t.label.toUpperCase()}</span>
+            <span class:list={['text-xs font-bold', t.rank === 1 ? 'text-amber-700' : 'text-slate-700']}>{t.rank === 1 ? '環境トップ・勝率最上位' : t.title}</span>
             <span class="font-mono text-[10px] text-slate-500">{t.decks.length} DECKS</span>
           </div>
           <ul class="flex flex-1 flex-wrap gap-2">
@@ -148,8 +154,8 @@ const chip =
                 <a
                   href={`/columns/${d.slug}/`}
                   class:list={[
-                    'inline-flex min-h-[2.5rem] items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-bold shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_2px_0_rgb(0_0_0/0.4)] transition hover:-translate-y-px active:translate-y-px',
-                    t.rank === 1 ? 'border-amber-500/60 bg-slate-800 text-amber-300 hover:border-amber-400 hover:text-amber-200' : 'border-slate-700 bg-slate-800 text-slate-200 hover:border-amber-400 hover:text-slate-100',
+                    'inline-flex min-h-[2.5rem] items-center gap-1.5 rounded-full border bg-white px-3.5 py-1.5 text-sm font-bold shadow-[0_1px_0_rgb(15_23_42/0.08),0_2px_4px_rgb(15_23_42/0.06)] transition hover:-translate-y-px hover:shadow-md active:translate-y-px',
+                    t.rank === 1 ? 'border-amber-400 text-amber-800 hover:border-amber-500 hover:bg-amber-50' : 'border-slate-300 text-slate-800 hover:border-cyan-500 hover:text-cyan-800',
                   ]}
                 >
                   {t.rank === 1 && <span aria-hidden="true">👑</span>}
@@ -162,23 +168,23 @@ const chip =
       ))}
     </div>
 
-    <a href="/tier/" class="mt-4 flex items-center justify-center gap-2 rounded-lg border border-amber-500/60 px-4 py-3 text-sm font-black text-amber-400 transition hover:bg-amber-500 hover:text-slate-950 sm:text-base">
+    <a href="/tier/" class="mt-4 flex items-center justify-center gap-2 rounded-lg border border-amber-400 px-4 py-3 text-sm font-black text-amber-700 transition hover:bg-amber-500 hover:text-white sm:text-base">
       Tier1〜3の全デッキ・評価の根拠を見る →
     </a>
   </section>
 
   <FeaturedDecks cards={cards} />
 
-  <p class="mb-6 rounded-lg border border-slate-700/60 bg-slate-900 px-4 py-3 text-xs leading-relaxed text-slate-400 sm:text-sm" role="note">{SITE.priceNotice}</p>
+  <p class="mb-6 rounded-lg border border-slate-200 bg-white px-4 py-3 text-xs leading-relaxed text-slate-600 sm:text-sm" role="note">{SITE.priceNotice}</p>
 
   <!-- 検索・絞り込み・並び替え -->
   <section aria-labelledby="price-list">
     <h2 id="price-list" class="sr-only">デッキパーツ検索</h2>
-    <div class="mb-6 space-y-4 rounded-2xl border border-slate-700/60 bg-slate-900 p-4 shadow-sm sm:p-5">
+    <div class="mb-6 space-y-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
       <div class="flex flex-col gap-3 sm:flex-row">
         <label class="relative flex-1">
           <span class="sr-only">カード名・型番・レアリティで検索</span>
-          <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="11" cy="11" r="7"></circle>
             <path stroke-linecap="round" d="m20 20-3.5-3.5"></path>
           </svg>
@@ -187,14 +193,14 @@ const chip =
             type="search"
             placeholder="使いたいカード名を入力（例: なかよしポフィン、オーガポン）"
             autocomplete="off"
-            class="w-full rounded-xl border border-slate-600 bg-slate-800/60 py-3 pl-10 pr-3 text-base outline-none transition placeholder:text-slate-500 focus:border-sky-500 focus:bg-slate-900 focus:ring-2 focus:ring-sky-500/30"
+            class="w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-3 text-base outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-200"
           />
         </label>
         <label class="flex items-center gap-2 sm:w-56">
-          <span class="shrink-0 text-sm text-slate-400">並び替え</span>
+          <span class="shrink-0 text-sm text-slate-600">並び替え</span>
           <select
             id="card-sort"
-            class="w-full rounded-xl border border-slate-600 bg-slate-900 px-3 py-3 text-base outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-500/30"
+            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           >
             <option value="new">新着順</option>
             <option value="sale-asc">販売が安い順</option>
@@ -203,19 +209,19 @@ const chip =
         </label>
       </div>
       <div class="flex flex-wrap items-center gap-2" role="group" aria-label="レアリティで絞り込み">
-        <span class="mr-1 w-full text-sm text-slate-400 sm:w-auto">レアリティ:</span>
+        <span class="mr-1 w-full text-sm text-slate-600 sm:w-auto">レアリティ:</span>
         <button type="button" class={chip} data-filter="rarity" data-value="" aria-pressed="true">すべて</button>
         {rarities.map((r) => <button type="button" class={chip} data-filter="rarity" data-value={r} aria-pressed="false">{r === '-' ? '記号なし' : r}</button>)}
       </div>
       <div class="flex flex-wrap items-center gap-2" role="group" aria-label="レギュレーションで絞り込み">
-        <span class="mr-1 w-full text-sm text-slate-400 sm:w-auto">レギュレーション:</span>
+        <span class="mr-1 w-full text-sm text-slate-600 sm:w-auto">レギュレーション:</span>
         <button type="button" class={chip} data-filter="regulation" data-value="" aria-pressed="true">すべて</button>
         {STANDARD_REGULATIONS.map((m) => <button type="button" class={chip} data-filter="regulation" data-value={m} aria-pressed="false">{m}</button>)}
-        <span class="ml-1 inline-flex items-center gap-1 text-xs text-emerald-400"><span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>H・I・J はスタンダードで使用可能</span>
+        <span class="ml-1 inline-flex items-center gap-1 text-xs text-emerald-600"><span class="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true"></span>H・I・J はスタンダードで使用可能</span>
       </div>
     </div>
 
-    <p class="mb-4 text-sm text-slate-400" aria-live="polite">
+    <p class="mb-4 text-sm text-slate-600" aria-live="polite">
       <span id="card-count">{cards.length}</span>件のカードを表示中
     </p>
 
@@ -223,14 +229,14 @@ const chip =
       {cards.map((card, i) => <CardItem card={card} eager={i < 3} cheapest={cheapestIds.has(card.id)} />)}
     </div>
 
-    <div id="card-empty" class="hidden rounded-2xl border border-dashed border-slate-600 py-16 text-center text-slate-400">
+    <div id="card-empty" class="hidden rounded-2xl border border-dashed border-slate-300 py-16 text-center text-slate-600">
       <p class="font-medium">該当するカードが見つかりませんでした</p>
       <p class="mt-1 text-sm">キーワードやレアリティを変えてお試しください。</p>
     </div>
 
     <AffiliatePixels cards={cards} shops={cards.some((c) => !hasSaleStock(c)) ? ['furuichi'] : []} />
 
-    <p class="mt-6 text-xs leading-relaxed text-slate-400">
+    <p class="mt-6 text-xs leading-relaxed text-slate-600">
       ※ 価格は各ショップの掲載情報をもとにした参考価格です。在庫状況や状態（美品・傷あり等）により実際の価格は変動します。購入・買取の前に必ず各ショップで最新情報をご確認ください。
     </p>
   </section>
@@ -238,14 +244,14 @@ const chip =
   {posts.length > 0 && (
     <section aria-labelledby="columns" class="mt-16">
       <div class="mb-6 flex items-end justify-between">
-        <h2 id="columns" class="text-xl font-bold text-slate-100">デッキ研究コラム</h2>
-        <a href="/blog/" class="text-sm text-sky-400 hover:underline">コラム一覧を見る →</a>
+        <h2 id="columns" class="text-xl font-bold text-slate-900">デッキ研究コラム</h2>
+        <a href="/blog/" class="text-sm text-blue-600 hover:underline">コラム一覧を見る →</a>
       </div>
       <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => <PostCard post={post} />)}
       </div>
       <div class="mt-8 text-center">
-        <a href="/blog/" class="inline-block rounded-xl border border-sky-500 px-6 py-3 text-sm font-bold text-sky-400 transition hover:bg-blue-600 hover:text-slate-100">コラム一覧をすべて見る</a>
+        <a href="/blog/" class="inline-block rounded-xl border border-blue-500 px-6 py-3 text-sm font-bold text-blue-600 transition hover:bg-blue-600 hover:text-slate-900">コラム一覧をすべて見る</a>
       </div>
     </section>
   )}

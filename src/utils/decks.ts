@@ -62,11 +62,11 @@ export function deckSummary(column: { deckKey: string; keyCards: string[] }, car
 export function deckBadgeClass(badge: string): string {
   return (
     {
-      メガシンカ: 'bg-gradient-to-r from-rose-600 to-orange-500 text-slate-100',
-      exアタッカー: 'bg-blue-600 text-slate-100',
-      非ex: 'bg-emerald-600 text-slate-100',
-      低予算: 'bg-emerald-500/15 text-emerald-300',
-    }[badge] ?? 'bg-slate-700 text-slate-300'
+      メガシンカ: 'bg-gradient-to-r from-rose-600 to-orange-500 text-white',
+      exアタッカー: 'bg-blue-600 text-white',
+      非ex: 'bg-emerald-600 text-white',
+      低予算: 'bg-emerald-100 text-emerald-700',
+    }[badge] ?? 'bg-slate-200 text-slate-700'
   );
 }
 

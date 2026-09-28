@@ -1,6 +1,6 @@
 ---
 // 「最安値で購入する」「最高値で買い取ってもらう」ボタン（別タブで開く）
-import { SALE_PRIMARY, SWITCH_BASE as switchBase } from '../utils/buttonStyles';
+import { BUYBACK_PRIMARY, SALE_PRIMARY, SWITCH_BASE as switchBase } from '../utils/buttonStyles';
 
 interface Props {
   kind: 'sale' | 'buyback' | 'bulk';
@@ -17,19 +17,15 @@ const { kind, href, shop, size = 'sm', item, label } = Astro.props;
 const network = href.includes('a8.net') ? 'a8' : href.includes('moshimo.com') ? 'moshimo' : undefined;
 
 const styles = {
-  // メイン：作業灯のアンバー（濃い文字）
-  sale: { label: '最安値で購入する', color: SALE_PRIMARY, led: 'bg-slate-950/70' },
-  // サブ：ダークサーフェス + エメラルドの細枠（購入ボタンと並べても主張しすぎない）
-  buyback: {
-    label: '最高値で買い取ってもらう',
-    color: `${switchBase} border border-emerald-500/40 bg-slate-800/80 text-emerald-400 hover:border-emerald-400/70 hover:bg-emerald-950/40 focus-visible:outline-emerald-500`,
-    led: 'bg-emerald-400 shadow-[0_0_6px_rgb(52_211_153/0.8)]',
-  },
-  // まとめて送る宅配買取（ふるいち）。在庫なしのカードで購入ボタンの代わりに出すため、アンバーの枠線で区別する
+  // メイン：インダストリアルオレンジ
+  sale: { label: '最安値で購入する', color: SALE_PRIMARY, led: 'bg-white/90' },
+  // 買取：落ち着いたエメラルド
+  buyback: { label: '最高値で買い取ってもらう', color: BUYBACK_PRIMARY, led: 'bg-emerald-200' },
+  // まとめて送る宅配買取（ふるいち）。在庫なしのカードで購入ボタンの代わりに出すため、白地 + アンバーの枠で区別する
   bulk: {
     label: 'まとめて買取査定',
-    color: `${switchBase} border border-amber-500/50 bg-slate-800/80 text-amber-400 hover:border-amber-400/80 hover:bg-amber-950/40 focus-visible:outline-amber-500`,
-    led: 'bg-amber-400 shadow-[0_0_6px_rgb(251_191_36/0.8)]',
+    color: `${switchBase} border border-amber-400 bg-white text-amber-700 hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-amber-500`,
+    led: 'bg-amber-500',
   },
 }[kind];
 ---
@@ -50,7 +46,7 @@ const styles = {
 >
   <span>{label ?? styles.label}</span>
   <!-- 遷移先：計器のランプ + 店舗名 -->
-  <span class:list={['flex items-center gap-1.5 font-mono font-medium tracking-wide opacity-80', size === 'lg' ? 'text-xs' : 'text-[10px]']}>
+  <span class:list={['flex items-center gap-1.5 font-mono font-medium tracking-wide opacity-90', size === 'lg' ? 'text-xs' : 'text-[10px]']}>
     <span class:list={['h-1.5 w-1.5 shrink-0 rounded-full', styles.led]} aria-hidden="true"></span>
     {shop}へ ↗
   </span>

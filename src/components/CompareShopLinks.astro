@@ -13,12 +13,12 @@ const affiliateNames = COMPARE_SHOPS.filter((s) => s.affiliate).map((s) => s.nam
 const topOnlyNames = COMPARE_SHOPS.filter((s) => s.opensTop).map((s) => s.name);
 ---
 
-<!-- 上のモール・フリマ検索と同じローズ系で、一段控えめにする（補助的な比較ツール） -->
-<section aria-labelledby="compare-shops" class="mt-4 rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-950/10 via-slate-900/80 to-slate-950/90 p-5">
-  <h3 id="compare-shops" class="flex items-center gap-1.5 text-sm font-bold text-slate-100">
-    <span class="text-rose-300" aria-hidden="true">🔍</span> 他の大手ショップで在庫・価格を比較する
+<!-- 上のモール・フリマ検索と同じ淡いローズ系（補助的な比較ツール） -->
+<section aria-labelledby="compare-shops" class="mt-4 rounded-2xl border border-rose-300 bg-rose-50/60 p-5 shadow-sm">
+  <h3 id="compare-shops" class="flex items-center gap-1.5 text-sm font-bold text-slate-900">
+    <svg class="h-4 w-4 shrink-0 text-rose-600" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"></circle><path d="m15 15 5 5"></path></svg> 他の大手ショップで在庫・価格を比較する
   </h3>
-  <p class="mt-1 text-xs text-slate-400">
+  <p class="mt-1 text-xs text-slate-600">
     「{keyword}」の検索結果を各サイトで開きます{topOnlyNames.length > 0 && `（${topOnlyNames.join('・')}は通販サイトのトップを開きます）`}。{affiliateNames.length > 0 ? `${affiliateNames.join('・')}へのリンクはアフィリエイトリンクです（それ以外は当サイトの提携先ではありません）。` : '当サイトの提携先ではありません。'}
   </p>
   <ul class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -33,10 +33,10 @@ const topOnlyNames = COMPARE_SHOPS.filter((s) => s.opensTop).map((s) => s.name);
           data-aff-shop={shop.affiliate ? shop.name : undefined}
           data-aff-type={shop.affiliate ? 'sale_search' : undefined}
           data-aff-item={shop.affiliate ? keyword : undefined}
-          class="group flex items-center justify-center gap-1.5 rounded-lg border border-rose-500/25 bg-rose-950/20 px-3 py-2.5 text-sm font-medium text-slate-200 shadow-[inset_0_1px_0_rgb(255_255_255/0.04)] transition hover:border-rose-400/60 hover:bg-rose-900/25 hover:text-slate-100 hover:shadow-[0_0_12px_rgb(251_113_133/0.15)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400"
+          class="group flex items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-800 shadow-sm transition hover:border-rose-400 hover:bg-rose-50 hover:text-rose-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500"
         >
           {shop.name}
-          <svg class="h-3.5 w-3.5 shrink-0 text-rose-300/70 transition group-hover:text-rose-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
+          <svg class="h-3.5 w-3.5 shrink-0 text-rose-500 transition group-hover:text-rose-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14 5h5v5M19 5l-8 8M10 5H6a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-4"></path>
           </svg>
         </a>

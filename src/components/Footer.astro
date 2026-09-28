@@ -15,27 +15,27 @@ const yahooCredit = `<!-- Begin Yahoo! JAPAN Web Services Attribution Snippet --
 <!-- End Yahoo! JAPAN Web Services Attribution Snippet -->`;
 ---
 
-<footer class="mt-12 border-t border-lab-700 bg-lab-950">
-  <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-slate-300">
-    <p class="mb-2 text-xs leading-relaxed text-slate-400">
+<footer class="mt-12 border-t border-slate-200 bg-white">
+  <div class="mx-auto max-w-6xl px-4 py-8 text-sm text-slate-700">
+    <p class="mb-2 text-xs leading-relaxed text-slate-600">
       当サイトはアフィリエイトプログラムに参加しており、掲載ショップへのリンクから購入・買取申込をされた場合に報酬を得ることがあります。
     </p>
-    <p class="mb-4 text-xs leading-relaxed text-slate-400">
+    <p class="mb-4 text-xs leading-relaxed text-slate-600">
       掲載価格は更新日時点の参考価格です。「ポケモンカードゲーム」は株式会社ポケモンの登録商標であり、当サイトは公式とは関係ありません。
     </p>
-    <!-- API のクレジット表記：規約で見た目の改変が禁止されているため、リンクはブラウザ標準の表示に戻す（Tailwind のリセットを打ち消す）。標準のリンク色が読めるよう明るい面に載せる -->
-    <p class="mb-4 rounded-md bg-slate-300 px-3 py-2 text-xs text-slate-800 [&_a]:[color:revert] [&_a]:[text-decoration:revert]">
+    <!-- API のクレジット表記：規約で見た目の改変が禁止されているため、リンクはブラウザ標準の表示に戻す（Tailwind のリセットを打ち消す） -->
+    <p class="mb-4 text-xs text-slate-600 [&_a]:[color:revert] [&_a]:[text-decoration:revert]">
       販売価格は楽天ウェブサービス・Yahoo!ショッピングAPIのデータを利用しています。<Fragment set:html={rakutenCredit} /><Fragment set:html={yahooCredit} />
     </p>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <p>&copy; {year} {SITE.title}（{SITE.shortName}）<span class="ml-2 font-mono text-xs tracking-widest text-lamp/70">{SITE.englishName}</span></p>
+      <p>&copy; {year} {SITE.title}（{SITE.shortName}）<span class="ml-2 font-mono text-xs tracking-widest text-amber-700">{SITE.englishName}</span></p>
       <ul class="flex flex-wrap gap-4">
-        <li><a href="/" class="hover:text-lamp">パーツ検索</a></li>
-        <li><a href="/tier/" class="hover:text-lamp">環境Tier表</a></li>
-        <li><a href="/blog/" class="hover:text-lamp">コラム一覧</a></li>
-        <li><a href="/about/" class="hover:text-lamp">運営者情報</a></li>
-        <li><a href="/privacy/" class="hover:text-lamp">プライバシーポリシー・免責事項</a></li>
-        <li><a href="/rss.xml" class="hover:text-lamp">RSS</a></li>
+        <li><a href="/" class="hover:text-amber-700">パーツ検索</a></li>
+        <li><a href="/tier/" class="hover:text-amber-700">環境Tier表</a></li>
+        <li><a href="/blog/" class="hover:text-amber-700">コラム一覧</a></li>
+        <li><a href="/about/" class="hover:text-amber-700">運営者情報</a></li>
+        <li><a href="/privacy/" class="hover:text-amber-700">プライバシーポリシー・免責事項</a></li>
+        <li><a href="/rss.xml" class="hover:text-amber-700">RSS</a></li>
       </ul>
     </div>
   </div>

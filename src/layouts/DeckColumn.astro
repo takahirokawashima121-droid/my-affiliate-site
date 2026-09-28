@@ -73,34 +73,34 @@ const jsonLd = {
 
     <article data-ga-item={column.title}>
       <header class="mb-8">
-        <p class="mb-3 inline-block rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-400">PR・本記事はアフィリエイト広告を含みます</p>
-        <p class="text-sm font-bold text-rose-400">🏆 {column.result}</p>
+        <p class="mb-3 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">PR・本記事はアフィリエイト広告を含みます</p>
+        <p class="text-sm font-bold text-rose-600">🏆 {column.result}</p>
         {tier && (
-          <a href={`/tier/#${slug}`} class="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-xs font-bold text-slate-200 hover:bg-amber-500/20">
-            📊 環境Tier表で<span class="text-red-400">{tier.label}</span>に掲載中 →
+          <a href={`/tier/#${slug}`} class="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-bold text-slate-800 hover:bg-amber-100">
+            📊 環境Tier表で<span class="text-red-600">{tier.label}</span>に掲載中 →
           </a>
         )}
-        <h1 class="mt-1 text-2xl font-bold leading-tight text-slate-100 sm:text-3xl">{column.title}</h1>
-        <p class="mt-3 text-sm text-slate-400">公開: <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></p>
-        <p class="mt-2 text-xs text-slate-400">
-          レシピの出典: <a href={recipe.url} target="_blank" rel="noopener" class="text-sky-400 underline">ポケモンカード公式 デッキ構築（デッキコード）</a>。カード価格は楽天市場・Yahoo!ショッピングの最安値で、毎日自動更新しています。
+        <h1 class="mt-1 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">{column.title}</h1>
+        <p class="mt-3 text-sm text-slate-600">公開: <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></p>
+        <p class="mt-2 text-xs text-slate-600">
+          レシピの出典: <a href={recipe.url} target="_blank" rel="noopener" class="text-blue-600 underline">ポケモンカード公式 デッキ構築（デッキコード）</a>。カード価格は楽天市場・Yahoo!ショッピングの最安値で、毎日自動更新しています。
         </p>
       </header>
 
-      <section aria-labelledby="key-cards" class="not-prose mb-10 rounded-2xl border-2 border-amber-500/30 bg-amber-500/10 p-5">
-        <h2 id="key-cards" class="text-lg font-black text-slate-100">💰 主力パーツの最安値</h2>
+      <section aria-labelledby="key-cards" class="not-prose mb-10 rounded-2xl border-2 border-amber-200 bg-amber-50 p-5">
+        <h2 id="key-cards" class="text-lg font-black text-slate-900">💰 主力パーツの最安値</h2>
         <ul class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
           {keyCards.map(({ card, qty }) => {
             const offer = bestOffer(card);
             return (
               <li>
-                <a href={cardPath(card)} class="flex h-full gap-3 rounded-xl border border-slate-700/60 bg-slate-900 p-3 transition hover:border-sky-500/50 hover:shadow-sm">
+                <a href={cardPath(card)} class="flex h-full gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:border-blue-400 hover:shadow-sm">
                   <span class="block w-16 shrink-0"><CardImage card={card} sizes="64px" /></span>
                   <span class="min-w-0">
-                    <span class="block text-sm font-bold leading-snug text-sky-400">{nameWithRarity(card.data)}</span>
-                    <span class="block text-[11px] text-slate-400">採用 {qty}枚</span>
-                    <span class="mt-1 block font-black tabular-nums text-rose-400">{offer ? formatYen(offer.price) : '在庫なし'}</span>
-                    {offer && <span class="block text-[10px] text-slate-400">{offer.shop}</span>}
+                    <span class="block text-sm font-bold leading-snug text-blue-600">{nameWithRarity(card.data)}</span>
+                    <span class="block text-[11px] text-slate-600">採用 {qty}枚</span>
+                    <span class="mt-1 block font-black tabular-nums text-rose-600">{offer ? formatYen(offer.price) : '在庫なし'}</span>
+                    {offer && <span class="block text-[10px] text-slate-600">{offer.shop}</span>}
                   </span>
                 </a>
               </li>
@@ -109,13 +109,13 @@ const jsonLd = {
         </ul>
       </section>
 
-      <div class="prose prose-invert max-w-none prose-headings:scroll-mt-20 prose-h2:border-b prose-h2:border-slate-700/60 prose-h2:pb-2 prose-a:text-sky-400">
+      <div class="prose prose-slate max-w-none prose-headings:scroll-mt-20 prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-2 prose-a:text-blue-600">
         <slot />
       </div>
 
       <DeckRecipe deck={deck} title={`${column.deckName}デッキレシピ（60枚）`} />
 
-      <div class="prose prose-invert mt-12 max-w-none prose-h2:border-b prose-h2:border-slate-700/60 prose-h2:pb-2 prose-a:text-sky-400">
+      <div class="prose prose-slate mt-12 max-w-none prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-2 prose-a:text-blue-600">
         <h2>代替カード・カスタマイズ提案</h2>
         <slot name="custom" />
 
@@ -126,19 +126,19 @@ const jsonLd = {
         </p>
       </div>
       {mallGaps.length > 0 && (
-        <ul class="not-prose mt-4 divide-y divide-slate-700/60 rounded-xl border border-slate-700/60 bg-slate-900">
+        <ul class="not-prose mt-4 divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white">
           {mallGaps.map(({ card, rakuten, yahoo }) => (
             <li class="flex flex-wrap items-center justify-between gap-2 p-3 text-sm">
-              <a href={cardPath(card)} class="font-bold text-sky-400 hover:underline">{nameWithRarity(card.data)}</a>
-              <span class="tabular-nums text-slate-400">
-                楽天 <span class:list={['font-bold', rakuten.price <= yahoo.price ? 'text-rose-400' : 'text-slate-300']}>{formatYen(rakuten.price)}</span>
-                ／ Yahoo! <span class:list={['font-bold', yahoo.price < rakuten.price ? 'text-rose-400' : 'text-slate-300']}>{formatYen(yahoo.price)}</span>
+              <a href={cardPath(card)} class="font-bold text-blue-600 hover:underline">{nameWithRarity(card.data)}</a>
+              <span class="tabular-nums text-slate-600">
+                楽天 <span class:list={['font-bold', rakuten.price <= yahoo.price ? 'text-rose-600' : 'text-slate-700']}>{formatYen(rakuten.price)}</span>
+                ／ Yahoo! <span class:list={['font-bold', yahoo.price < rakuten.price ? 'text-rose-600' : 'text-slate-700']}>{formatYen(yahoo.price)}</span>
               </span>
             </li>
           ))}
         </ul>
       )}
-      <div class="prose prose-invert mt-6 max-w-none prose-a:text-sky-400">
+      <div class="prose prose-slate mt-6 max-w-none prose-a:text-blue-600">
         <h3>2. 1枚数十円のカードは送料込みで考える</h3>
         <p>
           C・U のカードは1枚数十円でも、ショップごとに送料がかかります。まとめ買いで送料無料になるショップで必要な枚数をそろえ、高額な ex だけを最安のショップで買うと、合計を抑えやすくなります。
@@ -156,28 +156,28 @@ const jsonLd = {
         data-aff-shop={furuichi.name}
         data-aff-type="buyback_bulk"
         data-aff-item={`${column.deckName}デッキ解説`}
-        class="not-prose mt-4 flex flex-col rounded-xl border-2 border-amber-500/40 bg-amber-500/10 p-4 transition hover:border-amber-500/70 hover:bg-amber-500/20"
+        class="not-prose mt-4 flex flex-col rounded-xl border-2 border-amber-300 bg-amber-50 p-4 transition hover:border-amber-500 hover:bg-amber-100"
       >
-        <span class="text-base font-bold text-slate-100"><span aria-hidden="true">📦</span> 使わないカードはスリーブのまま宅配買取へ</span>
-        <span class="mt-1 text-xs leading-relaxed text-slate-400">スリーブ・ローダー・ファイルのまま箱に入れて送れる宅配買取（無料宅配キットあり）。デッキを組み替えるときの資金づくりに。</span>
-        <span class="mt-3 text-sm font-bold text-sky-400">{furuichi.name}で査定を申し込む →</span>
+        <span class="text-base font-bold text-slate-900"><span aria-hidden="true">📦</span> 使わないカードはスリーブのまま宅配買取へ</span>
+        <span class="mt-1 text-xs leading-relaxed text-slate-600">スリーブ・ローダー・ファイルのまま箱に入れて送れる宅配買取（無料宅配キットあり）。デッキを組み替えるときの資金づくりに。</span>
+        <span class="mt-3 text-sm font-bold text-blue-600">{furuichi.name}で査定を申し込む →</span>
       </a>
     </article>
 
     <aside class="mt-16" aria-labelledby="other-decks">
-      <h2 id="other-decks" class="mb-4 text-xl font-bold text-slate-100">ほかのデッキ解説</h2>
+      <h2 id="other-decks" class="mb-4 text-xl font-bold text-slate-900">ほかのデッキ解説</h2>
       <ul class="grid gap-4 sm:grid-cols-3">
         {others.map((c) => (
           <li>
-            <a href={columnPath(c)} class="flex h-full flex-col rounded-xl border border-slate-700/60 bg-slate-900 p-4 transition hover:border-sky-500/50 hover:shadow-md">
-              <span class="text-xs font-bold text-rose-400">🏆 {c.result}</span>
-              <span class="mt-1 font-bold text-slate-100">{c.deckName}デッキ</span>
-              <span class="mt-2 text-sm font-bold text-sky-400">レシピと回し方を見る →</span>
+            <a href={columnPath(c)} class="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-4 transition hover:border-blue-400 hover:shadow-md">
+              <span class="text-xs font-bold text-rose-600">🏆 {c.result}</span>
+              <span class="mt-1 font-bold text-slate-900">{c.deckName}デッキ</span>
+              <span class="mt-2 text-sm font-bold text-blue-600">レシピと回し方を見る →</span>
             </a>
           </li>
         ))}
       </ul>
-      <p class="mt-4 flex flex-wrap gap-4 text-sm"><a href="/columns/" class="text-sky-400 underline">デッキ解説の一覧へ</a><a href="/tier/" class="text-sky-400 underline">最新環境Tier表へ</a></p>
+      <p class="mt-4 flex flex-wrap gap-4 text-sm"><a href="/columns/" class="text-blue-600 underline">デッキ解説の一覧へ</a><a href="/tier/" class="text-blue-600 underline">最新環境Tier表へ</a></p>
     </aside>
 
     <XShareBox posts={xPosts} />

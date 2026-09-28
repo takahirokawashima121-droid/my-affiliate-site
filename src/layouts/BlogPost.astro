@@ -40,9 +40,9 @@ const jsonLd = {
 
     <article>
       <header class="mb-8">
-        {affiliate && <p class="mb-3 inline-block rounded bg-slate-800 px-2 py-0.5 text-xs text-slate-400">PR・本記事はアフィリエイト広告を含みます</p>}
-        <h1 class="text-2xl font-bold leading-tight text-slate-100 sm:text-3xl">{title}</h1>
-        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400">
+        {affiliate && <p class="mb-3 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">PR・本記事はアフィリエイト広告を含みます</p>}
+        <h1 class="text-2xl font-bold leading-tight text-slate-900 sm:text-3xl">{title}</h1>
+        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-600">
           <span>公開: <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time></span>
           {updatedDate && <span>更新: <time datetime={updatedDate.toISOString()}>{formatDate(updatedDate)}</time></span>}
           <span>約{readingTime(post.body)}分で読めます</span>
@@ -50,7 +50,7 @@ const jsonLd = {
         {tags.length > 0 && (
           <ul class="mt-4 flex flex-wrap gap-2">
             {tags.map((tag) => (
-              <li><a href={`/tags/${tag}/`} class="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs text-slate-400 hover:bg-sky-500/15 hover:text-sky-300">#{tag}</a></li>
+              <li><a href={`/tags/${tag}/`} class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-600 hover:bg-blue-50 hover:text-blue-700">#{tag}</a></li>
             ))}
           </ul>
         )}
@@ -61,19 +61,19 @@ const jsonLd = {
       )}
 
       {toc.length > 2 && (
-        <nav aria-label="目次" class="mb-10 rounded-xl border border-slate-700/60 bg-slate-800/60 p-5">
-          <p class="mb-2 text-sm font-bold text-slate-100">目次</p>
+        <nav aria-label="目次" class="mb-10 rounded-xl border border-slate-200 bg-slate-50 p-5">
+          <p class="mb-2 text-sm font-bold text-slate-900">目次</p>
           <ol class="space-y-1 text-sm">
             {toc.map((h) => (
               <li class:list={[h.depth === 3 && 'pl-4']}>
-                <a href={`#${h.slug}`} class="text-slate-400 hover:text-sky-400">{h.text}</a>
+                <a href={`#${h.slug}`} class="text-slate-600 hover:text-blue-600">{h.text}</a>
               </li>
             ))}
           </ol>
         </nav>
       )}
 
-      <div class="prose prose-invert max-w-none prose-headings:scroll-mt-20 prose-h2:border-b prose-h2:border-slate-700/60 prose-h2:pb-2 prose-a:text-sky-400 prose-img:rounded-lg">
+      <div class="prose prose-slate max-w-none prose-headings:scroll-mt-20 prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-2 prose-a:text-blue-600 prose-img:rounded-lg">
         <slot />
       </div>
 
@@ -82,7 +82,7 @@ const jsonLd = {
 
     {related.length > 0 && (
       <aside class="mt-16">
-        <h2 class="mb-4 text-xl font-bold text-slate-100">関連記事</h2>
+        <h2 class="mb-4 text-xl font-bold text-slate-900">関連記事</h2>
         <div class="grid gap-6 sm:grid-cols-2">
           {related.map((p) => <PostCard post={p} />)}
         </div>

@@ -4,14 +4,144 @@
   ],
   "cards": [
     {
-      "id": "bashixyamoex-svm-016",
-      "name": "バシャーモex",
+      "id": "mherakurosuex-rr-m2-004",
+      "name": "メガヘラクロスex",
+      "rarity": "RR",
+      "cardNumber": "004/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "mherakurosuex-deck-0927",
+      "role": "ポケモン（公式カードID 48344）"
+    },
+    {
+      "id": "guroukusaenerugi-r-m3-078",
+      "name": "グロウ草エネルギー",
+      "rarity": "R",
+      "cardNumber": "078/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "mherakurosuex-deck-0927",
+      "role": "エネルギー（公式カードID 49711）"
+    },
+    {
+      "id": "hisui-m6a-098",
+      "name": "ヒスイ ゾロア",
       "rarity": "-",
-      "cardNumber": "016/175",
-      "expansionCode": "SVM",
-      "regulationMark": "H",
-      "deck": "dragapult-ex-blaziken-deck",
-      "role": "ポケモン（公式カードID 46470・再録弾のためマークは推定）"
+      "cardNumber": "098/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "hisui-deck-0927",
+      "role": "ポケモン（公式カードID 50710・再録弾のためマークは推定）"
+    },
+    {
+      "id": "hisui-m6a-099",
+      "name": "ヒスイ ゾロアーク",
+      "rarity": "-",
+      "cardNumber": "099/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "hisui-deck-0927",
+      "role": "ポケモン（公式カードID 50711・再録弾のためマークは推定）"
+    },
+    {
+      "id": "buba-c-sv9-013",
+      "name": "ブーバー",
+      "rarity": "C",
+      "cardNumber": "013/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "hisui-deck-0927",
+      "role": "ポケモン（公式カードID 47021）"
+    },
+    {
+      "id": "buban-r-sv9-014",
+      "name": "ブーバーン",
+      "rarity": "R",
+      "cardNumber": "014/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "hisui-deck-0927",
+      "role": "ポケモン（公式カードID 47022）"
+    },
+    {
+      "id": "borukenionex-rr-sv9-017",
+      "name": "ボルケニオンex",
+      "rarity": "RR",
+      "cardNumber": "017/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "hisui-deck-0927",
+      "role": "ポケモン（公式カードID 47025）"
+    },
+    {
+      "id": "pureshixyasukixyari-mc-658",
+      "name": "プレシャスキャリー",
+      "rarity": "-",
+      "cardNumber": "658/742",
+      "expansionCode": "MC",
+      "regulationMark": "I",
+      "deck": "hisui-deck-0927",
+      "role": "グッズ（公式カードID 49374・再録弾のためマークは推定）"
+    },
+    {
+      "id": "hitokage-c-m2-011",
+      "name": "ヒトカゲ",
+      "rarity": "C",
+      "cardNumber": "011/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "mrizadonxex-deck-0927",
+      "role": "ポケモン（公式カードID 48351）"
+    },
+    {
+      "id": "rizado-c-m2-012",
+      "name": "リザード",
+      "rarity": "C",
+      "cardNumber": "012/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "mrizadonxex-deck-0927",
+      "role": "ポケモン（公式カードID 48352）"
+    },
+    {
+      "id": "mrizadonxex-rr-m2-013",
+      "name": "メガリザードンXex",
+      "rarity": "RR",
+      "cardNumber": "013/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "mrizadonxex-deck-0927",
+      "role": "ポケモン（公式カードID 48353）"
+    },
+    {
+      "id": "mrizadonyex-mc-085",
+      "name": "メガリザードンYex",
+      "rarity": "-",
+      "cardNumber": "085/742",
+      "expansionCode": "MC",
+      "regulationMark": "I",
+      "deck": "mrizadonxex-deck-0927",
+      "role": "ポケモン（公式カードID 48801・再録弾のためマークは推定）"
+    },
+    {
+      "id": "odoridoriex-rr-m2-018",
+      "name": "オドリドリex",
+      "rarity": "RR",
+      "cardNumber": "018/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "mrizadonxex-deck-0927",
+      "role": "ポケモン（公式カードID 48358）"
+    },
+    {
+      "id": "hifukiyarou-u-m2-078",
+      "name": "ひふきやろう",
+      "rarity": "U",
+      "cardNumber": "078/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "mrizadonxex-deck-0927",
+      "role": "サポート（公式カードID 48418）"
     }
   ]
 }

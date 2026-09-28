@@ -138,6 +138,21 @@ export function nowJst(date = new Date()) {
   return `${jst.toISOString().slice(0, 19)}+09:00`;
 }
 
+/**
+ * 楽天の商品URLから計測用のパラメータを取り除く。
+ * API が返す itemUrl には「?rafcid=wsc_i_is_{アプリID}」が付くため、そのまま保存するとアプリIDがサイト・リポジトリに公開される。
+ * 購入リンクの計測はもしもアフィリエイトで行うので、このパラメータは不要
+ */
+export function cleanItemUrl(itemUrl) {
+  try {
+    const url = new URL(itemUrl);
+    url.searchParams.delete('rafcid');
+    return url.toString();
+  } catch {
+    return itemUrl;
+  }
+}
+
 /** 販売側の項目だけを差し替えたカードを返す（買取・画像などはそのまま） */
 export function applySale(card, item, updatedAt = nowJst(), imageUrl = pickImageUrl(item)) {
   return {
@@ -147,7 +162,7 @@ export function applySale(card, item, updatedAt = nowJst(), imageUrl = pickImage
     salePrice: item.itemPrice,
     saleInStock: true,
     saleShop: SHOP_NAME,
-    saleUrl: moshimoLinkUrl('rakuten', item.itemUrl),
+    saleUrl: moshimoLinkUrl('rakuten', cleanItemUrl(item.itemUrl)),
     saleImpressionUrl: moshimoImpressionUrl('rakuten'),
     updatedAt,
   };

@@ -1,8 +1,9 @@
 ---
-// トップページの「最新ジムバトル優勝デッキ特集」。deck-columns.json から優勝日が新しい順に自動で選ぶ（latestGymWinners）
+// トップページの「最新大会入賞デッキ特集」。deck-columns.json のシティリーグ・ジムバトル入賞デッキから開催日が新しい順に自動で選ぶ（latestEventDecks）
 // PC は3列、タブレットは2列、スマホは1列（画像を左に置いた横長カードで縦に伸びすぎないようにする）
 import CardImage from './CardImage.astro';
-import { DECK_COLUMNS, columnPath, eventDate, latestGymWinners } from '../data/deck-columns';
+import EventBadge from './EventBadge.astro';
+import { DECK_COLUMNS, columnPath, latestEventDecks } from '../data/deck-columns';
 import { formatYen, type Card } from '../utils/cards';
 import { deckBadgeClass, deckSummary } from '../utils/decks';
 
@@ -11,17 +12,17 @@ interface Props {
 }
 
 const { cards } = Astro.props;
-const { title, columns } = latestGymWinners(6);
-const featured = columns.map((column) => ({ ...column, ...deckSummary(column, cards), date: eventDate(column) }));
+const { title, columns } = latestEventDecks(6);
+const featured = columns.map((column) => ({ column, ...column, ...deckSummary(column, cards) }));
 ---
 
 {featured.length > 0 && (
   <section aria-labelledby="featured-decks" class="bg-lab-panel lab-corners mb-8 rounded-2xl border border-slate-300 p-4 text-slate-900 shadow-md sm:p-6">
-    <p class="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] font-bold tracking-widest text-cyan-700">LATEST GYM BATTLE WINNERS / AUTO-SORTED<span class="unit-label">DATA UNIT 02</span></p>
+    <p class="flex flex-wrap items-center justify-between gap-2 font-mono text-[11px] font-bold tracking-widest text-cyan-700">LATEST TOURNAMENT PLACINGS / CITY LEAGUE &amp; GYM BATTLE<span class="unit-label">DATA UNIT 02</span></p>
     <h2 id="featured-decks" class="mt-1 text-lg font-black sm:text-xl">
       <span aria-hidden="true">🏆</span> {title}
     </h2>
-    <p class="mt-1 text-xs text-slate-600 sm:text-sm">優勝日が新しい順に自動で入れ替わります。60枚レシピ・回し方と、採用パーツの最安値をまとめてチェック。</p>
+    <p class="mt-1 text-xs text-slate-600 sm:text-sm">シティリーグ・ジムバトルの入賞デッキを、開催日が新しい順に自動で入れ替えています。60枚レシピ・回し方と、採用パーツの最安値をまとめてチェック。</p>
 
     <ul class="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
       {featured.map((c) => (
@@ -30,7 +31,7 @@ const featured = columns.map((column) => ({ ...column, ...deckSummary(column, ca
             {c.mainCard && <span class="block w-16 shrink-0 overflow-hidden rounded-md ring-1 ring-slate-300 sm:w-[4.5rem]"><CardImage card={c.mainCard} sizes="72px" /></span>}
             <span class="flex min-w-0 flex-1 flex-col">
               <span class="flex flex-wrap items-center gap-1">
-                <time datetime={c.date} class="spec-tag border-amber-400 bg-amber-50 text-amber-700">🏆 {c.date.replaceAll('-', '.')} 優勝</time>
+                <EventBadge column={c.column} />
                 {c.badges.map((b) => <span class={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
               </span>
               <span class="mt-1.5 text-base font-black leading-snug text-slate-900 group-hover:text-amber-700">{c.deckName}</span>

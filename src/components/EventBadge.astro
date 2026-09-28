@@ -1,0 +1,14 @@
+---
+// 大会バッジ（シティリーグ：濃紺×ゴールド / ジムバトル：アンバー / その他：控えめなグレー）。表記と配色は eventBadge() で決める
+import { eventBadge, type DeckColumn } from '../data/deck-columns';
+
+interface Props {
+  column: DeckColumn;
+  size?: 'sm' | 'md';
+}
+
+const { column, size = 'sm' } = Astro.props;
+const badge = eventBadge(column);
+---
+
+<span class:list={['inline-flex items-center whitespace-nowrap rounded-full font-bold', size === 'md' ? 'px-3 py-1 text-xs sm:text-sm' : 'px-2 py-0.5 text-[10px]', badge.className]}>{badge.label}</span>

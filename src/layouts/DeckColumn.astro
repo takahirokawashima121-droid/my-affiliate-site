@@ -6,6 +6,7 @@ import BaseLayout from './BaseLayout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import DeckRecipe from '../components/DeckRecipe.astro';
 import CardImage from '../components/CardImage.astro';
+import EventBadge from '../components/EventBadge.astro';
 import AffiliatePixels from '../components/AffiliatePixels.astro';
 import { SITE } from '../consts';
 import { SHOPS } from '../config/affiliate';
@@ -74,7 +75,7 @@ const jsonLd = {
     <article data-ga-item={column.title}>
       <header class="mb-8">
         <p class="mb-3 inline-block rounded bg-slate-100 px-2 py-0.5 text-xs text-slate-600">PR・本記事はアフィリエイト広告を含みます</p>
-        <p class="text-sm font-bold text-rose-600">🏆 {column.result}</p>
+        <p><EventBadge column={column} size="md" /></p>
         {tier && (
           <a href={`/tier/#${slug}`} class="mt-2 inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-bold text-slate-800 hover:bg-amber-100">
             📊 環境Tier表で<span class="text-red-600">{tier.label}</span>に掲載中 →
@@ -170,7 +171,7 @@ const jsonLd = {
         {others.map((c) => (
           <li>
             <a href={columnPath(c)} class="flex h-full flex-col rounded-xl border border-slate-200 bg-white p-4 transition hover:border-blue-400 hover:shadow-md">
-              <span class="text-xs font-bold text-rose-600">🏆 {c.result}</span>
+              <span><EventBadge column={c} /></span>
               <span class="mt-1 font-bold text-slate-900">{c.deckName}デッキ</span>
               <span class="mt-auto pt-3 text-sm font-bold text-blue-600">レシピと回し方を見る →</span>
             </a>

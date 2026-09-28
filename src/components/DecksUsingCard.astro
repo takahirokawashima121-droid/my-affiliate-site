@@ -1,6 +1,7 @@
 ---
 // カード詳細ページ: このカードを採用している優勝デッキ（デッキ解説コラム）の逆引き。該当がなければ何も表示しない
 import type { Card } from '../utils/cards';
+import EventBadge from './EventBadge.astro';
 import { columnPath } from '../data/deck-columns';
 import { decksUsingCard } from '../utils/decks';
 
@@ -24,7 +25,7 @@ const decks = decksUsingCard(card.id);
               {qty}枚<span class="block text-[10px] font-bold">採用</span>
             </span>
             <span class="min-w-0 flex-1">
-              <span class="block text-[11px] font-bold text-rose-600">{column.result}</span>
+              <span class="block"><EventBadge column={column} /></span>
               <span class="block text-sm font-bold leading-snug text-slate-900 group-hover:text-blue-600">{column.deckName}</span>
             </span>
             <span class="shrink-0 text-xs font-bold text-blue-600">記事へ →</span>

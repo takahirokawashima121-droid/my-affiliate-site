@@ -260,6 +260,10 @@ async function main() {
       title: `【${label}】${deckName}デッキレシピ！採用カード最安値・代替パーツ提案`,
       description: `${d.date ? `${d.date}の` : ''}ジムバトルで優勝した${d.archetype}デッキの60枚レシピを、採用カードの最安値つきで紹介。主力カードの効果と、予算を抑える版の選び方をまとめています。`,
       result: label,
+      // 大会の種類・成績（トップページの特集・一覧の大会バッジと絞り込みに使う）
+      eventType: 'gym',
+      rank: '優勝',
+      eventName: 'ジムバトル',
       pubDate: todayJst(),
       highlight: `${keyCards.slice(0, 2).join('・')}を採用した${d.archetype}デッキ。主力カードの効果と最安値をまとめて確認`,
       keyCards,

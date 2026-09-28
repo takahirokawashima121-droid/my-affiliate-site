@@ -19,21 +19,51 @@ export type DeckColumn = {
   highlight: string;
   /** 主力パーツ（レシピ内のカード名。最安値カードとして記事上部に表示する。同名が複数あれば最初の版） */
   keyCards: string[];
+  /** 大会の種類（シティリーグ / ジムバトル）。省略時は result の文言から判定し、「ジムバトル」を含めば gym */
+  eventType?: EventType;
+  /** 成績。省略時は result の文言から判定（「準優勝」「TOP4」「TOP8」、それ以外で「優勝」を含めば 優勝） */
+  rank?: EventRank;
+  /** 大会名（例: 「シティリーグ2026 S1」「ジムバトル」）。バッジの表記に使う */
+  eventName?: string;
+  /** 開催日（YYYY-MM-DD）。省略時は result の「M/D」と公開年から求める */
+  eventDate?: string;
 };
 
+export type EventType = 'city' | 'gym';
+export type EventRank = '優勝' | '準優勝' | 'TOP4' | 'TOP8';
+
 // 記事の一覧は deck-columns.json（scripts/auto-deck-updater.js が新着デッキの記事を追記する）
-export const DECK_COLUMNS: DeckColumn[] = deckColumns;
+export const DECK_COLUMNS = deckColumns as DeckColumn[];
 
 export const columnPath = (c: DeckColumn) => `/columns/${c.slug}/`;
 
-/** ジムバトル優勝デッキの記事か（result が「9/26 ジムバトル優勝」の形式） */
-export const isGymWin = (c: DeckColumn) => /ジムバトル優勝/.test(c.result);
+/** 大会の種類。明示されていなければ result の文言から判定（ジムバトル以外の大会・環境まとめ由来の記事は undefined） */
+export function eventTypeOf(c: DeckColumn): EventType | undefined {
+  if (c.eventType) return c.eventType;
+  if (/シティ/.test(c.result)) return 'city';
+  if (/ジムバトル/.test(c.result)) return 'gym';
+  return undefined;
+}
+
+/** 成績。明示されていなければ result の文言から判定（判定できなければ undefined） */
+export function rankOf(c: DeckColumn): EventRank | undefined {
+  if (c.rank) return c.rank;
+  if (/準優勝/.test(c.result)) return '準優勝';
+  if (/TOP\s*4|ベスト4/i.test(c.result)) return 'TOP4';
+  if (/TOP\s*8|ベスト8/i.test(c.result)) return 'TOP8';
+  if (/優勝/.test(c.result)) return '優勝';
+  return undefined;
+}
+
+/** 特集に載せる大会入賞デッキか（シティリーグ・ジムバトルの入賞記録があるもの） */
+export const isEventPlacing = (c: DeckColumn) => eventTypeOf(c) !== undefined && rankOf(c) !== undefined;
 
 /**
- * 優勝日（YYYY-MM-DD）。result の「M/D」に、記事の公開年を補って求める
+ * 開催日（YYYY-MM-DD）。eventDate があればそれを使い、なければ result の「M/D」に記事の公開年を補って求める
  * （公開月より後の月なら前年の大会とみなす。例: 2027-01-02 公開の「12/30」→ 2026-12-30）。日付がなければ公開日
  */
 export function eventDate(c: DeckColumn): string {
+  if (c.eventDate) return c.eventDate;
   const m = c.result.match(/(\d{1,2})\/(\d{1,2})/);
   if (!m) return c.pubDate;
   const [year, pubMonth] = c.pubDate.split('-').map(Number);
@@ -42,21 +72,50 @@ export function eventDate(c: DeckColumn): string {
   return `${month > pubMonth ? year - 1 : year}-${pad(month)}-${pad(Number(m[2]))}`;
 }
 
+/** 「2026-09-26」→「9/26」 */
+const shortDate = (date: string) => date.slice(5).replace(/^0/, '').replace('-0', '-').replace('-', '/');
+
+/**
+ * 大会バッジ（表記と配色）。デッキカード・一覧・記事ヘッダーで共通に使う
+ * - シティリーグ：濃紺 × ゴールド（例:「🏆 9/14 シティS1 優勝」「🎖️ 9/14 シティS1 TOP4」）
+ * - ジムバトル：アンバー（例:「⚔️ 9/26 ジムバトル 優勝」）
+ * - それ以外（環境まとめ由来の記事など）：result の文言をそのまま控えめなバッジで表示
+ */
+export function eventBadge(c: DeckColumn): { label: string; className: string; type: EventType | 'other' } {
+  const type = eventTypeOf(c);
+  const rank = rankOf(c);
+  const hasDate = Boolean(c.eventDate) || /\d{1,2}\/\d{1,2}/.test(c.result);
+  const date = hasDate ? `${shortDate(eventDate(c))} ` : '';
+  if (type === 'city' && rank) {
+    const name = (c.eventName ?? 'シティリーグ').replace(/シティリーグ\s*(\d{4})?\s*/, 'シティ');
+    return {
+      type,
+      label: `${rank === '優勝' ? '🏆' : '🎖️'} ${date}${name} ${rank}`,
+      className: 'border border-amber-500/40 bg-slate-900 text-amber-300',
+    };
+  }
+  if (type === 'gym' && rank) {
+    return { type, label: `⚔️ ${date}ジムバトル ${rank}`, className: 'border border-amber-300 bg-amber-100 text-amber-800' };
+  }
+  return { type: 'other', label: `🏅 ${c.result}`, className: 'border border-slate-300 bg-slate-100 text-slate-700' };
+}
+
 /** デッキの系統（「メガジガルデex（〇〇型）」→「メガジガルデex」）。特集に同じデッキが並ばないようにする */
 const deckBase = (c: DeckColumn) => c.deckName.replace(/（.*）$/, '');
 
 /**
- * トップページの「最新ジムバトル優勝デッキ特集」。deck-columns.json から優勝日（→ 公開日）が新しい順に並べて先頭から選ぶため、
- * scripts/auto-deck-updater.js が新しい優勝デッキを追記すれば、次のビルドで自動的に特集が切り替わる。
- * 同じ日付どうしは deck-columns.json の掲載順。同じ系統のデッキは1件だけ載せる
+ * トップページの「最新大会入賞デッキ特集」。deck-columns.json のシティリーグ・ジムバトル入賞デッキを、開催日（→ 公開日）が
+ * 新しい順に並べて先頭から選ぶ。新しい大会のデッキが追加されれば、次のビルドで自動的に特集が切り替わる。
+ * 同じ日付どうしはシティリーグ → ジムバトル、成績の高い順、deck-columns.json の掲載順。同じ系統のデッキは1件だけ載せる
  */
-export function latestGymWinners(limit = 6): { title: string; date: string; columns: DeckColumn[] } {
-  const sorted = DECK_COLUMNS.filter(isGymWin)
-    .map((c, order) => ({ c, order, date: eventDate(c) }))
-    .sort((a, b) => b.date.localeCompare(a.date) || b.c.pubDate.localeCompare(a.c.pubDate) || a.order - b.order);
+export function latestEventDecks(limit = 6): { title: string; date: string; columns: DeckColumn[] } {
+  const rankOrder: EventRank[] = ['優勝', '準優勝', 'TOP4', 'TOP8'];
+  const score = (c: DeckColumn) => (eventTypeOf(c) === 'city' ? 0 : 10) + rankOrder.indexOf(rankOf(c)!);
+  const sorted = DECK_COLUMNS.map((c, order) => ({ c, order, date: eventDate(c) }))
+    .filter(({ c }) => isEventPlacing(c))
+    .sort((a, b) => b.date.localeCompare(a.date) || score(a.c) - score(b.c) || b.c.pubDate.localeCompare(a.c.pubDate) || a.order - b.order);
   const seen = new Set<string>();
   const columns = sorted.filter(({ c }) => !seen.has(deckBase(c)) && seen.add(deckBase(c))).slice(0, limit).map(({ c }) => c);
   const date = sorted[0]?.date ?? '';
-  const [, m, d] = date.split('-').map(Number);
-  return { title: `最新ジムバトル優勝デッキ特集${date ? `（${m}/${d}）` : ''}`, date, columns };
+  return { title: `最新大会入賞デッキ特集（シティ＆ジムバ）${date ? `・${shortDate(date)}更新` : ''}`, date, columns };
 }

@@ -86,10 +86,10 @@ const chip =
     <h2 class="unit-label relative mt-8">当工房の特徴 / FEATURES</h2>
     <ul class="relative mt-2 grid gap-3 md:grid-cols-3">
       {[
-        // アイコン：レンチ（研究）・電球（ひらめき＝最安の発見）・シールド（スタン落ち防止）
+        // アイコン：レンチ（研究）・電球（ひらめき＝最安の発見）・シールド（レギュ落ち防止）
         { no: '01', tone: 'border-t-amber-400 hover:border-amber-300 hover:bg-amber-50/50', iconTone: 'border-amber-200 bg-amber-100 text-amber-600', title: 'ジムバトル優勝レシピの分析', body: '勝率を高める60枚の採用理由と立ち回りを研究', icon: 'M14.7 6.3a4 4 0 0 0-5.4 5.1L3.5 17.2a1.8 1.8 0 0 0 2.5 2.5l5.8-5.8a4 4 0 0 0 5.1-5.4l-2.4 2.4-2.2-.4-.4-2.2 2.4-2.4Z' },
         { no: '02', tone: 'border-t-sky-400 hover:border-sky-300 hover:bg-sky-50/50', iconTone: 'border-sky-200 bg-sky-100 text-sky-600', title: '最安パーツ一括調達', body: '不足しているカードの最安値をショップ横断で即時チェック', icon: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2V16h5v-.2c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3Z' },
-        { no: '03', tone: 'border-t-emerald-400 hover:border-emerald-300 hover:bg-emerald-50/50', iconTone: 'border-emerald-200 bg-emerald-100 text-emerald-600', title: 'スタン落ち完全排除', body: 'H・I・J規格のみ掲載。使えないカードを買ってしまう事故を防止', icon: 'M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Zm-3.2 9 2.3 2.3 4.3-4.6' },
+        { no: '03', tone: 'border-t-emerald-400 hover:border-emerald-300 hover:bg-emerald-50/50', iconTone: 'border-emerald-200 bg-emerald-100 text-emerald-600', title: 'レギュ落ち完全排除', body: 'H・I・J規格のみ掲載。使えないカードを買ってしまう事故を防止', icon: 'M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Zm-3.2 9 2.3 2.3 4.3-4.6' },
       ].map((f) => (
         <li class={`rounded-lg border border-t-4 border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md ${f.tone}`}>
           <span class="flex items-center justify-between">

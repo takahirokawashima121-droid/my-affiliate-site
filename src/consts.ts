@@ -27,7 +27,7 @@ export const SITE = {
 
 /**
  * 現在のスタンダードレギュレーションで使えるレギュレーションマーク（2026年1月23日〜）。
- * レギュレーション変更（スタン落ち）のたびに更新すること。
+ * レギュレーション変更（レギュ落ち）のたびに更新すること。
  * 参考: https://www.pokemon-card.com/info/005262.html
  */
 export const STANDARD_REGULATIONS = ['H', 'I', 'J'] as const;

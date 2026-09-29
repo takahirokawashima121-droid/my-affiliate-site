@@ -160,14 +160,22 @@ const dateKey = (date) => (date ? date.split('/').map(Number).reduce((m, d) => m
 
 /**
  * レシピからデッキ名を推定する（シティリーグのまとめ記事はデッキ名を文字で載せていないため）。
- * 既存の記事のデッキ名と同じポケモン > メガシンカ ex > ex > それ以外、同じなら枚数の多い順。汎用のポケモン（STAPLES）は選ばない
+ * メガシンカ ex > 既存の記事のデッキ名と同じポケモン（2枚以上）> ex > それ以外、同じなら枚数の多い順。汎用のポケモン（STAPLES）は選ばない。
+ * knownArchetypes は「ポケモン名 → 既存記事のデッキ名」（「カミッチュ」→「カミッチュ（おまつりおんど）」）。
+ * 既存記事のポケモンが選ばれたら、そのデッキ名（アーキタイプ名）を返す
+ * （進化前の「カジッチュ」がデッキ名になり、正しくは「カミッチュ（おまつりおんど）」だったため）
  */
-function inferArchetype(list, knownNames) {
+function inferArchetype(list, knownArchetypes) {
   const counts = new Map();
   for (const c of list.filter((c) => c.category === 'ポケモン')) counts.set(c.name, (counts.get(c.name) ?? 0) + c.count);
+  // 既存のデッキ名の加点は2枚以上のときだけ（1枚だけのミュウex などの技枠が、メガシンカ ex より優先されないように）
   const score = (name) =>
-    (knownNames.has(norm(name)) ? 150 : 0) + (/^メガ.+ex$/.test(name) ? 200 : /ex$/.test(name) ? 100 : 0) - (STAPLES.has(name) ? 500 : 0) + counts.get(name);
-  return [...counts.keys()].sort((a, b) => score(b) - score(a))[0] ?? 'デッキ';
+    (counts.get(name) >= 2 && knownArchetypes.has(norm(name)) ? 150 : 0) +
+    (/^メガ.+ex$/.test(name) ? 300 : /ex$/.test(name) ? 100 : 0) -
+    (STAPLES.has(name) ? 500 : 0) +
+    counts.get(name);
+  const best = [...counts.keys()].sort((a, b) => score(b) - score(a))[0];
+  return best ? (knownArchetypes.get(norm(best)) ?? best) : 'デッキ';
 }
 
 /**
@@ -283,6 +291,8 @@ async function main() {
   const columns = await readJson(COLUMNS_PATH, []);
   const imported = new Set(Object.values(await readJson(DECKS_PATH, {})).map((d) => d.deckId));
   const existingNames = new Set(columns.map((c) => norm(baseDeckName(c.deckName))));
+  // 「カミッチュ（おまつりおんど）」のように、ポケモン名に補足を付けたアーキタイプ名は、ポケモン名から引けるようにする
+  const knownArchetypes = new Map(columns.map((c) => [norm(baseDeckName(c.deckName).replace(/（[^（）]*）$/, '')), baseDeckName(c.deckName)]));
   const candidates = [];
   for (const it of fresh) {
     const decks = (await decksOf(it)).filter((d) => !doneDecks.has(d.deckId) && !imported.has(d.deckId));
@@ -295,7 +305,7 @@ async function main() {
   // ジムバトル: 見出しがデッキ名でなかった（日付・大会名だった）デッキは、レシピからデッキ名を推定する
   if (opts.source === 'gym') {
     for (const d of candidates.filter((c) => !c.archetype)) {
-      d.archetype = inferArchetype(await deckCards(d.deckId), existingNames);
+      d.archetype = inferArchetype(await deckCards(d.deckId), knownArchetypes);
       d.inferred = true;
     }
   }
@@ -333,7 +343,7 @@ async function main() {
   for (const d of pool) {
     if (selected.length >= opts.maxColumns) break;
     if (opts.source === 'city') {
-      d.archetype = inferArchetype(await deckCards(d.deckId), existingNames);
+      d.archetype = inferArchetype(await deckCards(d.deckId), knownArchetypes);
       d.inferred = true;
       if (selected.some((o) => norm(o.archetype) === norm(d.archetype))) continue;
     }

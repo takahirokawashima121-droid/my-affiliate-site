@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="robots" content="noindex, nofollow" />
+<title>OG画像テンプレート</title>
+<!--
+  public/og-default.png（1200×630）の元になるテンプレート。
+  書き直したら `node scripts/render-og-image.js` で PNG を作り直す（手順は README の「OG画像」）。
+  デザインはトップページのヒーロー（白基調の方眼・ハザードストライプ・赤→オレンジのグラデーション文字）に合わせる。
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@800&family=Noto+Sans+JP:wght@700;900&display=block" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    position: relative;
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+    color: #0f172a;
+    background-color: #f8fafc;
+    background-image:
+      radial-gradient(ellipse 50% 60% at 100% 0%, rgb(245 158 11 / 0.14), transparent 70%),
+      radial-gradient(ellipse 40% 50% at 0% 100%, rgb(220 38 38 / 0.07), transparent 70%),
+      linear-gradient(rgb(100 116 139 / 0.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(100 116 139 / 0.10) 1px, transparent 1px),
+      linear-gradient(rgb(100 116 139 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(100 116 139 / 0.05) 1px, transparent 1px);
+    background-size: auto, auto, 96px 96px, 96px 96px, 24px 24px, 24px 24px;
+  }
+  .hazard { position: absolute; left: 0; right: 0; height: 14px; background-image: repeating-linear-gradient(-45deg, #f59e0b 0 14px, #1e293b 14px 28px); }
+  .hazard.top { top: 0; }
+  .hazard.bottom { bottom: 0; height: 8px; }
+  /* 四隅の L 字ブラケット */
+  .corner { position: absolute; width: 34px; height: 34px; border-color: #94a3b8; border-style: solid; }
+  .corner.tl { top: 34px; left: 34px; border-width: 3px 0 0 3px; }
+  .corner.tr { top: 34px; right: 34px; border-width: 3px 3px 0 0; }
+  .corner.bl { bottom: 30px; left: 34px; border-width: 0 0 3px 3px; }
+  .corner.br { bottom: 30px; right: 34px; border-width: 0 3px 3px 0; }
+
+  .content { position: absolute; left: 72px; top: 66px; }
+  .plates { display: flex; gap: 10px; }
+  .plate { font-size: 19px; font-weight: 900; padding: 5px 14px; border-radius: 6px; border: 2px solid; }
+  .plate.red { color: #b91c1c; background: #fef2f2; border-color: #fecaca; }
+  .plate.green { color: #047857; background: #ecfdf5; border-color: #a7f3d0; }
+  .en { margin-top: 22px; font-family: ui-monospace, Menlo, monospace; font-size: 20px; font-weight: 700; letter-spacing: 0.28em; color: #0891b2; }
+  h1 {
+    margin-top: 2px;
+    font-family: 'M PLUS Rounded 1c', 'Noto Sans JP', sans-serif;
+    font-size: 86px; font-weight: 800; line-height: 1.12; letter-spacing: -0.01em; white-space: nowrap;
+    background: linear-gradient(90deg, #dc2626, #f97316 55%, #f59e0b);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .rule { margin-top: 10px; width: 150px; height: 8px; background-image: repeating-linear-gradient(-45deg, #f59e0b 0 8px, #1e293b 8px 16px); }
+  .lead { margin-top: 18px; font-size: 27px; font-weight: 900; color: #334155; }
+  .lead small { font-size: 22px; color: #64748b; font-weight: 700; margin-left: 4px; }
+  .sub { margin-top: 8px; font-size: 22px; font-weight: 700; color: #475569; }
+  .sub b { color: #dc2626; font-weight: 900; }
+
+  .features { position: absolute; left: 72px; right: 72px; bottom: 58px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .feature { display: flex; align-items: center; gap: 14px; background: #fff; border: 2px solid #e2e8f0; border-top-width: 7px; border-radius: 12px; padding: 16px 18px; box-shadow: 0 4px 14px rgb(15 23 42 / 0.07); }
+  .feature .icon { flex: none; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 999px; border: 2px solid; }
+  .feature .icon svg { width: 30px; height: 30px; }
+  .feature .no { font-family: ui-monospace, Menlo, monospace; font-size: 14px; font-weight: 700; letter-spacing: 0.1em; color: #94a3b8; }
+  .feature .title { font-size: 27px; font-weight: 900; line-height: 1.2; color: #0f172a; white-space: nowrap; }
+  .f1 { border-top-color: #dc2626; } .f1 .icon { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
+  .f2 { border-top-color: #f97316; } .f2 .icon { color: #ea580c; background: #fff7ed; border-color: #fed7aa; }
+  .f3 { border-top-color: #f59e0b; } .f3 .icon { color: #d97706; background: #fffbeb; border-color: #fde68a; }
+
+  /* 右側：デッキ（カードの束）と最安値タグのイラスト */
+  .art { position: absolute; right: 64px; top: 88px; width: 300px; height: 300px; transform: scale(0.86); transform-origin: top right; }
+  .card { position: absolute; width: 150px; height: 210px; border-radius: 12px; background: #fff; border: 3px solid #1e293b; box-shadow: 0 10px 24px rgb(15 23 42 / 0.16); overflow: hidden; }
+  .card::before { content: ''; position: absolute; left: 10px; right: 10px; top: 12px; height: 92px; border-radius: 6px; background: var(--art); }
+  .card::after { content: ''; position: absolute; left: 12px; right: 12px; top: 118px; height: 64px; background: repeating-linear-gradient(#cbd5e1 0 5px, transparent 5px 17px); }
+  .c1 { left: 20px; top: 40px; transform: rotate(-14deg); --art: linear-gradient(135deg, #fde68a, #f59e0b); }
+  .c2 { left: 80px; top: 20px; transform: rotate(-2deg); --art: linear-gradient(135deg, #fed7aa, #f97316); }
+  .c3 { left: 140px; top: 36px; transform: rotate(11deg); --art: linear-gradient(135deg, #fecaca, #dc2626); }
+  .count { position: absolute; left: 34px; top: 238px; font-family: ui-monospace, Menlo, monospace; font-size: 17px; font-weight: 700; letter-spacing: 0.14em; color: #0f172a; background: #fff; border: 2px solid #1e293b; border-radius: 6px; padding: 4px 10px; }
+  .tag { position: absolute; right: -6px; top: 196px; display: flex; align-items: center; gap: 8px; background: #dc2626; color: #fff; font-size: 26px; font-weight: 900; padding: 10px 18px 10px 14px; border-radius: 10px; box-shadow: 0 8px 18px rgb(220 38 38 / 0.35); transform: rotate(-6deg); }
+  .tag svg { width: 26px; height: 26px; }
+  .domain { position: absolute; right: 76px; top: 26px; font-family: ui-monospace, Menlo, monospace; font-size: 17px; font-weight: 700; color: #64748b; letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+  <div class="hazard top"></div>
+  <div class="hazard bottom"></div>
+  <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+  <p class="domain">pokeca-factory.com</p>
+
+  <div class="content">
+    <div class="plates">
+      <span class="plate red">競技プレイヤー専用</span>
+      <span class="plate green">現行レギュレーション H・I・J</span>
+    </div>
+    <p class="en">POKECA FACTORY</p>
+    <h1>ポケカファクトリー</h1>
+    <div class="rule"></div>
+    <p class="lead">デッキ構築＆パーツ調達ナビ<small>（ポケトリー）</small></p>
+    <p class="sub">優勝デッキが<b>60枚いくらで組めるか</b>、ひと目でわかる</p>
+  </div>
+
+  <div class="art" aria-hidden="true">
+    <div class="card c1"></div>
+    <div class="card c2"></div>
+    <div class="card c3"></div>
+    <span class="count">60 CARDS</span>
+    <span class="tag">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>
+      最安値
+    </span>
+  </div>
+
+  <ul class="features">
+    <li class="feature f1">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4ZM7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3"/></svg></span>
+      <span><span class="no">SPEC-01</span><br /><span class="title">大会入賞デッキ分析</span></span>
+    </li>
+    <li class="feature f2">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2.5 3.5h3l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.2a1.5 1.5 0 0 0 1.5-1.1L21 8H6.5"/></svg></span>
+      <span><span class="no">SPEC-02</span><br /><span class="title">パーツ最安値調達</span></span>
+    </li>
+    <li class="feature f3">
+      <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Zm-3.2 9 2.3 2.3 4.3-4.6"/></svg></span>
+      <span><span class="no">SPEC-03</span><br /><span class="title">レギュ落ち完全排除</span></span>
+    </li>
+  </ul>
+</body>
+</html>

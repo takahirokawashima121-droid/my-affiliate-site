@@ -12,7 +12,7 @@ import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../../src/consts.ts
 
 export const OFFICIAL = 'https://www.pokemon-card.com';
 const CACHE_DIR = fileURLToPath(new URL('../../.cache/trending/', import.meta.url));
-const USER_AGENT = 'Mozilla/5.0 (compatible; pokeca-price-navi/1.0; +https://my-affiliate-site-phi.vercel.app/)';
+const USER_AGENT = 'Mozilla/5.0 (compatible; pokeca-price-navi/1.0; +https://www.pokeca-factory.com/)';
 const WAIT_MS = 1500;
 
 /**

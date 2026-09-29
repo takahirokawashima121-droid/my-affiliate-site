@@ -65,7 +65,7 @@ const PROCESSED_PATH = path('scripts/cache/processed-decks.json');
 const COLUMNS_PATH = path('src/data/deck-columns.json');
 const DECKS_PATH = path('src/data/official-decks.json');
 const CARDS_PATH = path('src/data/cards.json');
-const SITE_URL = 'https://my-affiliate-site-phi.vercel.app/';
+const SITE_URL = 'https://www.pokeca-factory.com/';
 
 function parseArgs(argv) {
   return {

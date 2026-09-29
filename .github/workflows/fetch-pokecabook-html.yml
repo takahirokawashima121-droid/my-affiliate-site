@@ -1,0 +1,82 @@
+# ポケカブックのまとめ記事の HTML をそのままダウンロードし、実行結果のページに Artifacts として添付する（読み取りの不具合調査用）
+# Claude Code の実行環境からはポケカブックにアクセスできないため、GitHub Actions で取得して確認する（README「ポケカブックの HTML の取得」）。
+# 取得した HTML はリポジトリにはコミットしない（記事本文を転載しないため）。Artifacts は 7 日で消える
+name: Fetch pokecabook HTML (manual)
+
+on:
+  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
+    inputs:
+      urls:
+        description: 取得する記事の URL（空白区切りで複数可）
+        required: true
+        default: https://pokecabook.com/archives/27265 https://pokecabook.com/archives/335123
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # リクエストの間は 2 秒あける（収集元へのリクエストは1.5秒以上あける）
+      - name: Download HTML
+        env:
+          URLS: ${{ github.event.inputs.urls || 'https://pokecabook.com/archives/27265 https://pokecabook.com/archives/335123' }}
+        run: |
+          mkdir -p pokecabook-html
+          for url in $URLS; do
+            name="$(echo "$url" | sed -E 's#^https?://##; s#[^A-Za-z0-9]+#_#g')"
+            curl -sSL --fail -A 'Mozilla/5.0 (compatible; pokeca-factory-bot; +https://www.pokeca-factory.com/)' \
+              -o "pokecabook-html/$name.html" "$url"
+            echo "$url -> pokecabook-html/$name.html ($(wc -c < "pokecabook-html/$name.html") bytes)"
+            sleep 2
+          done
+
+      # ●付きの行・デッキコードのリンクが、どの要素（タグ・class）の中にあるかをログに出す
+      - name: Outline
+        run: |
+          for f in pokecabook-html/*.html; do node scripts/debug/outline-html.js "$f"; done
+
+      # 見出しの●が CSS で付けられているか（本文に「●」の文字がないとき）を確かめるため、CSS の中の●（\25CF）をログに出す
+      - name: Bullet in CSS
+        run: |
+          grep -ohiE '[^{}]{0,120}\{[^{}]*(\\25cf|●)[^{}]*\}' pokecabook-html/*.html | head -20 || true
+          for u in $(grep -ohE 'https://pokecabook\.com/[^"'"'"' ]+\.css[^"'"'"' ]*' pokecabook-html/*.html | sort -u | head -15); do
+            echo "== $u"
+            curl -sSL "$u" | grep -oiE '[^{}]{0,160}\{[^{}]*(\\25cf|●)[^{}]*\}' | head -10 || true
+            sleep 2
+          done
+
+      # テスト用の骨組み（本文・画像を除いた構造）を gzip + base64 でログに出す（Artifacts を取得できない環境向け）
+      - name: Skeleton
+        run: |
+          mkdir -p pokecabook-skeleton
+          for f in pokecabook-html/*.html; do
+            out="pokecabook-skeleton/$(basename "$f")"
+            node scripts/debug/skeleton-html.js "$f" > "$out"
+            echo "===== SKELETON $out ($(wc -c < "$out") bytes)"
+            gzip -9c "$out" | base64 -w 0; echo
+            echo "===== END"
+          done
+
+      - name: Upload HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: pokecabook-html
+          path: |
+            pokecabook-html/
+            pokecabook-skeleton/
+          retention-days: 7

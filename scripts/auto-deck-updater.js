@@ -43,6 +43,7 @@ import { deckEnglishName, englishName } from './lib/english-name.js';
 import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
 import { matchDeckNameRule } from './lib/deck-name-rules.js';
+import { auditHighlights, chooseHighlights, highlightCandidates } from './lib/highlight.js';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
@@ -62,6 +63,8 @@ const COLUMNS_PATH = path('src/data/deck-columns.json');
 const DECKS_PATH = path('src/data/official-decks.json');
 const CARDS_PATH = path('src/data/cards.json');
 const SITE_URL = 'https://www.pokeca-factory.com/';
+/** 見どころをカードテキストから作れなかったときの印（PR で報告し、人が書く） */
+const HIGHLIGHT_TODO = 'TODO: 見どころを書く';
 
 function parseArgs(argv) {
   return {
@@ -332,9 +335,11 @@ async function main() {
   const cards = await readJson(CARDS_PATH, []);
   const generated = [];
   const renamedColumns = []; // 同名デッキの追加で型名を付けた既存記事
+  const highlightInputs = []; // 見どころの材料（同じ日の記事と書き出しが重ならないよう、全記事の生成後にまとめて選ぶ）
   for (const d of selected.filter((x) => result.decks.includes(x.slug))) {
     const recipe = recipes[d.slug].cards;
     const keyCards = pickKeyCards(recipe, d.nameRule?.has[0] ?? d.archetype);
+    const profiles = await recipeProfiles(recipe); // 採用カードの公式テキスト（立ち回り・見どころに使う。キャッシュつき）
     const isCity = opts.source === 'city';
     const rank = d.rank ?? '優勝';
     const label = `${d.date ?? ''} ${isCity ? 'シティリーグ' : 'ジムバトル'}${rank}`.trim();
@@ -371,11 +376,14 @@ async function main() {
           }
         : { eventType: 'gym', rank, eventName: 'ジムバトル' }),
       pubDate: todayJst(),
-      highlight: `${keyCards.slice(0, 2).join('・')}を採用した${d.archetype}デッキ。主力カードの効果と最安値をまとめて確認`,
+      // 見どころ: 主役の特性・ワザ（名前・ダメージ・効果）と組み合わせるカードを、公式のカードテキストから作る（scripts/lib/highlight.js）。
+      // 下で同じ日の記事と書き出しが重ならない候補を選んで入れる。作れなかったときは TODO のまま PR で報告する
+      highlight: HIGHLIGHT_TODO,
       keyCards,
       // 序盤・中盤・終盤の立ち回り（60枚の構成と公式のカードテキストから自動生成。ページの「立ち回り・対戦の手順」に表示）
-      gamePlan: buildGamePlan(recipe, await recipeProfiles(recipe), keyCards[0]),
+      gamePlan: buildGamePlan(recipe, profiles, keyCards[0]),
     };
+    highlightInputs.push({ column, recipe, profiles });
     await writeFile(path(`src/pages/columns/${d.slug}.astro`), await renderPage(column, recipe), 'utf8');
     columns.push(column);
     generated.push({
@@ -388,6 +396,24 @@ async function main() {
       ruleUncertain: d.ruleUncertain,
     });
     console.log(`  ✓ src/pages/columns/${d.slug}.astro`);
+  }
+  // 見どころを選ぶ（同じ日に公開する記事同士で、書き出しがそっくりにならない候補を選ぶ）
+  const namesOf = (recipe, column) => [...recipe.map((e) => e.name), ...column.keyCards];
+  const sameDay = columns
+    .filter((c) => c.pubDate === todayJst() && !highlightInputs.some((h) => h.column === c))
+    .map((c) => ({ slug: c.slug, highlight: c.highlight, names: [...(recipes[c.deckKey]?.cards ?? []).map((e) => e.name), ...(c.keyCards ?? [])] }));
+  const chosen = chooseHighlights(
+    highlightInputs.map(({ column, recipe, profiles }) => ({
+      slug: column.slug,
+      names: namesOf(recipe, column),
+      candidates: highlightCandidates({ recipe, profiles, keyCards: column.keyCards }),
+    })),
+    sameDay,
+  );
+  for (const { column } of highlightInputs) {
+    column.highlight = chosen.get(column.slug) ?? HIGHLIGHT_TODO;
+    const g = generated.find((x) => x.slug === column.slug);
+    if (g) g.highlight = column.highlight;
   }
   await writeJson(COLUMNS_PATH, columns);
 
@@ -416,6 +442,16 @@ async function main() {
     const { parent, reply } = buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, estimate: estimateOf(c.slug), url: `${SITE_URL}columns/${c.slug}/` });
     return [`#### ${c.deckName}`, '1ポスト目（親）', '```', parent, '```', '2ポスト目（リプライ）', '```', reply, '```', ''];
   });
+  // 紹介文の点検: 決まった文（BANNED_PHRASES）と、同じ日の記事同士の書き出しの似かよい
+  const xParentOf = (c) => buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, estimate: estimateOf(c.slug), url: '' }).parent;
+  const audit = auditHighlights([
+    ...sameDay.map((c) => ({ ...c, pubDate: todayJst() })),
+    ...generated.map((c) => ({ slug: c.slug, pubDate: c.pubDate, highlight: c.highlight, names: namesOf(recipes[c.slug].cards, c), xText: xParentOf(c) })),
+  ]);
+  const generatedSlugs = new Set(generated.map((c) => c.slug));
+  const bannedHits = audit.banned.filter((b) => generatedSlugs.has(b.slug));
+  const similarHits = audit.similar.filter(([a, b]) => generatedSlugs.has(a.slug) || generatedSlugs.has(b.slug));
+  const todoHighlights = generated.filter((c) => c.highlight === HIGHLIGHT_TODO);
   const inferredColumns = generated.filter((c) => c.inferred);
   const romajiColumns = generated.filter((c) => c.slugFallback);
   const approxColumns = generated.filter((c) => c.slugApprox);
@@ -436,8 +472,17 @@ async function main() {
     ...fresh.map((it) => `- 元記事: [${it.title}](${it.link})`),
     '',
     `### 生成した記事（${generated.length}本）`,
-    ...(generated.length ? generated.map((c) => `- \`/columns/${c.slug}/\` ${c.title}`) : ['- なし']),
+    ...(generated.length ? generated.map((c) => `- \`/columns/${c.slug}/\` ${c.title}\n  - 見どころ: ${c.highlight}`) : ['- なし']),
     '',
+    ...(bannedHits.length || similarHits.length || todoHighlights.length
+      ? [
+          '### ⚠ 紹介文（見どころ・X投稿文）の確認すべき点',
+          ...bannedHits.map((b) => `- \`/columns/${b.slug}/\` の${b.where}に決まった文が含まれています: ${b.labels.join('・')}`),
+          ...similarHits.map(([a, b, head]) => `- \`/columns/${a.slug}/\` と \`/columns/${b.slug}/\` の見どころの書き出しがそっくりです（骨組み: 「${head}…」）`),
+          ...todoHighlights.map((c) => `- \`/columns/${c.slug}/\` はカードテキストから見どころを作れませんでした（TODO のまま。deck-columns.json の highlight を書いてください）`),
+          '',
+        ]
+      : []),
     ...(ruleColumns.length
       ? ['### 言い換えルールでデッキ名を変えた記事', ...ruleColumns.map((c) => `- \`/columns/${c.slug}/\` ${c.sourceName ?? '—'} → **${c.deckName}**`), '']
       : []),
@@ -455,6 +500,7 @@ async function main() {
     ...(result.skipped?.length ? ['### 価格を掲載できなかったカード（レシピには載るがリンクなし）', ...result.skipped.map((x) => `- ${x.name}: ${x.reason}`), ''] : []),
     ...(xSection.length ? ['### 📱 X（Twitter）投稿用コピペ文', 'マージして公開されたあとに投稿してください（見どころを書き直した場合は、公開後の記事末尾「Xシェア用テキスト」の文面を使うと最新になります）。', '', ...xSection] : []),
     '### マージ前に確認すること',
+    ...(bannedHits.length || similarHits.length || todoHighlights.length ? ['- [ ] 「紹介文の確認すべき点」の見どころを書き直した'] : []),
     ...(inferredColumns.length ? ['- [ ] 推定したデッキ名が元記事のデッキ名と合っている'] : []),
     ...(uncertainColumns.length ? ['- [ ] 言い換えルールに当てはまるか迷う記事のデッキ名を決めた'] : []),
     ...(approxColumns.length ? [`- [ ] デッキ名を英語にできず主役ポケモンの英語名にした URL でよいか確認した（scripts/lib/english-name.js の DECK_WORDS に追記すると直訳になる）: ${approxColumns.map((c) => `\`${c.slug}\``).join('・')}`] : []),

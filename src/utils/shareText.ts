@@ -32,16 +32,22 @@ export type SharePostInput = {
   url: string;
 };
 
-/** 親ポストが上限を超える場合は、可変の行（見どころ等）を末尾から「…」で詰める */
+/**
+ * 親ポストが上限を超える場合は、可変の行（見どころ等）を詰める。
+ * 見どころが複数の文（「。」区切り）なら、まず後ろの文から外し、文の途中で切らないようにする。
+ * 1文でも入りきらないときだけ、末尾から「…」で詰める
+ */
 function fitParent(compose: (text: string) => string, text: string): string {
-  let t = text;
+  const sentences = text.split('。').filter(Boolean);
+  while (sentences.length > 1 && xWeightedLength(compose(sentences.join('。'))) > PARENT_POST_LIMIT) sentences.pop();
+  let t = sentences.join('。');
   while (t.length > 1 && xWeightedLength(compose(t)) > PARENT_POST_LIMIT) t = `${t.slice(0, -2)}…`;
   return compose(t);
 }
 
 /**
  * 親ポスト（URLなし・全角130文字前後）と、リプライ用の子ポスト（記事URL）を作る。
- * 親ポストが上限を超える場合は、見どころの行を末尾から「…」で詰める。
+ * 親ポストが上限を超える場合は、見どころの後ろの文から外し、それでも入りきらなければ末尾から「…」で詰める。
  * ジムバトル以外の結果（「環境Tier1・大会優勝構築」など）は、結果をそのまま見出しに使う
  */
 export function buildXPosts({ deckName, result, highlight, estimate, url }: SharePostInput): { parent: string; reply: string } {

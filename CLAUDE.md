@@ -22,6 +22,7 @@
   - `scripts/lib/deck-variant.js` … 同名デッキの型名付け
   - `scripts/lib/deck-name-rules.js` … デッキ名の言い換え表（`DECK_NAME_RULES`。ポケカブックの名前より優先）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
+  - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
   - `scripts/cache/processed-decks.json` … 処理済みの記事・デッキ
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
 - 主要コマンド
@@ -31,7 +32,8 @@
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
-  - `npm test`（`scripts/lib/pokecabook.js` の読み取りと、`scripts/lib/deck-name-rules.js` の言い換えルールのテスト。どちらかを変更したら必ず実行する）
+  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の言い換えルール、`scripts/lib/highlight.js` の見どころの自動生成のテスト。どれかを変更したら必ず実行する）
+  - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run apply-name-rules`（言い換えルールを既存の記事に当てはめる。`--dry-run` あり。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
@@ -85,6 +87,7 @@
   - 「〇〇・〇〇を採用した〇〇デッキ。主力カードの効果と最安値をまとめて確認」
 - カードの効果・HP・ダメージは、公式テキスト（取得済みデータ）に基づいて書く。推測で書かない
 - 生成後、同じ一覧に並ぶ記事同士で書き出しや構成が重複していないか確認する
+- 見どころ（`highlight`）は `scripts/lib/highlight.js` が、主役の特性・ワザ（名前・ダメージ・効果）と、主役と組み合わせて使うカードの効果を、公式のカードテキストの文のまま組み立てる。`BANNED_PHRASES` の決まった文や、同じ日の記事と書き出しがそっくりなもの（カード名・「」の中・数字を伏せた骨組みで比較）は、自動生成の PR の「紹介文の確認すべき点」に出る。X投稿文は見どころを文の区切りで詰めて使う
 - 解説が生成できなかった記事は TODO のまま残し、PR で報告する（中身のない文で埋めない）
 
 ## 7. デザインのルール（ホワイトラボ）

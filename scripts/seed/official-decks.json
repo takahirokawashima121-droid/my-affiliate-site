@@ -4,14 +4,34 @@
   ],
   "cards": [
     {
-      "id": "makishimamuberuto-sv5k-066",
-      "name": "マキシマムベルト",
-      "rarity": "-",
-      "cardNumber": "066/071",
-      "expansionCode": "SV5K",
+      "id": "karubou-c-m5-010",
+      "name": "カルボウ",
+      "rarity": "C",
+      "cardNumber": "010/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "ceruledge-ex-deck-0929",
+      "role": "ポケモン（公式カードID 50229）"
+    },
+    {
+      "id": "zeraora-r-sv9a-040",
+      "name": "ゼラオラ",
+      "rarity": "R",
+      "cardNumber": "040/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "mega-kangaskhan-ex-deck-0929",
+      "role": "ポケモン（公式カードID 47335）"
+    },
+    {
+      "id": "muchixyuru-c-sv7a-018",
+      "name": "ムチュール",
+      "rarity": "C",
+      "cardNumber": "018/064",
+      "expansionCode": "SV7a",
       "regulationMark": "H",
-      "deck": "kajitchixyu-deck-0927",
-      "role": "ポケモンのどうぐ（公式カードID 45212）"
+      "deck": "mega-kangaskhan-ex-deck-0929",
+      "role": "ポケモン（公式カードID 46247）"
     }
   ]
 }

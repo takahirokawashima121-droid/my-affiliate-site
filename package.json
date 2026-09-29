@@ -16,6 +16,7 @@
     "auto-city": "node scripts/auto-deck-updater.js --source=city",
     "backfill-plans": "node scripts/backfill-game-plans.js",
     "check-deck-names": "node scripts/check-deck-names.js",
+    "apply-name-rules": "node scripts/apply-deck-name-rules.js",
     "test": "node --test scripts/test/*.test.js"
   },
   "dependencies": {

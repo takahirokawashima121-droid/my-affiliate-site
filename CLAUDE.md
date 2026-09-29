@@ -20,6 +20,7 @@
   - `src/content/blog/` … コラム記事（Markdown）
   - `scripts/lib/official.js` の `SET_MARKS` … 弾ごとのレギュレーションマーク
   - `scripts/lib/deck-variant.js` … 同名デッキの型名付け
+  - `scripts/lib/deck-name-rules.js` … デッキ名の言い換え表（`DECK_NAME_RULES`。ポケカブックの名前より優先）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
   - `scripts/cache/processed-decks.json` … 処理済みの記事・デッキ
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
@@ -30,7 +31,8 @@
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
-  - `npm test`（`scripts/lib/pokecabook.js` の読み取りのテスト。読み取りを変更したら必ず実行する）
+  - `npm test`（`scripts/lib/pokecabook.js` の読み取りと、`scripts/lib/deck-name-rules.js` の言い換えルールのテスト。どちらかを変更したら必ず実行する）
+  - `npm run apply-name-rules`（言い換えルールを既存の記事に当てはめる。`--dry-run` あり。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
   - `fetch-pokecabook-html.yml`（手動実行のみ）… ポケカブックの記事の HTML を Artifacts に保存し、構造と骨組みをログに出す。この環境からポケカブックにアクセスできないときの調査用
@@ -58,11 +60,17 @@
   - スタン落ち時は、両定数の更新・範囲外カードの削除・`astro.config.mjs` の `redirects` への旧URL追加をセットで行う
 - カードのURL（id）を変える場合は、必ず `redirects` に旧URL → 新URLを追加する
 - デッキ名は**ポケカブックのまとめ記事の●付き小見出しの名前を正とする**（例: 「●スッカラカン」「●ボムファイアロー」「●ケンタロス」）
+  - ただし、次の**言い換えルールに当てはまるデッキは、ルールの名前を優先する**（●付き小見出しから名前が取れた場合も、推定した場合も）
+    - ヤドキングが採用されている → 「ひらめきチャレンジ」
+    - カミッチュが採用されていて、カミツオロチexが採用されていない → 「おまつりおんど」（「カミッチュ（おまつりおんど）」とは書かない）
+    - 同じ名前のデッキが複数あるときは、これまでどおり「（〇〇採用型）」を付けて区別する（例: おまつりおんど（スイレンのお世話採用型））。そのデッキにしか入っていないカードがなく、既存の同名デッキと大きな差がないときは「（別構築型）」などを付けず、そのままの名前にする
+    - ルールの本体は `scripts/lib/deck-name-rules.js` の `DECK_NAME_RULES`（言い換え表）。追加するときは表に1行足し、`scripts/lib/english-name.js` の `DECK_NAMES` に英語表記を追記し、`npm run apply-name-rules` で既存の記事にも当てはめ、このリストも更新する
+    - ヤドキングが1枚だけなど、ルールのカードが少なく迷うデッキ（`minQty` 未満）は自動では言い換えない。PR の「人が確認すべき点」に一覧で書き、人に確認する
   - ●はテーマの装飾で表示されていて HTML の文字には含まれない（実際の HTML は `<h2>9/28【月】ジムバトル優勝</h2>` → `<h4><span>スッカラカン</span></h4>` → 画像の figcaption にデッキコードのリンク）
   - 日付の見出し（「9/28【月】ジムバトル優勝」など）はデッキ名に使わない
-  - ●付き小見出しの名前が取れないとき（シティリーグのように画像にしか名前がない場合など）だけ、60枚の構成から推定し、PR に「推定」と明記する。推定では進化前のポケモン名などをそのまま使わず、正しいアーキタイプ名に補正する（例: 「カジッチュ」→「カミッチュ（おまつりおんど）」）
+  - ●付き小見出しの名前が取れないとき（シティリーグのように画像にしか名前がない場合など）だけ、60枚の構成から推定し、PR に「推定」と明記する。推定では進化前のポケモン名などをそのまま使わず、正しいアーキタイプ名に補正する（例: 「カジッチュ」→「おまつりおんど」）
   - タイトル・スラッグ・`deck-columns.json` の表記を必ず一致させる
-  - スラッグはデッキ名の英語表記にする（例: `tauros-deck-0928`・`bomb-talonflame-deck-0928`。`scripts/lib/english-name.js`）。ローマ字の読み仮名は使わない
+  - スラッグはデッキ名の英語表記にする（例: `tauros-deck-0928`・`bomb-talonflame-deck-0928`・ひらめきチャレンジ＝`seek-inspiration-deck-0929`・おまつりおんど＝`dipplin-festival-lead-deck-0927`。`scripts/lib/english-name.js`）。ローマ字の読み仮名は使わない
   - 判定に自信がない場合は PR の「人が確認すべき点」に明記する
 - 立ち回りデータは `deck-columns.json` の `gamePlan` に `early` / `mid` / `end` の構造で保存する（ジムバトル・シティ共通）
 - 収集元（ポケカブック等）の記事本文やレシピ画像を転載しない。保存するのは事実データ（日付・店舗・順位・デッキコード）とリンクのみ。プレイヤー名は保存しない

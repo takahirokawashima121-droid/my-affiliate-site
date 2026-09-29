@@ -1,6 +1,11 @@
 # ポケカファクトリー（ポケトリー）
 
-中古ポケモンカードの販売最安値・買取最高値を比較できる、Astro + Tailwind CSS 製の静的サイトです。
+競技プレイヤー向けのデッキ研究＆パーツ最安調達サイトです（Astro + Tailwind CSS 製の静的サイト）。
+
+- 本番: https://www.pokeca-factory.com/
+- 現行スタンダードの大会上位デッキについて、60枚レシピ・立ち回りと「60枚いくらで組めるか」、不足パーツの最安ショップをまとめています
+- 扱うのは現行スタンダードのみです（レアリティ相場・投資・PSA価値は扱いません）
+- Claude Code で作業するときのルールは [CLAUDE.md](CLAUDE.md) にまとめています
 
 ## コマンド
 
@@ -10,10 +15,16 @@
 | `npm run build` | 本番ビルド（`dist/` に出力） |
 | `npm run preview` | ビルド結果をローカルで確認 |
 | `npx astro check` | 型チェック |
+| `npm run update-prices` | 楽天・Yahoo!の最安値に価格を更新（`--ids=` `--budget=` `--dry-run`） |
+| `npm run add-cards` | シードデータからカードを追加（`--dry-run`） |
+| `npm run sync-trending` | 環境の頻出カードを自動で追加（`--dry-run`） |
+| `npm run import-decks -- --deck=スラッグ:公式デッキコード` | 公式デッキを取り込む |
+| `npm run auto-decks` / `npm run auto-city` | ジムバトル / シティリーグの新着デッキから記事を自動生成（`--dry-run`） |
+| `npm run backfill-plans` | 既存記事に立ち回り（序盤・中盤・終盤）を追記（`--dry-run` `--force`） |
 
 ## 最初にやること
 
-1. `astro.config.mjs` の `site` が本番URLになっているか確認（現在: https://my-affiliate-site-phi.vercel.app/）
+1. `astro.config.mjs` の `site` が本番URLになっているか確認（現在: https://www.pokeca-factory.com）
 2. `src/consts.ts` でサイト名・説明文・運営者名・連絡先（`contactEmail`）を確認
 3. `public/og-default.png`（1200×630）を置く（SNSシェア時の画像）
 4. `src/pages/about.astro`（運営者情報）と `src/pages/privacy.md` の内容を確認
@@ -71,13 +82,15 @@ npm run sync-trending                # 追加候補のシードを作り、add-c
 
 デッキページ・カード詳細は `.cache/`（Git 管理外）に保存し、同じサイトへのリクエストは1.5秒以上あけます。
 
-`.github/workflows/sync-trending.yml` が毎週月曜 日本時間 午前5時23分に `npm run sync-trending` を実行し、ビルドが通ることを確認してから、カードが追加されていればコミット・プッシュします（Secrets は価格の自動更新と共通。Actions タブ →「Sync trending cards」→「Run workflow」で手動実行も可）。
+`.github/workflows/sync-trending.yml` が毎週月曜 日本時間 午前5時23分に `npm run sync-trending` を実行し、カードが追加されていれば `npm run build` でビルドが通ることを確認してから、main に直接コミット・プッシュします（ビルドに失敗した場合は push しません。Secrets は価格の自動更新と共通。Actions タブ →「Sync trending cards」→「Run workflow」で手動実行も可）。
 
 ## 価格の自動更新（GitHub Actions）
 
-`.github/workflows/update-prices.yml` が毎日 日本時間 午前4時7分に `npm run update-prices` を実行し、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。
+`.github/workflows/update-prices.yml` が1日2回（日本時間 午前4時7分・16時7分）に `node scripts/update-prices.js --budget=600` を実行し（600秒を過ぎたら新しいカードの取得を始めず、残りは次回）、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。
 
 事前に、リポジトリの Settings → Secrets and variables → Actions に `RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`・`YAHOO_APP_ID` を登録してください。全カードで API エラーになった場合（キーの失効など）はワークフローが失敗し、GitHub から通知されます。
+
+楽天APIへのリクエストには、アプリ登録時の「許可されたWebサイト」と一致する Origin が必要です。`scripts/update-prices.js`・`scripts/add-cards.js` の `RAKUTEN_ORIGIN_URL` は、楽天側の登録に合わせて設定してください（現在は登録済みの Vercel のURL）。
 
 楽天市場に在庫のないカードは「在庫なし」となり、買取価格も根拠がないため「要査定」と表示されます。
 
@@ -95,16 +108,18 @@ npm run auto-decks -- --dry-run                            # 新着の優勝デ�
 npm run auto-decks                                         # 新着の優勝デッキから記事を自動生成
 ```
 
-### 新着優勝デッキの自動生成（GitHub Actions）
+### 新着入賞デッキの自動生成（GitHub Actions）
 
-`.github/workflows/auto-deck-sync.yml` が1日2回（日本時間 6時6分・18時6分）、ポケカブックのRSSから新着の「ジムバトル優勝デッキまとめ」を検知し、次の処理をして **Pull Request** を作成します（`scripts/auto-deck-updater.js`）。
+`.github/workflows/auto-deck-sync.yml` が1日2回（日本時間 朝8時18分・夜23時23分）、ポケカブックのRSSから新着のジムバトル優勝デッキ（`npm run auto-decks`）と、シティリーグの優勝・準優勝デッキ（`npm run auto-city`）を検知し、次の処理をして1つの **Pull Request**（ブランチ `auto/deck-sync`）にまとめます（`scripts/auto-deck-updater.js`）。シティリーグだけを手動で取得したいときは `.github/workflows/auto-city-sync.yml`（Actions タブから手動実行のみ）を使います。
 
-- 既存の記事がないデッキ名を優先して最大4デッキを選び、未登録カードを最低レアリティで追加・価格取得
+- ジムバトル・シティリーグそれぞれ、既存の記事がないデッキ名を優先して最大4デッキを選び、未登録カードを最低レアリティで追加・価格取得
 - 記事（デッキの構成・公式テキストによる主力カードの効果・最安値つき60枚レシピ・代替案の枠）を生成
+- 立ち回り（序盤・中盤・終盤）を、60枚の構成と公式のカードテキストから自動生成して `deck-columns.json` の `gamePlan`（`early` / `mid` / `end`）に保存（`scripts/lib/game-plan.js`。表示は `src/components/GamePlan.astro`）
+- デッキ名はレシピから推定するため、PR で元記事と見比べて確認します
 - 同じデッキ名の記事がすでにある（または同じ回に複数ある）場合は、レシピを比べて一方にしか入っていないカード（ex → ACE SPEC → そのほかのポケモン → トレーナーズの順）から「メガゲッコウガex（ノココッチex採用型）」のように名付けます。型名のない既存の同名記事にも型名を付けます（`scripts/lib/deck-variant.js`）
 - 処理済みの記事・デッキは `scripts/cache/processed-decks.json` に記録（まとめ記事は同じURLのまま毎日更新されるため、URL＋タイトルとデッキコードで判定）
 
-回し方・代替カードは自動では書かないため、PR で各記事の `TODO` を追記してからマージしてください。PR の作成には、リポジトリの Settings → Actions → General → Workflow permissions で「Allow GitHub Actions to create and approve pull requests」を有効にする必要があります。
+代替カード・カスタマイズ案は自動では書かないため、PR で各記事の `TODO` を追記してからマージしてください。立ち回りが未記載の既存記事には `npm run backfill-plans` で追記できます（手書きの「回し方」がある記事は対象外）。PR の作成には、リポジトリの Settings → Actions → General → Workflow permissions で「Allow GitHub Actions to create and approve pull requests」を有効にする必要があります。
 
 PR に「マーク未対応の弾」と表示されたカードは、`scripts/lib/official.js` の `SET_MARKS` に弾とレギュレーションマーク（カード画像の左下）を追記すると、次回から登録されます。
 
@@ -124,4 +139,4 @@ src/
 
 ## デプロイ
 
-Cloudflare Pages / Netlify / Vercel などで、ビルドコマンド `npm run build`、出力ディレクトリ `dist` を指定してください。
+Vercel でホスティングしています（本番: https://www.pokeca-factory.com/）。main への push で本番デプロイされ、PR ごとにプレビューが作られます。ビルドコマンドは `npm run build`、出力ディレクトリは `dist` です。

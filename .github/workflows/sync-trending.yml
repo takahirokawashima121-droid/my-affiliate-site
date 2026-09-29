@@ -59,14 +59,24 @@ jobs:
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
           YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
 
-      # サイトのビルドはここでは行わない（main への push で Vercel がビルドする。失敗した場合は Vercel が前回のデプロイのまま公開を続ける）
-
-      - name: Commit and push if cards.json changed
+      - name: Check for new cards
+        id: changes
         run: |
           if git diff --quiet -- src/data/cards.json; then
             echo "追加されたカードはありません"
-            exit 0
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+
+      # 追加したカードでサイトがビルドできることを確認する（範囲外のカード・型の誤りなどで失敗したらこのステップで止まり、main には push しない）
+      - name: Build site
+        if: steps.changes.outputs.changed == 'true'
+        run: npm run build
+
+      - name: Commit and push if cards.json changed
+        if: steps.changes.outputs.changed == 'true'
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/data/cards.json scripts/seed/trending-cards.json

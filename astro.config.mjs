@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // 本番URL（canonical / OGP / sitemap / RSS に使われます）
 export default defineConfig({
-  site: 'https://pokeca-factory.com',
+  site: 'https://www.pokeca-factory.com',
   trailingSlash: 'always',
   integrations: [sitemap()],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },

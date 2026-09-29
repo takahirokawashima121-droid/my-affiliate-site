@@ -67,3 +67,49 @@ export function englishName(cardName) {
   if (!en) return null;
   return [...parts, mega, en, megaForm, ex ? 'ex' : ''].filter(Boolean).join('-');
 }
+
+/**
+ * ポケモン名ではないデッキの呼び名（ポケカブックの●付き小見出しで使われるもの）の英語表記。
+ * 新しい呼び名が出てきたら追記する（ローマ字の読み仮名は使わない）
+ */
+export const DECK_WORDS = {
+  スッカラカン: 'empty-hand',
+  ボム: 'bomb',
+  おまつりおんど: 'festival-lead',
+  ロスト: 'lost',
+  バレット: 'bullet',
+  コントロール: 'control',
+  ロック: 'lock',
+};
+
+/**
+ * デッキ名 → slug 用の英語表記。分からない部分があれば null
+ * ポケモン名・DECK_WORDS の組み合わせに分けて訳す（例: ボムファイアロー → bomb-talonflame、
+ * カミッチュ（おまつりおんど）→ dipplin-festival-lead、ケンタロス → tauros）
+ */
+export function deckEnglishName(deckName) {
+  const parts = norm(deckName).split(/[（）()・]/).filter(Boolean);
+  const out = [];
+  for (const part of parts) {
+    const en = compound(part);
+    if (!en) return null;
+    out.push(en);
+  }
+  return out.length ? out.join('-') : null;
+}
+
+/** 文字列を、英語にできる語（ポケモン名・DECK_WORDS）の並びに分ける。長い語を優先し、分けきれなければ null */
+function compound(text, memo = new Map()) {
+  if (text === '') return '';
+  if (memo.has(text)) return memo.get(text);
+  let result = null;
+  for (let end = text.length; end >= 2 && result === null; end--) {
+    const head = text.slice(0, end);
+    const en = DECK_WORDS[head] ?? englishName(head);
+    if (!en) continue;
+    const rest = compound(text.slice(end), memo);
+    if (rest !== null) result = rest ? `${en}-${rest}` : en;
+  }
+  memo.set(text, result);
+  return result;
+}

@@ -6,9 +6,9 @@ import CardLink from '../../components/CardLink.astro';
 import KeyCardEffect from '../../components/KeyCardEffect.astro';
 ---
 
-<DeckColumn slug="mew-ex-deck-0928-tauros">
+<DeckColumn slug="tauros-deck-0928">
   <p>
-    9/28 ジムバトル優勝の<strong>ミュウex（ケンタロス採用型）デッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+    9/28 ジムバトル優勝の<strong>ケンタロスデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
   </p>
 
   <h2>デッキの構成</h2>
@@ -16,6 +16,19 @@ import KeyCardEffect from '../../components/KeyCardEffect.astro';
 
   <h2>主力カードの効果</h2>
   <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="kentarosu-u-m4-067" qty={3}>
+    <ul>
+        <li><strong>ワザ「むれでねらう」</strong>（無無）：相手のポケモンを1匹選び、自分の場の、名前に「ケンタロス」とつくポケモンの数ぶんコインを投げる。選んだポケモンに、オモテの数×50ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="parudeakentarosu-u-m2-042" qty={4}>
+    <ul>
+        <li><strong>ワザ「いかりのとっしん」</strong>（闘・40×）：自分の場の、ダメカンがのっている名前に「ケンタロス」とつくポケモンの数×40ダメージ。</li>
+        <li><strong>ワザ「すてみタックル」</strong>（闘闘・70）：このポケモンにも20ダメージ。</li>
+    </ul>
+  </KeyCardEffect>
+
   <KeyCardEffect id="mixyuuiekkusu-rr-m6a-057" qty={4}>
     <ul>
         <li><strong>特性「きおくのらせん」</strong>：このポケモンは、自分のベンチポケモンが持つワザを、すべて使える。［ワザを使うためのエネルギーは必要。］</li>
@@ -27,19 +40,6 @@ import KeyCardEffect from '../../components/KeyCardEffect.astro';
     <ul>
         <li><strong>特性「フェアリーゾーン」</strong>：このポケモンがいるかぎり、相手の場の竜ポケモン全員の弱点は、すべて超タイプになる。［弱点は「×2」で計算する。］</li>
         <li><strong>ワザ「フルムーンロンド」</strong>（超無・20＋）：おたがいのベンチポケモンの数×20ダメージ追加。</li>
-    </ul>
-  </KeyCardEffect>
-
-  <KeyCardEffect id="parudeakentarosu-u-m2-042" qty={4}>
-    <ul>
-        <li><strong>ワザ「いかりのとっしん」</strong>（闘・40×）：自分の場の、ダメカンがのっている名前に「ケンタロス」とつくポケモンの数×40ダメージ。</li>
-        <li><strong>ワザ「すてみタックル」</strong>（闘闘・70）：このポケモンにも20ダメージ。</li>
-    </ul>
-  </KeyCardEffect>
-
-  <KeyCardEffect id="kentarosu-u-m4-067" qty={3}>
-    <ul>
-        <li><strong>ワザ「むれでねらう」</strong>（無無）：相手のポケモンを1匹選び、自分の場の、名前に「ケンタロス」とつくポケモンの数ぶんコインを投げる。選んだポケモンに、オモテの数×50ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
     </ul>
   </KeyCardEffect>
 

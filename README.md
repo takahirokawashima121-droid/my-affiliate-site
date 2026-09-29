@@ -111,6 +111,18 @@ npx playwright install chromium   # Chromium が入っていない場合だけ
 node scripts/render-og-image.js   # public/og-default.png を上書き
 ```
 
+## X（旧Twitter）用の画像
+
+`public/generate-assets.html` をブラウザで開くと、X のアイコン（400×400）・プロフィールのヘッダー（1500×500）・サイト紹介バナー（1200×675）を描画し、そのまま PNG で保存できます（「出力倍率」で2倍＝ヘッダー 3000×1000 なども選べます）。フォントが読み込めたかどうかは、ページ上部に表示されます。
+
+- ヘッダーは、スマホの X アプリでアイコンが重なる左下（x:0〜370・y:320〜500）に何も置かず、大事な文字は中央（上下60pxより内側）に集めています。「Xのトリミング目安を表示」でアイコンの位置と上下が切れる範囲を確認できます（保存する画像には入りません）
+- コマンドでまとめて書き出すこともできます。Web フォント（Noto Sans JP）が読み込めなかったときは書き出さずに止まります
+
+```sh
+npm install --no-save playwright
+node scripts/render-x-assets.js --scale=2   # .cache/x-assets/ にアイコン・ヘッダー・バナーと、目安を重ねた header-guide を保存
+```
+
 ## コラム記事の追加
 
 `src/content/blog/` に `.md` ファイルを追加するだけです。書き方は `src/content/blog/how-to-write-post.md` を参照してください。

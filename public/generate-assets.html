@@ -26,6 +26,9 @@
   #banner { width: 100%; max-width: 1200px; }
   button { margin-top: 12px; background: var(--accent); color: #0f172a; border: 0; border-radius: 10px; padding: 10px 18px; font-weight: 900; font-size: 14px; cursor: pointer; font-family: inherit; }
   button:hover { filter: brightness(1.08); }
+  .status { font-size: 13px; margin: -8px 0 20px; color: var(--muted); }
+  .status.ok { color: #34d399; }
+  .status.ng { color: #f87171; font-weight: 700; }
   .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
 </style>
 </head>
@@ -44,6 +47,7 @@
     </label>
     <label><input type="checkbox" id="guides" checked /> Xのトリミング目安を表示（保存画像には入りません）</label>
   </div>
+  <p id="font-status" class="status">フォントを読み込んでいます…</p>
 
   <section>
     <h2>アイコン（400×400）</h2>
@@ -56,7 +60,7 @@
     <h2>ヘッダー（1500×500）</h2>
     <canvas id="header"></canvas>
     <button type="button" id="dl-header">ヘッダーをダウンロード（PNG）</button>
-    <p class="note">赤い枠はスマホの X アプリでアイコンと重なる左下の領域、点線は端末によって上下が切れる目安です。文字・バッジはこの外に配置しています。</p>
+    <p class="note">X のプロフィールのヘッダー用（2倍なら 3000×1000）。円はスマホの X アプリでアイコンが重なる位置、赤い枠は何も置かない左下の範囲、点線の外は端末によって上下が切れる範囲です。大事な文字は中央に集めています。</p>
   </section>
   <section>
     <h2>サイト紹介バナー（1200×675・16:9）</h2>
@@ -303,103 +307,150 @@
   }
 
   // ───────────── ヘッダー（1500×500） ─────────────
-  // スマホの X アプリではアイコンが左下（おおよそ x:0〜280, y:340〜500）に重なり、上下も端末によって約60pxずつ切れるため、
-  // 文字・バッジは x:300 以降・y:70〜420 の範囲に置く
-  const AVATAR_ZONE = { x: 0, y: 340, w: 280, h: 160 };
-  const SAFE = { top: 70, bottom: 430 };
+  // スマホの X アプリでは、プロフィールのアイコン（直径およそ300px相当）が左下に重なり、上下も端末によって約60pxずつ切れる。
+  // そのため大事な文字は中央（x:380〜1220・y:90〜410）に集め、左下（x:0〜370・y:320〜500）には何も置かない
+  const AVATAR = { cx: 210, cy: 500, r: 150 }; // アイコンの円（下半分はヘッダーの外にはみ出す）
+  const AVATAR_ZONE = { x: 0, y: 320, w: 370, h: 180 }; // 何も置かない左下の範囲（アイコン＋余白）
+  const SAFE = { top: 60, bottom: 440 }; // これより外は端末によって切れる
 
   function drawHeader(canvas, scale, guides) {
-    const W = 1500, H = 500;
+    // 文字の中心は、左下のアイコンを避けて画像の中央より少し右（x:790）にする
+    const W = 1500, H = 500, CX = 790;
     canvas.width = W * scale; canvas.height = H * scale;
     const ctx = canvas.getContext('2d');
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
 
     cyberBackground(ctx, W, H, [
-      [260, 120, 520, 'rgba(30,58,138,0.55)'],
-      [1180, 380, 560, 'rgba(14,116,144,0.35)'],
-      [760, 520, 420, 'rgba(251,191,36,0.10)'],
-      [1400, 40, 360, 'rgba(239,68,68,0.12)'],
-    ], 1120, 250);
+      [750, 230, 560, 'rgba(30,58,138,0.55)'],
+      [1320, 380, 460, 'rgba(14,116,144,0.35)'],
+      [750, 520, 420, 'rgba(251,191,36,0.10)'],
+      [1420, 40, 340, 'rgba(239,68,68,0.12)'],
+    ], CX, 250);
 
-    // 左端の縦のアクセントライン（アイコンの領域の上で止める）
-    const bar = ctx.createLinearGradient(0, SAFE.top, 0, 330);
-    bar.addColorStop(0, C.amber); bar.addColorStop(1, C.red);
-    ctx.fillStyle = bar; ctx.fillRect(300, 92, 6, 214);
+    // 中央の文字の後ろを少し暗くして読みやすくする
+    const veil = ctx.createRadialGradient(CX, 240, 60, CX, 240, 520);
+    veil.addColorStop(0, 'rgba(10,15,29,0.55)'); veil.addColorStop(1, 'rgba(10,15,29,0)');
+    ctx.fillStyle = veil; ctx.fillRect(0, 0, W, H);
 
-    // ── テキストブロック（x:330〜） ──
-    const X = 330;
+    // ── 左上: 60枚デッキの設計図（縮小。アイコンの範囲より上に収める: y:75〜285） ──
+    ctx.save();
+    ctx.translate(58, 96); ctx.scale(0.6, 0.6);
+    drawBlueprint(ctx, 0, 0);
+    ctx.restore();
+
+    // ── 右: ロゴマーク ──
+    factoryMark(ctx, 1352, 238, 230);
+
+    // ── 中央のテキストブロック ──
+    ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
 
+    const en = 'POKECA FACTORY', jp = '／ ポケトリー';
     ctx.font = `900 22px ${FONT}`;
-    ctx.fillStyle = C.sky;
-    ctx.fillText('POKECA FACTORY', X, 112);
-    const enW = ctx.measureText('POKECA FACTORY').width;
+    const enW = ctx.measureText(en).width;
     ctx.font = `900 18px ${FONT}`;
-    ctx.fillStyle = C.slate;
-    ctx.fillText('／ ポケトリー', X + enW + 14, 112);
+    const jpW = ctx.measureText(jp).width;
+    const lx = CX - (enW + 14 + jpW) / 2;
+    ctx.textAlign = 'left';
+    ctx.font = `900 22px ${FONT}`; ctx.fillStyle = C.sky;
+    ctx.fillText(en, lx, 116);
+    ctx.font = `900 18px ${FONT}`; ctx.fillStyle = C.slate;
+    ctx.fillText(jp, lx + enW + 14, 116);
+    ctx.textAlign = 'center';
 
     // サイト名（大見出し）
     ctx.save();
-    // 右の設計図（x:1040〜）に重ならないよう、幅 600px に収まる大きさで描く
     const title = 'ポケカファクトリー';
-    let size = 80;
+    let size = 86;
     ctx.font = `900 ${size}px ${FONT}`;
-    while (ctx.measureText(title).width > 600 && size > 40) ctx.font = `900 ${--size}px ${FONT}`;
-    const tg = ctx.createLinearGradient(X, 130, X, 210);
+    while (ctx.measureText(title).width > 760 && size > 40) ctx.font = `900 ${--size}px ${FONT}`;
+    const tg = ctx.createLinearGradient(0, 130, 0, 210);
     tg.addColorStop(0, '#ffffff'); tg.addColorStop(1, '#fde68a');
     ctx.shadowColor = 'rgba(251,191,36,0.35)'; ctx.shadowBlur = 24;
     ctx.fillStyle = tg;
-    ctx.fillText(title, X, 206);
+    ctx.fillText(title, CX, 206);
     ctx.restore();
 
     // サブタイトル
-    ctx.font = `900 26px ${FONT}`;
+    ctx.font = `900 27px ${FONT}`;
     ctx.fillStyle = C.white;
-    ctx.fillText('対戦で勝つためのデッキ研究＆パーツ調達工房', X, 258);
-    ctx.font = `700 20px ${FONT}`;
-    ctx.fillStyle = C.slate;
-    ctx.fillText('（略称：ポケトリー）', X, 292);
+    ctx.fillText('対戦で勝つためのデッキ研究＆パーツ調達工房', CX, 256);
 
-    // バッジ（2段。アイコン領域より右・安全範囲の内側）
+    // 区切り線（中央から左右へ消える）
+    const line = ctx.createLinearGradient(CX - 280, 0, CX + 280, 0);
+    line.addColorStop(0, 'rgba(251,191,36,0)'); line.addColorStop(0.5, C.amber); line.addColorStop(1, 'rgba(251,191,36,0)');
+    ctx.fillStyle = line; ctx.fillRect(CX - 280, 280, 560, 3);
+
+    // バッジ（1列・中央ぞろえ）
     const badges = [
-      ['現行スタンダード（H・I・J）特化', C.amber],
-      ['ジムバトル優勝レシピ＆回し方', C.sky],
+      ['現行レギュレーション（H・I・J）特化', C.amber],
+      ['大会入賞デッキ分析＆立ち回り', C.sky],
       ['パーツ最安値一括比較', C.emerald],
     ];
-    ctx.font = `900 19px ${FONT}`;
-    let bx = X, by = 322;
-    for (const [label, color] of badges) {
-      const tw = ctx.measureText(label).width;
-      const bw = tw + 46, bh = 40;
-      if (bx + bw > 960) { bx = X; by += bh + 12; }
+    ctx.textAlign = 'left';
+    let fs = 19;
+    const bh = 44, bgap = 12;
+    const widths = () => badges.map(([label]) => ctx.measureText(label).width + 42);
+    const total = () => widths().reduce((a, b) => a + b, 0) + bgap * (badges.length - 1);
+    ctx.font = `900 ${fs}px ${FONT}`;
+    // 左下のアイコンの範囲（x:〜370）と右のロゴマーク（x:1230〜）にかからないよう、x:380〜1200（幅 820px）に収める
+    while (total() > 820 && fs > 14) ctx.font = `900 ${--fs}px ${FONT}`;
+    let bx = CX - total() / 2;
+    const by = 308;
+    badges.forEach(([label, color], i) => {
+      const bw = widths()[i];
       roundRect(ctx, bx, by, bw, bh, 10);
-      ctx.fillStyle = 'rgba(15,23,42,0.85)'; ctx.fill();
+      ctx.fillStyle = 'rgba(15,23,42,0.88)'; ctx.fill();
       ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke();
       ctx.fillStyle = color;
-      ctx.beginPath(); ctx.arc(bx + 18, by + bh / 2, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(bx + 16, by + bh / 2, 5, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = C.white;
-      ctx.fillText(label, bx + 32, by + 27);
-      bx += bw + 12;
-    }
+      ctx.fillText(label, bx + 28, by + bh / 2 + fs * 0.36);
+      bx += bw + bgap;
+    });
 
-    // ── 右側: 60枚デッキの設計図（10×6 のカードスロット） ──
-    drawBlueprint(ctx, 1062, 100);
+    // URL
+    ctx.textAlign = 'center';
+    ctx.font = `700 18px ${FONT}`; ctx.fillStyle = C.slate;
+    ctx.fillText('www.pokeca-factory.com', CX, 396);
+    ctx.textAlign = 'left';
 
-    if (guides) {
-      ctx.save();
-      ctx.fillStyle = 'rgba(239,68,68,0.18)';
-      ctx.fillRect(AVATAR_ZONE.x, AVATAR_ZONE.y, AVATAR_ZONE.w, AVATAR_ZONE.h);
-      ctx.strokeStyle = 'rgba(239,68,68,0.9)'; ctx.lineWidth = 2;
-      ctx.strokeRect(AVATAR_ZONE.x + 1, AVATAR_ZONE.y + 1, AVATAR_ZONE.w - 2, AVATAR_ZONE.h - 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.font = `900 14px ${FONT}`;
-      ctx.fillText('スマホ版のアイコン位置', 16, AVATAR_ZONE.y + 26);
-      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.setLineDash([8, 8]);
-      for (const y of [SAFE.top - 10, SAFE.bottom + 10]) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
-      ctx.restore();
-    }
+    if (guides) drawHeaderGuides(ctx, W);
   }
 
-  /** 右側のグラフィック: 60枚デッキの設計図（x, y は左上。用紙は y-18〜y+330 に収まる） */
+  /** ヘッダーの確認用の目安（アイコンが重なる位置・上下が切れる範囲）。保存する画像には入れない */
+  function drawHeaderGuides(ctx, W) {
+    ctx.save();
+    // 何も置かない左下の範囲
+    ctx.fillStyle = 'rgba(239,68,68,0.14)';
+    ctx.fillRect(AVATAR_ZONE.x, AVATAR_ZONE.y, AVATAR_ZONE.w, AVATAR_ZONE.h);
+    ctx.setLineDash([6, 6]); ctx.strokeStyle = 'rgba(239,68,68,0.9)'; ctx.lineWidth = 2;
+    ctx.strokeRect(AVATAR_ZONE.x + 1, AVATAR_ZONE.y + 1, AVATAR_ZONE.w - 2, AVATAR_ZONE.h - 2);
+    ctx.setLineDash([]);
+    // アイコンの円（実際のアイコンを縮小して重ねる）
+    ctx.save();
+    ctx.beginPath(); ctx.arc(AVATAR.cx, AVATAR.cy, AVATAR.r, 0, Math.PI * 2); ctx.clip();
+    if (!drawHeaderGuides.icon) { drawHeaderGuides.icon = document.createElement('canvas'); drawIcon(drawHeaderGuides.icon, 1, false); }
+    ctx.globalAlpha = 0.9;
+    ctx.drawImage(drawHeaderGuides.icon, AVATAR.cx - AVATAR.r, AVATAR.cy - AVATAR.r, AVATAR.r * 2, AVATAR.r * 2);
+    ctx.restore();
+    ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.arc(AVATAR.cx, AVATAR.cy, AVATAR.r, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#ffffff'; ctx.font = `900 15px ${FONT}`;
+    ctx.fillText('スマホ版のアイコン位置（何も置かない）', 12, AVATAR_ZONE.y + 22);
+    // 上下が切れる目安
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.fillRect(0, 0, W, SAFE.top); ctx.fillRect(AVATAR_ZONE.w, SAFE.bottom, W - AVATAR_ZONE.w, 500 - SAFE.bottom);
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.setLineDash([10, 8]); ctx.lineWidth = 2;
+    for (const y of [SAFE.top, SAFE.bottom]) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffffff'; ctx.font = `700 14px ${FONT}`; ctx.textAlign = 'right';
+    ctx.fillText('↑ 端末によって切れる範囲', W - 16, SAFE.top - 12);
+    ctx.fillText('↓ 端末によって切れる範囲', W - 16, SAFE.bottom + 26);
+    ctx.restore();
+  }
+
+  /** 60枚デッキの設計図（ヘッダーの左上に縮小して置く。x, y は左上。用紙は y-18〜y+330 に収まる） */
   function drawBlueprint(ctx, x, y) {
     const cols = 10, rows = 6, cw = 30, ch = 40, gap = 6;
     const gw = cols * cw + (cols - 1) * gap, gh = rows * ch + (rows - 1) * gap;
@@ -503,8 +554,8 @@
 
     // 3つの見出し（番号つきのパネル）
     const heads = [
-      ['01', '現行スタン（H・I・J）特化', 'レギュ落ちの心配なし・大会で使えるカードだけ', C.amber],
-      ['02', 'ジムバトル優勝レシピ＆立ち回り', '60枚レシピと序盤〜終盤の回し方を解説', C.sky],
+      ['01', '現行レギュレーション（H・I・J）特化', 'レギュ落ちの心配なし・大会で使えるカードだけ', C.amber],
+      ['02', '大会入賞デッキ分析＆立ち回り', 'ジムバトル・シティリーグの60枚と序盤〜終盤の回し方', C.sky],
       ['03', '不足パーツ最安値一括検索', '楽天市場・Yahoo!ショッピングを毎日比較', C.emerald],
     ];
     heads.forEach(([num, head, sub, color], i) => {
@@ -639,12 +690,36 @@
   };
   render();
   const chars = [...usedChars].join('');
-  Promise.all(['700', '900'].map((w) => document.fonts.load(`${w} 24px "Noto Sans JP"`, chars)))
+  const ready = Promise.all(['700', '900'].map((w) => document.fonts.load(`${w} 24px "Noto Sans JP"`, chars)))
     .catch(() => {}) // 読み込めない環境（オフライン等）ではシステムのゴシック体で描く
     .then(() => document.fonts.ready)
     .then(() => {
+      // 描く文字を含むサブセットが 700・900 とも読み込めたかを確かめる
+      // （document.fonts.check() は該当する書体が1つもないときも true を返すので、読み込み済みの書体の数も見る）
+      const loadedWeights = new Set();
+      document.fonts.forEach((f) => {
+        if (f.family.replaceAll('"', '') === 'Noto Sans JP' && f.status === 'loaded') loadedWeights.add(String(f.weight));
+      });
+      const ok = ['700', '900'].every((w) => loadedWeights.has(w) && document.fonts.check(`${w} 24px "Noto Sans JP"`, chars));
+      const status = $('font-status');
+      status.textContent = ok
+        ? 'フォント（Noto Sans JP 700・900）を読み込みました。このまま保存できます。'
+        : 'フォント（Noto Sans JP）を読み込めませんでした。別の書体で描かれているので、ネットワークを確認して再読み込みしてから保存してください。';
+      status.className = ok ? 'status ok' : 'status ng';
       render();
+      return ok;
     });
+
+  // scripts/render-x-assets.js から使う（フォントの確認と、目安線の有無を指定した PNG の書き出し）
+  const draws = { icon: drawIcon, header: drawHeader, banner: drawBanner };
+  window.xAssets = {
+    ready,
+    toDataURL(name, s, guides = false) {
+      const c = document.createElement('canvas');
+      draws[name](c, s, guides);
+      return c.toDataURL('image/png');
+    },
+  };
 })();
 </script>
 </body>

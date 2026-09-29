@@ -17,6 +17,8 @@
     "backfill-plans": "node scripts/backfill-game-plans.js",
     "check-deck-names": "node scripts/check-deck-names.js",
     "apply-name-rules": "node scripts/apply-deck-name-rules.js",
+    "rewrite-highlights": "node scripts/rewrite-highlights.js",
+    "check-highlights": "node scripts/rewrite-highlights.js --check",
     "test": "node --test scripts/test/*.test.js"
   },
   "dependencies": {

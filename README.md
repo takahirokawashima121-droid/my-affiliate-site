@@ -31,7 +31,7 @@
 
 1. `astro.config.mjs` の `site` が本番URLになっているか確認（現在: https://www.pokeca-factory.com）
 2. `src/consts.ts` でサイト名・説明文・運営者名・連絡先（`contactEmail`）を確認
-3. `public/og-default.png`（1200×630）を置く（SNSシェア時の画像）
+3. `public/og-default.png`（1200×630）を確認する（SNSシェア時の画像。作り直し方は下の「OG画像」）
 4. `src/pages/about.astro`（運営者情報）と `src/pages/privacy.md` の内容を確認
 
 ## カードデータの更新
@@ -98,6 +98,18 @@ npm run sync-trending                # 追加候補のシードを作り、add-c
 楽天APIへのリクエストには、アプリ登録時の「許可されたWebサイト」と一致する Origin が必要です。`scripts/update-prices.js`・`scripts/add-cards.js` の `RAKUTEN_ORIGIN_URL` は、楽天側の登録に合わせて設定してください（現在は登録済みの Vercel のURL）。
 
 楽天市場に在庫のないカードは「在庫なし」となり、買取価格も根拠がないため「要査定」と表示されます。
+
+## OG画像（SNSシェア時の画像）
+
+- トップ・コラム・デッキ解説・Tier表など、個別の画像を指定しないページは `public/og-default.png`（1200×630。`src/consts.ts` の `ogImage`）を使います
+- カードページはカードの画像（`cards.json` の `imageUrl`）、コラムはフロントマターの `heroImage` があればそれを使います
+- `og-default.png` の元は `scripts/assets/og-default.html` です。文言やデザインを変えたら、次のコマンドで PNG を作り直してコミットしてください（Playwright はプロジェクトの依存に入れていないので、使うときだけ入れます）
+
+```sh
+npm install --no-save playwright
+npx playwright install chromium   # Chromium が入っていない場合だけ
+node scripts/render-og-image.js   # public/og-default.png を上書き
+```
 
 ## コラム記事の追加
 

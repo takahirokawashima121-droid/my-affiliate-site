@@ -7,7 +7,7 @@ import FeaturedDecks from '../components/FeaturedDecks.astro';
 import { DECK_COLUMNS } from '../data/deck-columns';
 import { TIER_LIST, TIER_SOURCES } from '../data/tier';
 import { SITE, STANDARD_REGULATIONS } from '../consts';
-import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cardModel, cheapestVariantIds, bestOffer, hasSaleStock } from '../utils/cards';
+import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cheapestVariantIds, hasSaleStock } from '../utils/cards';
 import { getPosts } from '../utils/posts';
 
 const cards = await getCards();
@@ -23,7 +23,7 @@ const tierPreview = TIER_LIST.tiers.slice(0, 2).map((t) => ({
   decks: t.decks.map((d) => ({ slug: d.slug, name: DECK_COLUMNS.find((c) => c.slug === d.slug)?.deckName ?? d.slug })),
 }));
 
-// 構造化データ：サイト情報 + 掲載カード一覧（商品と最安値）
+// 構造化データ：サイト情報 + 掲載カード一覧（価格情報は各カードページの Product に持たせる）
 const jsonLd = [
   {
     '@context': 'https://schema.org',
@@ -41,24 +41,9 @@ const jsonLd = [
     itemListElement: cards.map((c, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      item: {
-        '@type': 'Product',
-        name: cardLabel(c),
-        sku: cardModel(c),
-        url: new URL(cardPath(c), Astro.site).toString(),
-        brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
-        ...(c.data.imageUrl && { image: new URL(c.data.imageUrl, Astro.site).toString() }),
-        // 2大モールの最安値。どちらも在庫なしのカードは価格情報（Offer）を出さない
-        ...(bestOffer(c) && {
-          offers: {
-            '@type': 'Offer',
-            price: bestOffer(c)!.price,
-            priceCurrency: 'JPY',
-            seller: { '@type': 'Organization', name: bestOffer(c)!.shop },
-            url: bestOffer(c)!.url,
-          },
-        }),
-      },
+      // 一覧ページで Product を並べると「販売者のリスティング」扱いになるため、各カードページへのリンクだけにする
+      name: cardLabel(c),
+      url: new URL(cardPath(c), Astro.site).toString(),
     })),
   },
 ];

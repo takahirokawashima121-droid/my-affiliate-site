@@ -53,6 +53,41 @@ export function bestOffer(card: Card): MallOffer | null {
   return rakuten ?? yahoo;
 }
 
+/**
+ * カード詳細ページの構造化データ（Product ＋ AggregateOffer）。
+ * 本サイトは自社販売ではなく楽天市場・Yahoo!ショッピングの価格比較なので、
+ * Google の「販売者のリスティング」ではなく「商品スニペット」向けに AggregateOffer（最安値・最高値・ショップ数）で出す。
+ * - 画像（http(s) の絶対URL）がないカードは Product を出さない（image 必須エラーの回避）
+ * - どちらのモールにも在庫がないカードは価格が無く offers を書けないため、Product を出さない
+ * - sku は型番（「SV2D 096/071」等）が SKU として無効と判定されるため出さない。実際のレビューが無いので review・aggregateRating も出さない
+ */
+export function productJsonLd(card: Card, pageUrl: string, description: string): Record<string, unknown> | null {
+  const { imageUrl } = card.data;
+  if (!/^https?:\/\//.test(imageUrl)) return null;
+  const prices = Object.values(mallOffers(card))
+    .filter((o): o is MallOffer => o !== null)
+    .map((o) => o.price);
+  if (prices.length === 0) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: cardLabel(card),
+    description,
+    image: imageUrl,
+    url: pageUrl,
+    brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
+    offers: {
+      '@type': 'AggregateOffer',
+      priceCurrency: 'JPY',
+      lowPrice: Math.min(...prices),
+      highPrice: Math.max(...prices),
+      offerCount: prices.length, // 在庫のある出品が見つかったショップ（モール）の数
+      availability: 'https://schema.org/InStock', // 在庫なしのカードはここに来ない
+      url: pageUrl,
+    },
+  };
+}
+
 /** 販売在庫があるか（楽天・Yahoo! のどちらかに在庫のある出品がある） */
 export function hasSaleStock(card: Card): boolean {
   return bestOffer(card) !== null;

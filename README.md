@@ -21,6 +21,7 @@
 | `npm run import-decks -- --deck=スラッグ:公式デッキコード` | 公式デッキを取り込む |
 | `npm run auto-decks` / `npm run auto-city` | ジムバトル / シティリーグの新着デッキから記事を自動生成（`--dry-run`） |
 | `npm run backfill-plans` | 既存記事に立ち回り（序盤・中盤・終盤）を追記（`--dry-run` `--force`） |
+| `npm run check-deck-names` | 公開済み記事のデッキ名をポケカブックの●付き小見出しと照合（記事は書き換えない。結果は `.cache/deck-name-check.md`） |
 
 ## 最初にやること
 
@@ -123,6 +124,15 @@ npm run auto-decks                                         # 新着の優勝デ�
 代替カード・カスタマイズ案は自動では書かないため、PR で各記事の `TODO` を追記してからマージしてください。立ち回りが未記載の既存記事には `npm run backfill-plans` で追記できます（手書きの「回し方」がある記事は対象外）。PR の作成には、リポジトリの Settings → Actions → General → Workflow permissions で「Allow GitHub Actions to create and approve pull requests」を有効にする必要があります。
 
 PR に「マーク未対応の弾」と表示されたカードは、`scripts/lib/official.js` の `SET_MARKS` に弾とレギュレーションマーク（カード画像の左下）を追記すると、次回から登録されます。
+
+### 公開済み記事のデッキ名チェック（GitHub Actions・手動）
+
+`.github/workflows/check-deck-names.yml`（`scripts/check-deck-names.js`）は、公開済みのすべてのデッキ記事について、元になったポケカブックのまとめ記事から公式デッキコードが一致するデッキの●付き小見出しの名前を取り出し、今のデッキ名と比べて、結果を **Issue** として作成します。**記事は書き換えません。** GitHub の Actions タブ →「Check deck names (manual)」→「Run workflow」から実行します（定期実行はしません）。
+
+- 一覧には「今のデッキ名」「ポケカブックの名前」「判定（一致・不一致・確認できなかった）」「記事のURL」「元記事」「メモ」が入ります
+- 元記事は `scripts/cache/processed-decks.json` の記録から探し、記録にない記事はいまの RSS のまとめ記事からも探します。ジムバトルのまとめ記事は同じURLのまま毎日書き換えられるため、見つからないときは処理日の前後に Wayback Machine に保存された版も読みます
+- 型名（「（ノココッチex採用型）」など当サイトで付けた区別）を外すと一致する場合は「一致」とします
+- シティリーグのようにデッキ名が画像にしかない記事、元記事からデッキが消えている記事、手動で作成した記事（元記事の記録がない）は「確認できなかった」になります。元記事を人が見て確認してください
 
 ## フォルダ構成
 

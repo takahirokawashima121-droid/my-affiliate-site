@@ -1,0 +1,165 @@
+// ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しのデッキ名と公式デッキコードの対応）
+// scripts/auto-deck-updater.js（記事の自動生成）と scripts/check-deck-names.js（公開済み記事のデッキ名の照合）から使う
+
+import * as cheerio from 'cheerio';
+import { fetchText } from './official.js';
+
+/** まとめ記事の RSS と、対象にする記事タイトル（デッキタイプ別のまとめ記事は過去の環境のデッキを含むため対象外） */
+export const FEEDS = {
+  gym: { feed: 'https://pokecabook.com/archives/category/deck-recipe/feed', title: /ジムバトル優勝デッキまとめ/ },
+  city: { feed: 'https://pokecabook.com/archives/category/tournament/city-league/feed', title: /シティリーグ.*デッキまとめ/ },
+};
+
+/** シティリーグで記事にする成績（上位入賞のみ。並び順が優先順） */
+export const CITY_RANKS = ['優勝', '準優勝'];
+
+/** RSS の記事一覧 */
+export async function feedItems(feedUrl) {
+  const $ = cheerio.load(await fetchText(feedUrl), { xmlMode: true });
+  return $('item')
+    .map((_, it) => ({ title: $(it).find('title').first().text().trim(), link: $(it).find('link').first().text().trim(), pubDate: $(it).find('pubDate').text().trim() }))
+    .get();
+}
+
+/**
+ * 見出し・デッキ名が「9/28【月】ジムバトル優勝」のような日付・大会名になっていないか
+ * （まとめ記事の見出しが日付のときにデッキ名として使ってしまい、タイトルが「【9/28 ジムバトル優勝】9/28【月】ジムバトル優勝（〇〇採用型）」になったため）
+ */
+export const isDeckName = (text) => Boolean(text) && !/\d{1,2}\/\d{1,2}|【[月火水木金土日]】|ジムバトル|シティリーグ|優勝|入賞|まとめ/.test(text);
+
+/**
+ * 「●スッカラカン」→「スッカラカン」。ポケカブックのまとめ記事は、日付の見出しの下に●付きの小見出しでデッキ名を書いている。
+ * デッキ名として使えない●行（日付・大会名・「●大会結果」のような項目名）は null
+ */
+export function bulletName(text) {
+  // 表記はポケカブックのまま使う（NFKC で全角の（）を半角にしない）
+  const name = text.trim().match(/^●\s*([^\n]+)/)?.[1].trim().replace(/デッキ$/, '');
+  if (!name || name.length > 30 || !isDeckName(name) || /[:：]|レシピ|結果|さん$/.test(name)) return null;
+  return name;
+}
+
+/** root の中のノード（要素・テキスト）を文書の順にたどる。visit が false を返したら、その要素の中は見ない */
+function eachInOrder(root, visit) {
+  const go = (node) => {
+    if (visit(node) === false) return;
+    for (const child of node.children ?? []) go(child);
+  };
+  for (const child of root?.children ?? []) go(child);
+}
+
+/**
+ * ●付きの小見出しを文書の順に追う。見出しの中で「●」と名前が別の要素に分かれている場合（<span>●</span>スッカラカン）にも対応する。
+ * text(node) が true を返したら、そのテキストは●行として処理済み
+ */
+function bulletTracker() {
+  let pending = false;
+  const state = { name: null };
+  state.text = (node) => {
+    const t = node.data.trim();
+    if (!t) return false;
+    if (pending) {
+      pending = false;
+      state.name = bulletName(`●${t}`);
+      return true;
+    }
+    if (t === '●') return (pending = true);
+    if (!t.startsWith('●')) return false;
+    state.name = bulletName(t);
+    return true;
+  };
+  return state;
+}
+
+const DECK_ID = /https:\/\/www\.pokemon-card\.com\/deck\/(?:result|confirm)\.html\/deckID\/([A-Za-z0-9-]+)/;
+
+/**
+ * ジムバトルのまとめ記事から、デッキごとの公式デッキコードを取り出す。
+ * 記事の構成: 日付の見出し（h2「9/28【月】ジムバトル優勝」）→ ●付きの小見出し（「●スッカラカン」= デッキ名）→ 公式デッキコードのリンク。
+ * デッキ名は●付きの小見出しを正とする（nameSource: 'bullet'）。●がなく h2 がデッキ名のとき（古い形式の記事）は h2 を使う（'heading'）。
+ * どちらもないときは archetype を null にし、あとでレシピから推定する（inferArchetype）
+ */
+export function parseGymArticle(html) {
+  const $ = cheerio.load(html);
+  const decks = [];
+  let heading = null;
+  let headingDate = null;
+  let inSection = false; // 最初の h2 より前（前書き）のリンクは読まない
+  const bullet = bulletTracker();
+  eachInOrder($('.entry-content').get(0), (node) => {
+    if (node.type === 'text') return void bullet.text(node);
+    if (node.type !== 'tag') return;
+    if (node.name === 'h2') {
+      const text = $(node).text().trim();
+      inSection = true;
+      bullet.name = null;
+      if (text.normalize('NFKC').startsWith('●')) {
+        bullet.name = bulletName(text);
+        return false;
+      }
+      heading = isDeckName(text) ? text : null;
+      headingDate = text.match(/(\d{1,2}\/\d{1,2})/)?.[1] ?? null;
+      return false;
+    }
+    if (/^h[3-6]$/.test(node.name) && $(node).text().normalize('NFKC').trim().startsWith('●')) {
+      bullet.name = bulletName($(node).text());
+      return false;
+    }
+    if (node.name !== 'a') return;
+    const deckId = ($(node).attr('href') ?? '').match(DECK_ID)?.[1];
+    if (!deckId || !inSection || decks.some((d) => d.deckId === deckId)) return false;
+    const text = $(node).text();
+    const date = text.match(/(\d{1,2}\/\d{1,2})/)?.[1] ?? headingDate;
+    // 成績はリンクの文字（「9/27【日】ジムバトル優勝」など）から読む。準優勝の掲載があれば準優勝として扱う
+    const rank = /準優勝/.test(text) ? '準優勝' : '優勝';
+    const name = bulletName(text) ?? bullet.name;
+    decks.push({ deckId, archetype: name ?? heading, nameSource: name ? 'bullet' : heading ? 'heading' : null, date, rank });
+    return false;
+  });
+  return decks;
+}
+
+/**
+ * シティリーグのまとめ記事から、会場ごとの入賞デッキ（CITY_RANKS の成績のみ）を取り出す。
+ * 記事の構成: 日付の見出し（「シティリーグ9/28【月】」。1日だけの記事はタイトルの日付）→ 会場の見出し（h2 / h4）→
+ * 「大会結果」→ 成績ごとの画像（figcaption のリンク文字が「優勝」「準優勝」「TOP4」…、リンク先が公式デッキコード）。
+ * デッキ名は画像にしか載っていないことが多い。画像の前に●付きの小見出しでデッキ名が書かれていれば、それを正とする
+ * （●1つにつきすぐ後のデッキ1つだけに使う。会場の見出しでリセット）。なければ archetype を null にし、あとでレシピから推定する
+ */
+export function parseCityArticle(html, title) {
+  const $ = cheerio.load(html);
+  let date = title.match(/(\d{1,2}\/\d{1,2})/)?.[1];
+  let venue = null;
+  const decks = [];
+  const bullet = bulletTracker();
+  eachInOrder($('.entry-content').get(0), (node) => {
+    if (node.type === 'text') return void bullet.text(node);
+    if (node.type !== 'tag') return;
+    if (/^h[2-4]$/.test(node.name)) {
+      const text = $(node).text().trim();
+      if (text.normalize('NFKC').startsWith('●')) {
+        bullet.name = bulletName(text);
+        return false;
+      }
+      const headingDate = text.match(/シティリーグ\s*(\d{1,2}\/\d{1,2})/)?.[1];
+      if (headingDate) [date, venue] = [headingDate, null];
+      else venue = text;
+      bullet.name = null;
+      return false;
+    }
+    if (node.name !== 'a' || !venue || $(node).closest('figcaption').length === 0) return;
+    const deckId = ($(node).attr('href') ?? '').match(/deckID\/([A-Za-z0-9-]+)/)?.[1];
+    const rank = $(node).text().normalize('NFKC').replace(/\s+/g, '').toUpperCase();
+    if (deckId && CITY_RANKS.includes(rank) && !decks.some((d) => d.deckId === deckId)) {
+      decks.push({ deckId, archetype: bullet.name, nameSource: bullet.name ? 'bullet' : null, date, rank, venue });
+    }
+    bullet.name = null;
+    return false;
+  });
+  return decks;
+}
+
+/** ジムバトルのまとめ記事を取得して parseGymArticle で読む */
+export const articleDecks = async (url) => parseGymArticle(await fetchText(url));
+
+/** シティリーグのまとめ記事を取得して parseCityArticle で読む */
+export const cityArticleDecks = async (url, title) => parseCityArticle(await fetchText(url), title);

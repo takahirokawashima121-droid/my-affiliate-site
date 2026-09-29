@@ -20,6 +20,7 @@
   - `src/content/blog/` … コラム記事（Markdown）
   - `scripts/lib/official.js` の `SET_MARKS` … 弾ごとのレギュレーションマーク
   - `scripts/lib/deck-variant.js` … 同名デッキの型名付け
+  - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）
   - `scripts/cache/processed-decks.json` … 処理済みの記事・デッキ
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
 - 主要コマンド
@@ -29,6 +30,7 @@
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
+  - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
   - 実行時刻は各 yml の cron が正。README と食い違っていたら README を直す
 

@@ -14,7 +14,8 @@
     "import-decks": "node scripts/import-official-decks.js",
     "auto-decks": "node scripts/auto-deck-updater.js",
     "auto-city": "node scripts/auto-deck-updater.js --source=city",
-    "backfill-plans": "node scripts/backfill-game-plans.js"
+    "backfill-plans": "node scripts/backfill-game-plans.js",
+    "check-deck-names": "node scripts/check-deck-names.js"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.19",

@@ -1,0 +1,58 @@
+# 公開済みのデッキ記事のデッキ名が、ポケカブックのまとめ記事の●付き小見出しの名前と合っているかを照合し、結果を Issue にする
+# 記事は書き換えない（直すときは結果の Issue を見て、別の PR で直す）。Actions タブの「Run workflow」ボタンから手動実行のみ
+name: Check deck names (manual)
+
+on:
+  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行（定期実行はしない）
+
+permissions:
+  contents: read # リポジトリの読み取りのみ（記事・データは書き換えない）
+  issues: write # 結果の Issue の作成
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # ポケカブック・Wayback Machine へのリクエストは1.5秒以上あけるため、記事数に応じて数分かかる
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # scripts/*.js は .ts を直接 import するため Node 22.18 以降が必要
+          cache: npm
+
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Compare deck names with pokecabook
+        run: npm run check-deck-names
+
+      # 結果（.cache/deck-name-check.md）をそのまま Issue の本文にする
+      - name: Create issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "デッキ名チェック結果（$(TZ=Asia/Tokyo date +%Y-%m-%d)）" \
+            --body-file .cache/deck-name-check.md
+
+      # Issue の作成に失敗したときも結果を見られるよう、実行結果のページに添付する
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: deck-name-check
+          path: .cache/deck-name-check.*
+          if-no-files-found: ignore

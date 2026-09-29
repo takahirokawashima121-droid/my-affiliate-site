@@ -38,6 +38,7 @@ import * as cheerio from 'cheerio';
 import { cardEffects, deckCards, fetchText, norm, romaji } from './lib/official.js';
 import { importDecks } from './import-official-decks.js';
 import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
+import { englishName } from './lib/english-name.js';
 import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
 
@@ -94,19 +95,33 @@ async function feedItems(feedUrl) {
     .get();
 }
 
-/** 記事ページから、見出し（デッキ名）ごとの公式デッキコードを取り出す */
+/**
+ * 見出し・デッキ名が「9/28【月】ジムバトル優勝」のような日付・大会名になっていないか
+ * （まとめ記事の見出しが日付のときにデッキ名として使ってしまい、タイトルが「【9/28 ジムバトル優勝】9/28【月】ジムバトル優勝（〇〇採用型）」になったため）
+ */
+const isDeckName = (text) => Boolean(text) && !/\d{1,2}\/\d{1,2}|【[月火水木金土日]】|ジムバトル|シティリーグ|優勝|入賞|まとめ/.test(text);
+
+/**
+ * 記事ページから、見出し（h2 = デッキ名）ごとの公式デッキコードを取り出す。
+ * 見出しがデッキ名でない（日付・大会名の）ときは archetype を null にし、あとでレシピから推定する（inferArchetype）
+ */
 async function articleDecks(url) {
   const $ = cheerio.load(await fetchText(url));
   const decks = [];
   let archetype = null;
+  let inSection = false; // 最初の h2 より前（前書き）のリンクは読まない
   $('.entry-content').children().each((_, el) => {
-    if (el.tagName === 'h2') archetype = $(el).text().trim();
+    if (el.tagName === 'h2') {
+      const text = $(el).text().trim();
+      archetype = isDeckName(text) ? text : null;
+      inSection = true;
+    }
     $(el).find('a[href*="deckID/"]').addBack('a[href*="deckID/"]').each((_, a) => {
       const deckId = $(a).attr('href').match(/https:\/\/www\.pokemon-card\.com\/deck\/(?:result|confirm)\.html\/deckID\/([A-Za-z0-9-]+)/)?.[1];
       const date = ($(a).text() + $(el).text()).match(/(\d{1,2}\/\d{1,2})/)?.[1];
       // 成績はリンクの文字（「9/27【日】ジムバトル優勝」など）から読む。準優勝の掲載があれば準優勝として扱う
       const rank = /準優勝/.test($(a).text()) ? '準優勝' : '優勝';
-      if (deckId && archetype && !decks.some((d) => d.deckId === deckId)) decks.push({ deckId, archetype, date, rank });
+      if (deckId && inSection && !decks.some((d) => d.deckId === deckId)) decks.push({ deckId, archetype, date, rank });
     });
   });
   return decks;
@@ -156,18 +171,21 @@ function inferArchetype(list, knownNames) {
 }
 
 /**
- * 記事の主役（デッキ名と同じ名前、なければデッキ名に含まれる名前のポケモン）の公式画像から slug を作る。
- * 同名デッキと区別するカード（variant）があれば、そのカードのローマ字も付ける（例: mgekkougaex-deck-0926-nokokotchiex）
+ * 記事の主役（デッキ名、なければデッキ名と同じ名前・デッキ名に含まれる名前のポケモン）の英語名から slug を作る（例: mega-kangaskhan-ex-deck-0928）。
+ * 同名デッキと区別するカード（variant）がポケモンなら、その英語名も付ける（例: jellicent-ex-deck-0928-slowbro）。
+ * 英語名が分からないときだけ公式画像のローマ字を使い、fallback: true を返す（PR で人が直す）
  */
 function makeSlug(archetype, list, date, taken, variant) {
   const pokemon = list.filter((c) => c.category === 'ポケモン');
   const main = pokemon.find((c) => norm(c.name) === norm(archetype)) ?? pokemon.find((c) => norm(archetype).includes(norm(c.name))) ?? pokemon[0];
+  const mainEn = englishName(archetype) ?? (main && englishName(main.name));
   const [m, d] = (date ?? '').split('/').map((n) => n.padStart(2, '0'));
-  const variantCard = variant?.card ? list.find((c) => norm(c.name) === norm(variant.card)) : undefined;
-  const base = `${main ? romaji(main.thumb) : 'deck'}-deck${m && d ? `-${m}${d}` : ''}${variantCard?.thumb ? `-${romaji(variantCard.thumb)}` : ''}`;
+  const variantEn = variant?.card ? englishName(variant.card) : null;
+  const head = mainEn ?? (main ? romaji(main.thumb) : 'deck');
+  const base = `${head}-deck${m && d ? `-${m}${d}` : ''}${variantEn ? `-${variantEn}` : ''}`;
   let slug = base;
   for (let i = 2; taken.has(slug); i++) slug = `${base}-${i}`;
-  return slug;
+  return { slug, fallback: !mainEn };
 }
 
 /** 主力パーツ: デッキ名のポケモン、ex・メガシンカなどのポケモン（枚数の多い順）、汎用カード以外のトレーナーズの順 */
@@ -274,6 +292,13 @@ async function main() {
     // シティリーグは、最新の記事に新しいデッキがなくても1つ前の記事まで見る（前回選ばれなかったデッキが残っていることがあるため）
   }
   if (opts.source === 'city' && candidates.length === 0) return console.log('新着はありません。');
+  // ジムバトル: 見出しがデッキ名でなかった（日付・大会名だった）デッキは、レシピからデッキ名を推定する
+  if (opts.source === 'gym') {
+    for (const d of candidates.filter((c) => !c.archetype)) {
+      d.archetype = inferArchetype(await deckCards(d.deckId), existingNames);
+      d.inferred = true;
+    }
+  }
   // 優先順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）
   // （シティリーグはこの時点でデッキ名が未定のため、下の成績順で並べる）
   const occurrence = new Map();
@@ -309,6 +334,7 @@ async function main() {
     if (selected.length >= opts.maxColumns) break;
     if (opts.source === 'city') {
       d.archetype = inferArchetype(await deckCards(d.deckId), existingNames);
+      d.inferred = true;
       if (selected.some((o) => norm(o.archetype) === norm(d.archetype))) continue;
     }
     const check = await importDecks([{ slug: `check-${d.deckId}`, deckId: d.deckId }], { dryRun: true, skipInvalid: true });
@@ -328,9 +354,12 @@ async function main() {
       ...selected.filter((o) => o !== d && norm(o.archetype) === norm(d.archetype)).map((o) => asRecipe(o.list)),
     ];
     d.variant = peers.length > 0 ? variantLabel(asRecipe(d.list), peers) : null;
-    d.slug = makeSlug(d.archetype, d.list, d.date, taken, d.variant);
+    if (!isDeckName(d.archetype)) throw new Error(`デッキ名が日付・大会名になっています: 「${d.archetype}」（${d.deckId}）`);
+    ({ slug: d.slug, fallback: d.slugFallback } = makeSlug(d.archetype, d.list, d.date, taken, d.variant));
     taken.add(d.slug);
-    console.log(`  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}${d.rank ? ` ${d.venue} ${d.rank}・デッキ名は推定` : ''}）→ /columns/${d.slug}/`);
+    console.log(
+      `  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}${d.venue ? ` ${d.venue}` : ''} ${d.rank ?? ''}${d.inferred ? '・デッキ名は推定' : ''}）→ /columns/${d.slug}/${d.slugFallback ? '（⚠ 英語名が不明のためローマ字）' : ''}`,
+    );
   }
   if (opts.dryRun) return console.log('\n（dry-run: カード追加・記事生成・処理済みの記録は行いません）');
 
@@ -384,7 +413,7 @@ async function main() {
     };
     await writeFile(path(`src/pages/columns/${d.slug}.astro`), await renderPage(column, recipe), 'utf8');
     columns.push(column);
-    generated.push(column);
+    generated.push({ ...column, inferred: Boolean(d.inferred), slugFallback: Boolean(d.slugFallback) });
     console.log(`  ✓ src/pages/columns/${d.slug}.astro`);
   }
   await writeJson(COLUMNS_PATH, columns);
@@ -414,13 +443,17 @@ async function main() {
     const { parent, reply } = buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, estimate: estimateOf(c.slug), url: `${SITE_URL}columns/${c.slug}/` });
     return [`#### ${c.deckName}`, '1ポスト目（親）', '```', parent, '```', '2ポスト目（リプライ）', '```', reply, '```', ''];
   });
+  const inferredColumns = generated.filter((c) => c.inferred);
+  const romajiColumns = generated.filter((c) => c.slugFallback);
   const body = [
     `## 🏭 ポケカファクトリー｜新着${source.label}入賞デッキ記事の自動生成`,
     '',
     `RSS（${source.feed}）の新着記事から自動生成しました。`,
     ...(opts.source === 'city'
       ? ['', '> ⚠ シティリーグのまとめ記事はデッキ名を画像でしか載せていないため、**デッキ名はレシピから推定**しています。元記事の画像と見比べて、違っていれば deck-columns.json の deckName・title とページを直してください。']
-      : []),
+      : inferredColumns.length
+        ? ['', `> ⚠ まとめ記事の見出しがデッキ名ではなかったため、次の記事は**デッキ名をレシピから推定**しています: ${inferredColumns.map((c) => c.deckName).join('・')}。元記事と見比べて、違っていれば deck-columns.json の deckName・title・slug とページを直してください。`]
+        : []),
     '',
     ...fresh.map((it) => `- 元記事: [${it.title}](${it.link})`),
     '',
@@ -434,7 +467,8 @@ async function main() {
     ...(result.skipped?.length ? ['### 価格を掲載できなかったカード（レシピには載るがリンクなし）', ...result.skipped.map((x) => `- ${x.name}: ${x.reason}`), ''] : []),
     ...(xSection.length ? ['### 📱 X（Twitter）投稿用コピペ文', 'マージして公開されたあとに投稿してください（見どころを書き直した場合は、公開後の記事末尾「Xシェア用テキスト」の文面を使うと最新になります）。', '', ...xSection] : []),
     '### マージ前に確認すること',
-    ...(opts.source === 'city' ? ['- [ ] 推定したデッキ名が元記事の画像のデッキ名と合っている'] : []),
+    ...(opts.source === 'city' || inferredColumns.length ? ['- [ ] 推定したデッキ名が元記事のデッキ名と合っている'] : []),
+    ...(romajiColumns.length ? [`- [ ] 英語名が分からずローマ字の slug になった記事の URL を英語表記に直した（scripts/lib/pokemon-names-en.json に追記）: ${romajiColumns.map((c) => `\`${c.slug}\``).join('・')}`] : []),
     '- [ ] 自動生成の立ち回り（序盤・中盤・終盤）をプレビューで読み、不自然な箇所があれば deck-columns.json の gamePlan を直した',
     '- [ ] 各記事の TODO（代替カード / カスタマイズ案）を追記した',
     '- [ ] 追加したカードの型番・レギュレーションマークに誤りがない',

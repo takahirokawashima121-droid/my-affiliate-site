@@ -16,7 +16,7 @@ import DecksUsingCard from '../../components/DecksUsingCard.astro';
 import { cardSearchKeyword, nameWithRarity } from '../../utils/cardFormat';
 import { moshimoClickUrl } from '../../utils/moshimo';
 import { SITE, STANDARD_REGULATIONS } from '../../consts';
-import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, type Card } from '../../utils/cards';
+import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, productJsonLd, type Card } from '../../utils/cards';
 
 export const getStaticPaths = (async () => {
   const cards = await getCards();
@@ -82,27 +82,8 @@ const saleSummary = best ? `${label}の販売最安値は${formatYen(best.price)
 const buybackSummary = buybackShown ? `買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。` : `買取価格は${buybackShop}での査定をご確認ください。`;
 const description = `${saleSummary}${best ? '、' : ''}${buybackSummary}${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
 
-// 構造化データ（Product + 販売価格）
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: label,
-  sku: model,
-  description,
-  brand: { '@type': 'Brand', name: 'ポケモンカードゲーム' },
-  ...(imageUrl && { image: new URL(imageUrl, Astro.site).toString() }),
-  // 在庫なしのカードは価格情報（Offer）を出さない
-  ...(best && {
-    offers: {
-      '@type': 'Offer',
-      price: best.price,
-      priceCurrency: 'JPY',
-      itemCondition: 'https://schema.org/UsedCondition',
-      seller: { '@type': 'Organization', name: best.shop },
-      url: best.url,
-    },
-  }),
-};
+// 構造化データ（Product ＋ AggregateOffer）。画像・在庫がないカードは出さない（null）
+const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(), description) ?? undefined;
 ---
 
 <BaseLayout title={title} titleSuffix={false} description={description} image={imageUrl || undefined} jsonLd={jsonLd}>

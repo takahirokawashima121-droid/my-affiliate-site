@@ -7,7 +7,7 @@
 // 仕組み:
 // 1. 全記事のレシピ（src/data/official-decks.json）を言い換えルールと照らし、当てはまればデッキ名（型名を外した名前）をルールの名前にする。
 //    ルールのカードが少なく迷うもの（ヤドキング1枚だけなど）は書き換えず、一覧に出す（PR で人が確認する）
-// 2. 同じ名前のデッキが複数になったら「（〇〇採用型）」で区別する（scripts/lib/deck-variant.js）。
+// 2. 同じ名前のデッキが複数になったら「（〇〇採用型）」で区別する（scripts/lib/deck-variant.js）。区別できるカードがない（大きな差がない）記事は型名なし。
 //    すでに付いている型名は、同じ名前のほかの記事と重ならなければそのまま使う。1本だけになったら型名を外す
 // 3. deckName・title・description・highlight と、ページ本文のデッキ名の表記（「〇〇デッキ」・型名つきの名前）を置き換える。
 //    カード名と同じデッキ名（「ヤドキング」など）は「ヤドキングデッキ」の形だけを置き換え、カード名としての表記は残す
@@ -76,7 +76,11 @@ async function main() {
         const kept = labelOf(c.deckName);
         const dup = kept && group.some((o) => o !== c && labelOf(o.deckName) === kept);
         if (kept && !dup && !/^別構築$/.test(kept)) labels.set(c.slug, kept);
-        else if (recipeOf(c)) labels.set(c.slug, `${variantLabel(recipeOf(c), group.filter((o) => o !== c && recipeOf(o)).map(recipeOf)).text}`);
+        else if (recipeOf(c)) {
+          // このデッキにしか入っていないカードがなく、枚数の違いでも区別できない（大きな差がない）ときは型名を付けない
+          const label = variantLabel(recipeOf(c), group.filter((o) => o !== c && recipeOf(o)).map(recipeOf));
+          if (label.card) labels.set(c.slug, label.text);
+        }
       }
     }
     for (const c of group) {

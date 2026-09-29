@@ -315,6 +315,8 @@ async function main() {
       ...selected.filter((o) => o !== d && norm(o.archetype) === norm(d.archetype)).map((o) => asRecipe(o.list)),
     ];
     d.variant = peers.length > 0 ? variantLabel(asRecipe(d.list), peers) : null;
+    // このデッキにしか入っていないカードがなく、枚数の違いでも区別できない（大きな差がない）ときは型名を付けない
+    if (d.variant && !d.variant.card) d.variant = null;
     if (!isDeckName(d.archetype)) throw new Error(`デッキ名が日付・大会名になっています: 「${d.archetype}」（${d.deckId}）`);
     ({ slug: d.slug, fallback: d.slugFallback, approx: d.slugApprox } = makeSlug(d.archetype, d.list, d.date, taken, d.variant, d.nameRule?.has[0]));
     taken.add(d.slug);
@@ -341,7 +343,9 @@ async function main() {
     // 型名のない既存の同名記事にも、新しいデッキとの差分から型名を付ける（一覧・タイトルで区別できるように）
     for (const c of columns.filter((c) => c.deckName === d.archetype && recipes[c.deckKey])) {
       const others = [recipe, ...columns.filter((o) => o !== c && sameBase(o, d.archetype) && recipes[o.deckKey]).map((o) => recipes[o.deckKey].cards)];
-      const renamed = `${d.archetype}（${variantLabel(recipes[c.deckKey].cards, others).text}型）`;
+      const label = variantLabel(recipes[c.deckKey].cards, others);
+      if (!label.card) continue; // 大きな差がない既存の記事には型名を付けない
+      const renamed = `${d.archetype}（${label.text}型）`;
       c.title = c.title.replace(`${d.archetype}デッキレシピ`, `${renamed}デッキレシピ`);
       c.deckName = renamed;
       renamedColumns.push(c);

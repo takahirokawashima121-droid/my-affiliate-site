@@ -1,0 +1,65 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-09-29 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="nnozoroakuex-deck-0927-iberutaru">
+  <p>
+    9/27 シティリーグ優勝の<strong>Nのゾロアークex（イベルタル採用型）デッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 19枚・グッズ 16枚・ポケモンのどうぐ 2枚・サポート 13枚・スタジアム 2枚・エネルギー 8枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="ns-zoroark-ex-rr-sv9-061" qty={4}>
+    <ul>
+        <li><strong>特性「とりひき」</strong>：自分の番に、自分の手札を1枚トラッシュするなら、1回使える。自分の山札を2枚引く。</li>
+        <li><strong>ワザ「ナイトジョーカー」</strong>（悪悪）：自分のベンチの「Nのポケモン」が持つワザを1つ選び、このワザとして使う。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="ns-zorua-c-sv9-060" qty={4}>
+    <ul>
+        <li><strong>ワザ「ひっかく」</strong>（悪・20）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="momowarouex-rr-sv6a-039" qty={2}>
+    <ul>
+        <li><strong>特性「しはいのくさり」</strong>：自分の番に1回使える。自分のベンチの悪ポケモン（「モモワロウex」をのぞく）を1匹選び、バトルポケモンと入れ替える。その後、新しいバトルポケモンをどくにする。この番、すでに別の「しはいのくさり」を使っていたなら、この特性は使えない。</li>
+        <li><strong>ワザ「イライラバースト」</strong>（悪悪・60×）：相手がすでにとったサイドの枚数×60ダメージ。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="nnozekuromu-m2a-129" qty={2}>
+    <ul>
+        <li><strong>ワザ「ひきさく」</strong>（無無無・70）：このワザのダメージは、相手のバトルポケモンにかかっている効果を計算しない。</li>
+        <li><strong>ワザ「ランページサンダー」</strong>（炎雷雷無・250）：次の自分の番、このポケモンはワザが使えない。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="nnopointoappu-u-sv9-089" qty={3}>
+    <ul>
+        <li><strong>グッズ</strong>：自分のトラッシュから基本エネルギーを1枚選び、ベンチの「Nのポケモン」につける。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="shiano-u-sv8-102" qty={3}>
+    <ul>
+        <li><strong>サポート</strong>：自分の山札から「ポケモンex」を3枚まで選び、相手に見せて、手札に加える。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

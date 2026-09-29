@@ -83,11 +83,21 @@ export const DECK_WORDS = {
 };
 
 /**
+ * デッキ名全体の英語表記（言い換えルール scripts/lib/deck-name-rules.js の名前など、語に分けずにそのまま訳すもの）。
+ * 言い換えルールを追加したら、ここにも英語表記を追記する（海外で通じるデッキの呼び名。ひらめきチャレンジはワザの英語名）
+ */
+export const DECK_NAMES = {
+  ひらめきチャレンジ: 'seek-inspiration',
+  おまつりおんど: 'dipplin-festival-lead',
+};
+
+/**
  * デッキ名 → slug 用の英語表記。分からない部分があれば null
  * ポケモン名・DECK_WORDS の組み合わせに分けて訳す（例: ボムファイアロー → bomb-talonflame、
  * カミッチュ（おまつりおんど）→ dipplin-festival-lead、ケンタロス → tauros）
  */
 export function deckEnglishName(deckName) {
+  if (DECK_NAMES[norm(deckName)]) return DECK_NAMES[norm(deckName)];
   const parts = norm(deckName).split(/[（）()・]/).filter(Boolean);
   const out = [];
   for (const part of parts) {

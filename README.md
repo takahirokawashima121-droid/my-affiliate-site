@@ -97,7 +97,7 @@ npm run auto-decks                                         # 新着の優勝デ�
 
 ### 新着優勝デッキの自動生成（GitHub Actions）
 
-`.github/workflows/auto-deck-sync.yml` が1日2回（日本時間 6時6分・18時6分）、ポケカブックのRSSから新着の「ジムバトル優勝デッキまとめ」を検知し、次の処理をして **Pull Request** を作成します（`scripts/auto-deck-updater.js`）。
+`.github/workflows/auto-deck-sync.yml` が1日2回（日本時間 8時18分・23時23分。時刻は auto-deck-sync.yml の cron が正）、ポケカブックのRSSから新着の「ジムバトル優勝デッキまとめ」を検知し、次の処理をして **Pull Request** を作成します（`scripts/auto-deck-updater.js`）。
 
 - 既存の記事がないデッキ名を優先して最大4デッキを選び、未登録カードを最低レアリティで追加・価格取得
 - 記事（デッキの構成・公式テキストによる主力カードの効果・最安値つき60枚レシピ・代替案の枠）を生成

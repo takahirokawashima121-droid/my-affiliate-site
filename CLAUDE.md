@@ -20,7 +20,7 @@
   - `src/content/blog/` … コラム記事（Markdown）
   - `scripts/lib/official.js` の `SET_MARKS` … 弾ごとのレギュレーションマーク
   - `scripts/lib/deck-variant.js` … 同名デッキの型名付け
-  - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）
+  - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
   - `scripts/cache/processed-decks.json` … 処理済みの記事・デッキ
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
 - 主要コマンド
@@ -30,8 +30,10 @@
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
+  - `npm test`（`scripts/lib/pokecabook.js` の読み取りのテスト。読み取りを変更したら必ず実行する）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
+  - `fetch-pokecabook-html.yml`（手動実行のみ）… ポケカブックの記事の HTML を Artifacts に保存し、構造と骨組みをログに出す。この環境からポケカブックにアクセスできないときの調査用
   - 実行時刻は各 yml の cron が正。README と食い違っていたら README を直す
 
 ## 3. Git のルール（最重要）
@@ -56,6 +58,7 @@
   - スタン落ち時は、両定数の更新・範囲外カードの削除・`astro.config.mjs` の `redirects` への旧URL追加をセットで行う
 - カードのURL（id）を変える場合は、必ず `redirects` に旧URL → 新URLを追加する
 - デッキ名は**ポケカブックのまとめ記事の●付き小見出しの名前を正とする**（例: 「●スッカラカン」「●ボムファイアロー」「●ケンタロス」）
+  - ●はテーマの装飾で表示されていて HTML の文字には含まれない（実際の HTML は `<h2>9/28【月】ジムバトル優勝</h2>` → `<h4><span>スッカラカン</span></h4>` → 画像の figcaption にデッキコードのリンク）
   - 日付の見出し（「9/28【月】ジムバトル優勝」など）はデッキ名に使わない
   - ●付き小見出しの名前が取れないとき（シティリーグのように画像にしか名前がない場合など）だけ、60枚の構成から推定し、PR に「推定」と明記する。推定では進化前のポケモン名などをそのまま使わず、正しいアーキタイプ名に補正する（例: 「カジッチュ」→「カミッチュ（おまつりおんど）」）
   - タイトル・スラッグ・`deck-columns.json` の表記を必ず一致させる

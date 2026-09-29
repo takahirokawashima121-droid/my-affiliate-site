@@ -38,6 +38,15 @@ export function bulletName(text) {
   return name;
 }
 
+/**
+ * 小見出し（h3〜h6）の文字からデッキ名を取り出す。ポケカブックの小見出しの「●」はテーマの装飾で表示されるため、文字に●がないときも●付きとして読む。
+ * デッキ名として使えない小見出し（日付・大会名・「大会結果」など）は null
+ */
+export function headingName(text) {
+  const t = text.trim();
+  return bulletName(t.normalize('NFKC').startsWith('●') ? t : `●${t}`);
+}
+
 /** root の中のノード（要素・テキスト）を文書の順にたどる。visit が false を返したら、その要素の中は見ない */
 function eachInOrder(root, visit) {
   const go = (node) => {
@@ -74,8 +83,12 @@ const DECK_ID = /https:\/\/www\.pokemon-card\.com\/deck\/(?:result|confirm)\.htm
 
 /**
  * ジムバトルのまとめ記事から、デッキごとの公式デッキコードを取り出す。
- * 記事の構成: 日付の見出し（h2「9/28【月】ジムバトル優勝」）→ ●付きの小見出し（「●スッカラカン」= デッキ名）→ 公式デッキコードのリンク。
- * デッキ名は●付きの小見出しを正とする（nameSource: 'bullet'）。●がなく h2 がデッキ名のとき（古い形式の記事）は h2 を使う（'heading'）。
+ * 記事の構成（2026年9月の実際の HTML）: 日付の見出し（<h2>9/28【月】ジムバトル優勝</h2>）→ デッキ名の小見出し（<h4>スッカラカン</h4>）→
+ * 画像の figcaption に公式デッキコードのリンク（リンクの文字は「9/28【月】ジムバトル優勝」）。
+ * ページに表示される小見出しの「●」はテーマ（Cocoon）の装飾（CSS）で表示されていて、HTML の文字には含まれない（CSS にも「●」の文字はない）。
+ * そのため、日付の見出しの下の h3〜h6 の小見出しを「●付き小見出し」として扱う（文字に●が含まれる古い形式・<span>●</span> の形式にも対応）。
+ * 小見出し1つにつき、すぐ後のデッキ1つだけに使う（小見出しのないデッキに前のデッキの名前を付けないため）。
+ * デッキ名は●付きの小見出しを正とする（nameSource: 'bullet'）。小見出しがなく h2 がデッキ名のとき（古い形式の記事）は h2 を使う（'heading'）。
  * どちらもないときは archetype を null にし、あとでレシピから推定する（inferArchetype）
  */
 export function parseGymArticle(html) {
@@ -100,8 +113,9 @@ export function parseGymArticle(html) {
       headingDate = text.match(/(\d{1,2}\/\d{1,2})/)?.[1] ?? null;
       return false;
     }
-    if (/^h[3-6]$/.test(node.name) && $(node).text().normalize('NFKC').trim().startsWith('●')) {
-      bullet.name = bulletName($(node).text());
+    if (/^h[3-6]$/.test(node.name)) {
+      // ●はテーマの装飾で表示されるため、文字に●がなくても小見出しの名前をデッキ名にする（前書きの小見出しは使わない）
+      if (inSection) bullet.name = headingName($(node).text());
       return false;
     }
     if (node.name !== 'a') return;
@@ -112,6 +126,7 @@ export function parseGymArticle(html) {
     // 成績はリンクの文字（「9/27【日】ジムバトル優勝」など）から読む。準優勝の掲載があれば準優勝として扱う
     const rank = /準優勝/.test(text) ? '準優勝' : '優勝';
     const name = bulletName(text) ?? bullet.name;
+    bullet.name = null;
     decks.push({ deckId, archetype: name ?? heading, nameSource: name ? 'bullet' : heading ? 'heading' : null, date, rank });
     return false;
   });

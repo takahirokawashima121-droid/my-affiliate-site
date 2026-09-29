@@ -57,7 +57,9 @@ const ROTATION_INTERVAL_MS = 44 * 3600e3;
 const FEATURED_COLUMNS = 12;
 const ENV_PATH = fileURLToPath(new URL('../.env', import.meta.url));
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
-const SITE_URL = 'https://my-affiliate-site-phi.vercel.app/';
+// 楽天APIの Origin/Referer。新APIはアプリ登録時の「許可されたWebサイト」と一致しないと 403 になるため、
+// 楽天側に www.pokeca-factory.com を登録するまでは登録済みの Vercel のURLのままにする
+const RAKUTEN_ORIGIN_URL = 'https://my-affiliate-site-phi.vercel.app/';
 /** 楽天の呼び出し間隔（楽天ウェブサービスの上限は1秒1回。わずかに余裕を持たせる） */
 const WAIT_MS = 1050;
 const SHOP_NAME = '楽天市場';
@@ -302,7 +304,7 @@ async function searchRakuten(keyword, { appId, accessKey }) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     await rakutenThrottle();
     // 新APIはアプリ登録時の「許可されたWebサイト」と一致する Origin ヘッダーが必須（ないと 403）
-    const res = await fetch(`${API_URL}?${params}`, { headers: { Origin: new URL(SITE_URL).origin, Referer: SITE_URL } });
+    const res = await fetch(`${API_URL}?${params}`, { headers: { Origin: new URL(RAKUTEN_ORIGIN_URL).origin, Referer: RAKUTEN_ORIGIN_URL } });
     if (res.status === 429 && attempt === 1) {
       // リクエスト過多：少し待って1回だけ再試行
       await sleep(WAIT_MS * 3);

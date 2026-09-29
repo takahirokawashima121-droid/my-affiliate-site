@@ -28,7 +28,9 @@ const ROOT = new URL('../', import.meta.url);
 const CARDS_PATH = fileURLToPath(new URL('src/data/cards.json', ROOT));
 const ENV_PATH = fileURLToPath(new URL('.env', ROOT));
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
-const SITE_URL = 'https://my-affiliate-site-phi.vercel.app/';
+// 楽天APIの Origin/Referer。新APIはアプリ登録時の「許可されたWebサイト」と一致しないと 403 になるため、
+// 楽天側に www.pokeca-factory.com を登録するまでは登録済みの Vercel のURLのままにする
+const RAKUTEN_ORIGIN_URL = 'https://my-affiliate-site-phi.vercel.app/';
 const EXCLUDE = /オリパ|くじ|PSA|BGS|ARS|鑑定|BOX|未開封|英語|韓国|中国/;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -58,7 +60,7 @@ async function countMatches(card, { appId, accessKey }) {
     availability: '0',
     formatVersion: '2',
   });
-  const res = await fetch(`${API_URL}?${params}`, { headers: { Origin: new URL(SITE_URL).origin, Referer: SITE_URL } });
+  const res = await fetch(`${API_URL}?${params}`, { headers: { Origin: new URL(RAKUTEN_ORIGIN_URL).origin, Referer: RAKUTEN_ORIGIN_URL } });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${body.errors?.errorMessage ?? res.statusText}`);
   const name = normalize(card.name);

@@ -82,7 +82,7 @@ npm run sync-trending                # 追加候補のシードを作り、add-c
 
 デッキページ・カード詳細は `.cache/`（Git 管理外）に保存し、同じサイトへのリクエストは1.5秒以上あけます。
 
-`.github/workflows/sync-trending.yml` が毎週月曜 日本時間 午前5時23分に `npm run sync-trending` を実行し、ビルドが通ることを確認してから、カードが追加されていればコミット・プッシュします（Secrets は価格の自動更新と共通。Actions タブ →「Sync trending cards」→「Run workflow」で手動実行も可）。
+`.github/workflows/sync-trending.yml` が毎週月曜 日本時間 午前5時23分に `npm run sync-trending` を実行し、カードが追加されていれば main に直接コミット・プッシュします（ワークフロー内ではビルドせず、Vercel のビルドが失敗した場合は前回のデプロイのまま公開が続きます）（Secrets は価格の自動更新と共通。Actions タブ →「Sync trending cards」→「Run workflow」で手動実行も可）。
 
 ## 価格の自動更新（GitHub Actions）
 

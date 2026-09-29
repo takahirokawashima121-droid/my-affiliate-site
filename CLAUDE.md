@@ -24,16 +24,19 @@
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
 - 主要コマンド
   - `npm run dev` / `npm run build` / `npm run preview` / `npx astro check`
-  - `npm run update-prices`（`--ids=` `--budget=210` `--dry-run`）
+  - `npm run update-prices`（`--ids=` `--budget=秒` `--dry-run`。GitHub Actions では `--budget=600`）
   - `npm run add-cards`（`--dry-run`）/ `npm run sync-trending`（`--dry-run`）
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
+  - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
   - 実行時刻は各 yml の cron が正。README と食い違っていたら README を直す
 
 ## 3. Git のルール（最重要）
 - **Claude Code は main へ直接 push しない。** 作業ブランチを作り、PR を作成して終了する
-  - 例外は GitHub Actions による価格データのみの自動コミット（`cards.json` の価格・画像更新）
+  - 例外は GitHub Actions による次の自動コミットのみ
+    - 価格データの更新（`update-prices.yml`：`cards.json` の価格・画像更新）
+    - sync-trending による新規カード追加（`sync-trending.yml`：ビルド検証済みのもの）
   - 記事・デッキ名・コード・デザインの変更は、自動生成でも必ず PR を経由する
 - ブランチ名: `feat/…` `fix/…` `perf/…` `content/…`
 - コミットメッセージ: `feat:` `fix:` `perf:` `content:` `docs:` `chore:` の接頭辞＋日本語の要約
@@ -54,7 +57,7 @@
   （例: 「カジッチュ」→「カミッチュ（おまつりおんど）」）
   - タイトル・スラッグ・`deck-columns.json` の表記を必ず一致させる
   - 判定に自信がない場合は PR の「人が確認すべき点」に明記する
-- 立ち回りデータは `earlyGame` / `midGame` / `endGame` の構造で保存する（ジムバトル・シティ共通）
+- 立ち回りデータは `deck-columns.json` の `gamePlan` に `early` / `mid` / `end` の構造で保存する（ジムバトル・シティ共通）
 - 収集元（ポケカブック等）の記事本文やレシピ画像を転載しない。保存するのは事実データ（日付・店舗・順位・デッキコード）とリンクのみ。プレイヤー名は保存しない
 - 収集元へのリクエストは1.5秒以上あけ、robots.txt を守る
 
@@ -77,7 +80,7 @@
 - 本文中の主要カード名は、青文字下線の個別カードページへのリンクにする
 
 ## 8. 外部APIとセキュリティ
-- 楽天・Yahoo!ショッピングAPIへのリクエスト間は 1〜2 秒待つ。価格更新は安全バジェット（最大210秒）を守る
+- 楽天・Yahoo!ショッピングAPIへのリクエスト間は 1〜2 秒待つ。価格更新は安全バジェット（`--budget=600`＝最大600秒。`update-prices.yml` で1日2回、日本時間 4:07・16:07 に実行）を守る
 - APIキー（`RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`・`YAHOO_APP_ID` など）は GitHub Secrets と `.env` のみ。コード・ログ・PR 本文に出力しない
 - リポジトリは Public。秘密情報をコミットしていないか、push 前に必ず確認する
 - アフィリエイト設定（もしもアフィリエイトのID）は変更しない

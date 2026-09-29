@@ -1,8 +1,8 @@
 // public/generate-assets.html の X 用画像（アイコン・ヘッダー・サイト紹介バナー）を PNG に書き出す。
-// Web フォント（Noto Sans JP）が読み込めたことを確かめてから書き出し、読めなければ止める。
+// Web フォント（Noto Sans JP・M PLUS Rounded 1c）が読み込めたことを確かめてから書き出し、読めなければ止める。
 // Playwright（Chromium）が必要。プロジェクトの依存には入れていないので、使うときだけ入れる:
 //   npm install --no-save playwright && node scripts/render-x-assets.js [--scale=2] [--out=.cache/x-assets]
-// 書き出すもの: icon / header / banner と、ヘッダーにアイコンの位置などの目安を重ねた header-guide（確認用）
+// 書き出すもの: icon / header / banner と、確認用の icon-circle（丸く切り抜いた見え方）・header-guide（アイコンの位置などの目安）
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -36,12 +36,16 @@ try {
   });
   await page.goto(pathToFileURL(join(root, 'public/generate-assets.html')).href, { waitUntil: 'networkidle' });
   const fontsOk = await page.evaluate(() => window.xAssets.ready);
-  if (!fontsOk) throw new Error('Web フォント（Noto Sans JP 700・900）を読み込めませんでした。ネットワークを確認してください。');
-  console.log('フォント（Noto Sans JP 700・900）の読み込みを確認しました');
+  if (!fontsOk) {
+    const status = await page.textContent('#font-status');
+    throw new Error(`Web フォントを読み込めませんでした。ネットワークを確認してください。\n${status}`);
+  }
+  console.log(await page.textContent('#font-status'));
 
   await mkdir(outDir, { recursive: true });
   const jobs = [
     ['icon', 'pokeca-factory-icon', false],
+    ['iconCircle', 'pokeca-factory-icon-circle', false],
     ['header', 'pokeca-factory-header', false],
     ['banner', 'pokeca-factory-banner', false],
     ['header', 'pokeca-factory-header-guide', true],

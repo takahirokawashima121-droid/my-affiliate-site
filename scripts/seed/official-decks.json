@@ -4,94 +4,14 @@
   ],
   "cards": [
     {
-      "id": "erezun-c-m2-056",
-      "name": "エレズン",
-      "rarity": "C",
-      "cardNumber": "056/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "mabusoruex-deck-0928",
-      "role": "ポケモン（公式カードID 48396）"
-    },
-    {
-      "id": "sutorinda-r-m2-057",
-      "name": "ストリンダー",
-      "rarity": "R",
-      "cardNumber": "057/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "mabusoruex-deck-0928",
-      "role": "ポケモン（公式カードID 48397）"
-    },
-    {
-      "id": "iyui-r-m5-057",
-      "name": "イーユイ",
-      "rarity": "R",
-      "cardNumber": "057/081",
-      "expansionCode": "M5",
-      "regulationMark": "J",
-      "deck": "mabusoruex-deck-0928",
-      "role": "ポケモン（公式カードID 50276）"
-    },
-    {
-      "id": "rokettodannonixyura-r-sv10-072",
-      "name": "ロケット団のニューラ",
-      "rarity": "R",
-      "cardNumber": "072/098",
-      "expansionCode": "SV10",
-      "regulationMark": "I",
-      "deck": "mabusoruex-deck-0928",
-      "role": "ポケモン（公式カードID 47465）"
-    },
-    {
-      "id": "araburutake-u-sv6-071",
-      "name": "アラブルタケ",
-      "rarity": "U",
-      "cardNumber": "071/101",
-      "expansionCode": "SV6",
-      "regulationMark": "H",
-      "deck": "mabusoruex-deck-0928",
-      "role": "ポケモン（公式カードID 45762）"
-    },
-    {
-      "id": "momowarou-u-sv8-075",
-      "name": "モモワロウ",
-      "rarity": "U",
-      "cardNumber": "075/106",
-      "expansionCode": "SV8",
-      "regulationMark": "H",
-      "deck": "mabusoruex-deck-0928",
-      "role": "ポケモン（公式カードID 46415）"
-    },
-    {
-      "id": "mabusoruex-rr-m1l-038",
-      "name": "メガアブソルex",
-      "rarity": "RR",
-      "cardNumber": "038/063",
-      "expansionCode": "M1L",
-      "regulationMark": "I",
-      "deck": "mabusoruex-deck-0928",
-      "role": "ポケモン（公式カードID 47771）"
-    },
-    {
-      "id": "pankumetto-mbg-017",
-      "name": "パンクメット",
+      "id": "makishimamuberuto-sv5k-066",
+      "name": "マキシマムベルト",
       "rarity": "-",
-      "cardNumber": "017/021",
-      "expansionCode": "MBG",
-      "regulationMark": "I",
-      "deck": "mabusoruex-deck-0928",
-      "role": "ポケモンのどうぐ（公式カードID 48278・再録弾のためマークは推定）"
-    },
-    {
-      "id": "danbaru-c-m4-057",
-      "name": "ダンバル",
-      "rarity": "C",
-      "cardNumber": "057/083",
-      "expansionCode": "M4",
-      "regulationMark": "J",
-      "deck": "mdorixyuuzuex-deck-0928-pureshixyasukixyari",
-      "role": "ポケモン（公式カードID 50141）"
+      "cardNumber": "066/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "kajitchixyu-deck-0927",
+      "role": "ポケモンのどうぐ（公式カードID 45212）"
     }
   ]
 }

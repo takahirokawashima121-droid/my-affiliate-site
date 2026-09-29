@@ -1,0 +1,67 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-09-29 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="dragapult-ex-deck-0927-moltres">
+  <p>
+    9/27 シティリーグ優勝の<strong>ドラパルトex（ファイヤー採用型）デッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 20枚・グッズ 19枚・サポート 12枚・スタジアム 2枚・エネルギー 7枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="dragapult-ex-rr-sv6-081" qty={2}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>ワザ「ジェットヘッド」</strong>（無・70）</li>
+        <li><strong>ワザ「ファントムダイブ」</strong>（炎超・200）：ダメカン6個を、相手のベンチポケモンに好きなようにのせる。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="drakloak-c-sv6-080" qty={4}>
+    <ul>
+        <li><strong>特性「ていさつしれい」</strong>：自分の番に1回使える。自分の山札を上から2枚見て、どちらか1枚を選び、手札に加える。残りのカードは、山札の下にもどす。</li>
+        <li><strong>ワザ「リューズヘッド」</strong>（炎超・70）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="dreepy-c-sv6-079" qty={4}>
+    <ul>
+        <li><strong>ワザ「ちょっとうらむ」</strong>（超・10）</li>
+        <li><strong>ワザ「かみつく」</strong>（炎超・40）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="duskull-c-sv6a-018" qty={2}>
+    <ul>
+        <li><strong>ワザ「むかえにいく」</strong>（超）：自分のトラッシュから「ヨマワル」を3枚まで選び、ベンチに出す。</li>
+        <li><strong>ワザ「つぶやく」</strong>（超超・30）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="crispin-u-sv7-097" qty={2}>
+    <ul>
+        <li><strong>サポート</strong>：自分の山札から、それぞれちがうタイプの基本エネルギーを2枚まで選び、相手に見せて、どちらか1枚を手札に加え、残りのエネルギーを自分のポケモンにつける。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="jamming-tower-u-sv6-100" qty={2}>
+    <ul>
+        <li><strong>スタジアム</strong>：おたがいのポケモン全員についている「ポケモンのどうぐ」の効果は、すべてなくなる。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

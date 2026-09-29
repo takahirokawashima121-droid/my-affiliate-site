@@ -12,7 +12,7 @@ on:
         default: https://pokecabook.com/archives/27265 https://pokecabook.com/archives/335123
   push: # 調査用ブランチでこのファイルを変更したときにも実行（main には影響しない）
     branches: ['claude/deck-name-check-parsing-asgebi']
-    paths: ['.github/workflows/fetch-pokecabook-html.yml', 'scripts/debug/outline-html.js']
+    paths: ['.github/workflows/fetch-pokecabook-html.yml', 'scripts/debug/**']
 
 permissions:
   contents: read
@@ -53,9 +53,33 @@ jobs:
         run: |
           for f in pokecabook-html/*.html; do node scripts/debug/outline-html.js "$f"; done
 
+      # 見出しの●が CSS で付けられているか（本文に「●」の文字がないとき）を確かめるため、CSS の中の●（\25CF）をログに出す
+      - name: Bullet in CSS
+        run: |
+          grep -ohiE '[^{}]{0,120}\{[^{}]*(\\25cf|●)[^{}]*\}' pokecabook-html/*.html | head -20 || true
+          for u in $(grep -ohE 'https://pokecabook\.com/[^"'"'"' ]+\.css[^"'"'"' ]*' pokecabook-html/*.html | sort -u | head -15); do
+            echo "== $u"
+            curl -sSL "$u" | grep -oiE '[^{}]{0,160}\{[^{}]*(\\25cf|●)[^{}]*\}' | head -10 || true
+            sleep 2
+          done
+
+      # テスト用の骨組み（本文・画像を除いた構造）を gzip + base64 でログに出す（Artifacts を取得できない環境向け）
+      - name: Skeleton
+        run: |
+          mkdir -p pokecabook-skeleton
+          for f in pokecabook-html/*.html; do
+            out="pokecabook-skeleton/$(basename "$f")"
+            node scripts/debug/skeleton-html.js "$f" > "$out"
+            echo "===== SKELETON $out ($(wc -c < "$out") bytes)"
+            gzip -9c "$out" | base64 -w 0; echo
+            echo "===== END"
+          done
+
       - name: Upload HTML
         uses: actions/upload-artifact@v4
         with:
           name: pokecabook-html
-          path: pokecabook-html/
+          path: |
+            pokecabook-html/
+            pokecabook-skeleton/
           retention-days: 7

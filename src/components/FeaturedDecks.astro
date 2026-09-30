@@ -1,7 +1,8 @@
 ---
-// トップページの大会別特集（上段：シティリーグ入賞 / 下段：ジムバトル優勝）。deck-columns.json から開催日が新しい順に自動で選ぶ（latestEventDecks）
+// トップページの大会別特集（上段：シティリーグ入賞 / 下段：ジムバトル優勝）。deck-columns.json からコラム一覧と同じ並び順（開催日 → 成績 → シティ → ジム）で自動で選ぶ（latestEventDecks）
 // PC は3列、タブレットは2列、スマホは1列（画像を左に置いた横長カードで縦に伸びすぎないようにする）
 import CardImage from './CardImage.astro';
+import DeckVenue from './DeckVenue.astro';
 import EventBadge from './EventBadge.astro';
 import { columnPath, latestEventDecks, type EventType } from '../data/deck-columns';
 import { formatYen, type Card } from '../utils/cards';
@@ -72,7 +73,7 @@ const headingId = `featured-${type}`;
                   {c.badges.map((b) => <span class={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
                 </span>
                 <span class="mt-1.5 text-base font-black leading-snug text-slate-900 group-hover:text-amber-700">{c.deckName}</span>
-                {c.venue && <span class="mt-0.5 truncate text-[11px] text-slate-500">📍 {c.venue}</span>}
+                <DeckVenue column={c} />
                 <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{c.highlight}</span>
                 {c.estimate > 0 && (
                   <span class="mt-1.5 font-mono text-[11px] text-slate-600">60枚の概算 <span class="text-sm font-bold tabular-nums text-cyan-700">{formatYen(c.estimate)}</span></span>

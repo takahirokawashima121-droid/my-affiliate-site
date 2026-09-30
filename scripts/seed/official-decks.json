@@ -4,34 +4,64 @@
   ],
   "cards": [
     {
-      "id": "karubou-c-m5-010",
-      "name": "カルボウ",
-      "rarity": "C",
-      "cardNumber": "010/081",
-      "expansionCode": "M5",
-      "regulationMark": "J",
-      "deck": "ceruledge-ex-deck-0929",
-      "role": "ポケモン（公式カードID 50229）"
+      "id": "kapukokekoex-svm-046",
+      "name": "カプ・コケコex",
+      "rarity": "-",
+      "cardNumber": "046/175",
+      "expansionCode": "SVM",
+      "regulationMark": "H",
+      "deck": "mega-kangaskhan-ex-deck-0927",
+      "role": "ポケモン（公式カードID 46500・再録弾のためマークは推定）"
     },
     {
-      "id": "zeraora-r-sv9a-040",
-      "name": "ゼラオラ",
-      "rarity": "R",
-      "cardNumber": "040/063",
-      "expansionCode": "SV9a",
-      "regulationMark": "I",
-      "deck": "seek-inspiration-deck-0929",
-      "role": "ポケモン（公式カードID 47335）"
+      "id": "iyui-u-sv5a-018",
+      "name": "イーユイ",
+      "rarity": "U",
+      "cardNumber": "018/066",
+      "expansionCode": "SV5a",
+      "regulationMark": "H",
+      "deck": "mega-kangaskhan-ex-deck-0927",
+      "role": "ポケモン（公式カードID 45594）"
     },
     {
-      "id": "muchixyuru-c-sv7a-018",
-      "name": "ムチュール",
-      "rarity": "C",
-      "cardNumber": "018/064",
+      "id": "nagetsukesaru-u-sv7a-031",
+      "name": "ナゲツケサル",
+      "rarity": "U",
+      "cardNumber": "031/064",
       "expansionCode": "SV7a",
       "regulationMark": "H",
-      "deck": "seek-inspiration-deck-0929",
-      "role": "ポケモン（公式カードID 46247）"
+      "deck": "mega-kangaskhan-ex-deck-0927",
+      "role": "ポケモン（公式カードID 46260）"
+    },
+    {
+      "id": "nnosujigaki-u-sv11b-083",
+      "name": "Nの筋書き",
+      "rarity": "U",
+      "cardNumber": "083/086",
+      "expansionCode": "SV11B",
+      "regulationMark": "I",
+      "deck": "mega-kangaskhan-ex-deck-0927",
+      "role": "サポート（公式カードID 47619）"
+    },
+    {
+      "id": "msamehadaex-rr-m2-051",
+      "name": "メガサメハダーex",
+      "rarity": "RR",
+      "cardNumber": "051/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "mega-sharpedo-ex-deck-0927",
+      "role": "ポケモン（公式カードID 48391）"
+    },
+    {
+      "id": "kibania-c-m2-050",
+      "name": "キバニア",
+      "rarity": "C",
+      "cardNumber": "050/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "mega-sharpedo-ex-deck-0927",
+      "role": "ポケモン（公式カードID 48390）"
     }
   ]
 }

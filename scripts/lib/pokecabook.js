@@ -123,11 +123,12 @@ export function parseGymArticle(html) {
     if (!deckId || !inSection || decks.some((d) => d.deckId === deckId)) return false;
     const text = $(node).text();
     const date = text.match(/(\d{1,2}\/\d{1,2})/)?.[1] ?? headingDate;
-    // 成績はリンクの文字（「9/27【日】ジムバトル優勝」など）から読む。準優勝の掲載があれば準優勝として扱う
-    const rank = /準優勝/.test(text) ? '準優勝' : '優勝';
+    // 成績はリンクの文字（「9/27【日】ジムバトル優勝」など）から読む。文字に成績がなければ null（記事では優勝として扱い、PR に「取得できず」と出す）
+    const rank = /準優勝/.test(text) ? '準優勝' : /優勝/.test(text) ? '優勝' : null;
     const name = bulletName(text) ?? bullet.name;
     bullet.name = null;
-    decks.push({ deckId, archetype: name ?? heading, nameSource: name ? 'bullet' : heading ? 'heading' : null, date, rank });
+    // position: 記事の中で上から何番目のデッキか（PR で元記事と見比べるため）
+    decks.push({ deckId, archetype: name ?? heading, nameSource: name ? 'bullet' : heading ? 'heading' : null, date, rank, position: decks.length + 1 });
     return false;
   });
   return decks;
@@ -138,13 +139,15 @@ export function parseGymArticle(html) {
  * 記事の構成: 日付の見出し（「シティリーグ9/28【月】」。1日だけの記事はタイトルの日付）→ 会場の見出し（h2 / h4）→
  * 「大会結果」→ 成績ごとの画像（figcaption のリンク文字が「優勝」「準優勝」「TOP4」…、リンク先が公式デッキコード）。
  * デッキ名は画像にしか載っていないことが多い。画像の前に●付きの小見出しでデッキ名が書かれていれば、それを正とする
- * （●1つにつきすぐ後のデッキ1つだけに使う。会場の見出しでリセット）。なければ archetype を null にし、あとでレシピから推定する
+ * （●1つにつきすぐ後のデッキ1つだけに使う。会場の見出しでリセット）。なければ archetype を null にし、あとでレシピから推定する。
+ * position は記事の中で上から何番目のデッキか（記事にしない TOP4〜TOP16 も数える）
  */
 export function parseCityArticle(html, title) {
   const $ = cheerio.load(html);
   let date = title.match(/(\d{1,2}\/\d{1,2})/)?.[1];
   let venue = null;
   const decks = [];
+  const seen = new Set(); // 記事内のデッキコード（TOP4〜TOP16 も含む。position を数えるため）
   const bullet = bulletTracker();
   eachInOrder($('.entry-content').get(0), (node) => {
     if (node.type === 'text') return void bullet.text(node);
@@ -164,8 +167,10 @@ export function parseCityArticle(html, title) {
     if (node.name !== 'a' || !venue || $(node).closest('figcaption').length === 0) return;
     const deckId = ($(node).attr('href') ?? '').match(/deckID\/([A-Za-z0-9-]+)/)?.[1];
     const rank = $(node).text().normalize('NFKC').replace(/\s+/g, '').toUpperCase();
-    if (deckId && CITY_RANKS.includes(rank) && !decks.some((d) => d.deckId === deckId)) {
-      decks.push({ deckId, archetype: bullet.name, nameSource: bullet.name ? 'bullet' : null, date, rank, venue });
+    if (deckId && !seen.has(deckId)) {
+      seen.add(deckId);
+      // position: 記事の中で上から何番目のデッキか（記事にしない TOP4〜TOP16 も数える。PR で元記事と見比べるため）
+      if (CITY_RANKS.includes(rank)) decks.push({ deckId, archetype: bullet.name, nameSource: bullet.name ? 'bullet' : null, date, rank, venue, position: seen.size });
     }
     bullet.name = null;
     return false;

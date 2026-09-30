@@ -15,7 +15,8 @@
 // - それでも通らないとき・API のエラー・キーがないとき・呼び出し回数の上限に達したときは null を返し、
 //   呼び出し側は従来の方法（scripts/lib/highlight.js）の見どころを使う。ここで例外を投げて記事の自動生成を止めることはしない
 // - 一覧のカードに出す「ひとこと」（deck-columns.json の tagline。TAGLINE_MIN〜TAGLINE_MAX 字）も、見どころのあとに別の呼び出しで書く（writeTagline）。
-//   渡すのは見どころと同じデータ＋その記事の見どころ（参考）。点検は reviewTagline（長さをはみ出したら短く書き直させる）、
+//   渡すのは見どころと同じデータ＋その記事の見どころ（参考）。答えは JSON の tagline（完成したひとこと1本だけ。字数を数える考えごとを本文に書かせない）。
+//   点検は reviewTagline（長さをはみ出したら「今○字なので、あと○字削って」と伝えて2回まで書き直させる。書き直しは毎回1通のメッセージで呼ぶ）、
 //   チェック役・直し（checkAndFix(…, { kind: 'tagline' })）は見どころと同じ基準。書けなかったときは null を返し、一覧は見どころを出す
 
 import { readFileSync } from 'node:fs';
@@ -26,7 +27,7 @@ import { HIGHLIGHT_MAX, bannedPhrases, opening } from './highlight.js';
  * AI の見どころの設定。**モデルを変えるときは model だけを書き換える**（料金の目安は下の PRICES に載っているモデルだけ出る）。
  * - effort: 考える深さ（low / medium / high）。effort に対応していないモデル（claude-haiku-4-5 など）にするときは null にする
  * - maxCallsPerRun: 1回の実行（npm run auto-decks / auto-city それぞれ）で API を呼ぶ回数の上限。不具合で何度も呼ばないための歯止め
- *   （見どころ・ひとことのチェック役・直しの分も数える。1本あたり見どころ最大5回＋ひとこと最大5回）
+ *   （見どころ・ひとことのチェック役・直しの分も数える。1本あたり見どころ最大5回＋ひとこと最大7回）
  * - maxTokens: 1回の応答の上限（考える分を含む）
  */
 export const AI_HIGHLIGHT_CONFIG = {
@@ -59,6 +60,10 @@ export const AI_HIGHLIGHT_MIN = 80;
 /** ひとこと（一覧のカードに出す短い紹介。deck-columns.json の tagline）の長さ（全角）。はみ出したら AI に書き直させる */
 export const TAGLINE_MIN = 30;
 export const TAGLINE_MAX = 40;
+
+/** ひとことを書く回数の上限（最初の1回＋書き直し2回）と、チェック役の指摘で直すときの回数の上限（直す1回＋長さなどの書き直し1回） */
+export const TAGLINE_MAX_ATTEMPTS = 3;
+export const TAGLINE_FIX_ATTEMPTS = 2;
 
 /** この長さ（全角）以上の公式テキストの1文がそのまま入っていたら、説明文の貼り付けとみなす */
 const PASTE_LENGTH = 25;
@@ -206,7 +211,8 @@ const TAGLINE_SYSTEM = `あなたはポケモンカードの大会入賞デッ�
 使ってよい情報は、ユーザーが渡す「デッキ名」「60枚のレシピ」「採用カードの公式テキスト」と、参考の「この記事の見どころ」だけです。
 
 守ること:
-- 長さは全角で${TAGLINE_MIN}〜${TAGLINE_MAX}字（数えて確かめる）。改行しない。文末に「。」を付けない
+- **長さは${TAGLINE_MIN}字以上・${TAGLINE_MAX}字以内。${TAGLINE_MAX}字を1字でも超えると使えない**ので、35字くらいを目安に短く書く（英字の「ex」や数字も1字ずつ数える。かぎかっこ「」も1字ずつ数える）。改行しない。文末に「。」を付けない
+- 字数は考えるときに数えて確かめ、答えには書かない。答えの JSON の tagline には、完成したひとこと1本だけを入れる（字数の数え方・下書き・候補・説明・前置きは入れない）
 - 主役のカードの名前を必ず入れ、そのデッキ固有の勝ち筋（キーになる特性・ワザ・組み合わせ）を1つだけ書く
 - 渡した情報に書かれていないこと（カードの効果・ダメージ・枚数・環境や大会での評判など）は書かない。知っている知識で補わない
 - 数字は、公式テキストかレシピに書いてある数字だけを使う。足し算などで新しい数字を作らない
@@ -215,7 +221,30 @@ const TAGLINE_SYSTEM = `あなたはポケモンカードの大会入賞デッ�
 - 見どころの文をそのまま縮めて貼らず、一覧で読んで何をするデッキかが伝わる言い方にする
 - 「最強」「必勝」「絶対」「無敵」のような誇張はしない
 - 「〇〇を採用した〇〇デッキ」のような、名前を入れ替えるだけでどのデッキにも使える決まり文句は使わない
-- 前置き・かぎかっこでくくった全体・説明は付けず、ひとことの文だけを出力する${rulesSection(GAME_RULES)}`;
+- ひとこと全体をかぎかっこでくくらない${rulesSection(GAME_RULES)}`;
+
+/** ひとことの答えの形（structured outputs。答えに考えごとや字数の数え方が混ざらないよう、完成したひとこと1本だけを返させる） */
+const TAGLINE_SCHEMA = {
+  type: 'object',
+  properties: { tagline: { type: 'string' } },
+  required: ['tagline'],
+  additionalProperties: false,
+};
+
+/**
+ * ひとことの答え（JSON の文）から、ひとことを取り出す。JSON でなければ答えの文のまま返す（点検で改行・長さに引っかかる）
+ * @param raw AI の答えの本文
+ */
+export function taglineOf(raw) {
+  const text = String(raw ?? '').trim();
+  try {
+    const json = JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, ''));
+    if (json && typeof json.tagline === 'string') return json.tagline;
+  } catch {
+    // JSON でない答え（そのまま点検にかける）
+  }
+  return text;
+}
 
 /**
  * ひとことを書く役に渡す文（見どころと同じデータ＋その記事の見どころ）
@@ -228,7 +257,7 @@ export function buildTaglinePrompt(input) {
     '## この記事の見どころ（参考）',
     input.highlight || '（なし）',
     '',
-    `上のデータだけを使って、一覧のカードに出す「ひとこと」を全角${TAGLINE_MIN}〜${TAGLINE_MAX}字で1本書いてください。`,
+    `上のデータだけを使って、一覧のカードに出す「ひとこと」を1本書いてください。長さは${TAGLINE_MIN}字以上・${TAGLINE_MAX}字以内（${TAGLINE_MAX}字を超えると使えません。35字くらいが目安）。答えの tagline には完成したひとこと1本だけを入れてください。`,
   ].join('\n');
 }
 
@@ -253,8 +282,8 @@ export function reviewTagline(text, input) {
   if (!t) return ['文が空でした'];
   if (/\n/.test(t)) problems.push('改行を付けず、ひとことの文だけにしてください');
   const len = taglineLength(t);
-  if (len > TAGLINE_MAX) problems.push(`長すぎます（${len}字）。${TAGLINE_MIN}〜${TAGLINE_MAX}字に短く書き直してください`);
-  if (len < TAGLINE_MIN) problems.push(`短すぎます（${len}字）。${TAGLINE_MIN}〜${TAGLINE_MAX}字にしてください`);
+  if (len > TAGLINE_MAX) problems.push(`長すぎます（今${len}字）。あと${len - TAGLINE_MAX}字以上削って、${TAGLINE_MAX}字以内（35字くらい）にしてください`);
+  if (len < TAGLINE_MIN) problems.push(`短すぎます（今${len}字）。あと${TAGLINE_MIN - len}字以上足して、${TAGLINE_MIN}字以上にしてください`);
   if (!nfkc(t).includes(nfkc(input.main))) problems.push(`主役のカード「${input.main}」の名前を入れてください`);
   for (const label of bannedPhrases(t)) problems.push(`決まり文句${label}は使わないでください`);
   const exaggeration = t.match(EXAGGERATION);
@@ -489,21 +518,53 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
    * - clean: AI の答えの整え方
    * - check: 点検（問題の配列）
    * - label: ログ・チェック役に渡す名前
+   * - maxAttempts: 書く回数の上限（最初の1回＋書き直し）
+   * - format: 答えの形（structured outputs）。read で答えの本文から文を取り出す
+   * - fresh: 書き直し・直しのたびに、1通のメッセージで呼び直す（前の答えと直す点は、渡す文の後ろに書く）。
+   *   前の応答（字数を数える考えごとが本文に混ざったもの）を会話に戻すと、断られたり空の答えになったりしたため（ひとこと）
+   * - retryRefusal: 断られた（refusal）・空の答えも、点検の問題として書き直させる
    */
   const KINDS = {
-    highlight: { system: SYSTEM, prompt: buildPrompt, clean: (t) => t, check: reviewAiHighlight, label: '見どころ' },
-    tagline: { system: TAGLINE_SYSTEM, prompt: buildTaglinePrompt, clean: cleanTagline, check: reviewTagline, label: 'ひとこと' },
+    highlight: { system: SYSTEM, prompt: buildPrompt, clean: (t) => t, check: reviewAiHighlight, label: '見どころ', maxAttempts: 2 },
+    tagline: {
+      system: TAGLINE_SYSTEM,
+      prompt: buildTaglinePrompt,
+      clean: cleanTagline,
+      check: reviewTagline,
+      label: 'ひとこと',
+      maxAttempts: TAGLINE_MAX_ATTEMPTS,
+      format: { type: 'json_schema', schema: TAGLINE_SCHEMA },
+      read: taglineOf,
+      fresh: true,
+      retryRefusal: true,
+    },
   };
 
-  /** 点検に引っかかったら1回だけ書き直させる（write・writeTagline の共通部分） */
+  /** fresh の種類で、前の答えと直す点を、渡す文の後ろに書く */
+  const retryBlock = (spec, previous, heading, request, problems) =>
+    ['', `## ${heading}`, previous || '（空でした）', '', request, ...problems.map((p) => `- ${p}`)].join('\n');
+
+  /** 答えの本文（format があれば JSON から取り出す）。空のときは、なぜ空かを調べるためにログに応答の形を出す */
+  function answerOf(spec, response) {
+    const raw = textOf(response);
+    const text = spec.clean(spec.read ? spec.read(raw) : raw);
+    if (!text) log(`    （空の答え: stop_reason ${response.stop_reason}・応答のブロック ${response.content.map((b) => b.type).join(', ') || 'なし'}）`);
+    return text;
+  }
+
+  /** 断られた（refusal）ときの理由の文（分かれば種類も） */
+  const refusalReason = (response) => `AI が応答を断った（refusal${response.stop_details?.category ? `・${response.stop_details.category}` : ''}）`;
+
+  /** 点検に引っかかったら書き直させる（見どころは1回・ひとことは2回まで。write・writeTagline の共通部分） */
   async function writeKind(kind, input) {
     const spec = KINDS[kind];
     if (!api) return { text: null, reason: 'ANTHROPIC_API_KEY が設定されていない', attempts: 0 };
+    if (spec.fresh) return writeFresh(kind, input);
     const messages = [{ role: 'user', content: spec.prompt(input) }];
     let problems = [];
     let attempts = 0;
     try {
-      for (attempts = 1; attempts <= 2; attempts++) {
+      for (attempts = 1; attempts <= spec.maxAttempts; attempts++) {
         const response = await call(messages, { system: spec.system });
         if (response.stop_reason === 'refusal') return { text: null, reason: 'AI が応答を断った（refusal）', attempts };
         if (response.stop_reason === 'max_tokens') return { text: null, reason: `応答が長さの上限（max_tokens ${config.maxTokens}）で切れた`, attempts };
@@ -512,20 +573,62 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
         const tag = kind === 'highlight' ? 'AI' : `AI（${spec.label}）`;
         log(`  ${tag} ${attempts}回目: ${text}${problems.length ? `\n    ⚠ ${problems.join(' / ')}` : '\n    ✓ 点検を通過'}`);
         if (problems.length === 0) return { text, attempts };
-        if (attempts === 2) break;
+        if (attempts === spec.maxAttempts) break;
         // 書き直し: 前の応答（考えた内容を含む）をそのまま返し、直す点を伝える（長さをはみ出したときも、ここで短く書き直させる）
         messages.push({ role: 'assistant', content: response.content });
         messages.push({ role: 'user', content: `次の点を直して、${spec.label}の文だけをもう一度書いてください。\n${problems.map((p) => `- ${p}`).join('\n')}` });
       }
-      return { text: null, reason: `書き直しても点検を通らなかった（${problems.join(' / ')}）`, attempts: 2 };
+      return { text: null, reason: `書き直しても点検を通らなかった（${problems.join(' / ')}）`, attempts: spec.maxAttempts };
     } catch (error) {
-      if (error instanceof LimitError) return { text: null, reason: error.message, attempts: attempts - 1, limit: true };
-      stats.errors++;
-      const detail = apiErrorDetail(error, [apiKey]);
-      log(`  ⚠ Claude API のエラー: ${detail}`);
-      return { text: null, reason: `Claude API のエラー（${detail}）`, attempts, apiError: true, fatal: isFatalApiError(error) };
+      return apiFailure(error, attempts, '  ⚠ Claude API のエラー');
     }
   }
+
+  /** API の呼び出しの失敗（上限・エラー）を、書けなかった結果にする */
+  function apiFailure(error, attempts, logLabel) {
+    if (error instanceof LimitError) return { text: null, reason: error.message, attempts: attempts - 1, limit: true };
+    stats.errors++;
+    const detail = apiErrorDetail(error, [apiKey]);
+    log(`${logLabel}: ${detail}`);
+    return { text: null, reason: `Claude API のエラー（${detail}）`, attempts, apiError: true, fatal: isFatalApiError(error) };
+  }
+
+  /**
+   * fresh の種類（ひとこと）を書く・直す。毎回1通のメッセージで呼び、点検に引っかかったら（断られた・空の答えも）
+   * 前の答えと直す点（「今○字なので、あと○字削って」など）を渡して、maxAttempts 回まで書かせる
+   * @param first 最初の呼び出しで渡す文の後ろに足すもの（直すとき: 直す前の文とチェック役の指摘）。なければ新しく書く
+   * @param maxAttempts 書く回数の上限
+   * @param onCall 呼んだあとに数えるもの（直しの回数など）
+   */
+  async function attemptFresh(kind, input, { first = null, maxAttempts, logLabel, onCall = () => {} }) {
+    const spec = KINDS[kind];
+    const prompt = spec.prompt(input);
+    let extra = first ? retryBlock(spec, first.text, first.heading, first.request, first.reasons) : '';
+    let problems = [];
+    let attempts = 0;
+    try {
+      for (attempts = 1; attempts <= maxAttempts; attempts++) {
+        const response = await call([{ role: 'user', content: prompt + extra }], { system: spec.system, format: spec.format });
+        onCall();
+        if (response.stop_reason === 'max_tokens') return { text: null, reason: `応答が長さの上限（max_tokens ${config.maxTokens}）で切れた`, attempts };
+        const refused = response.stop_reason === 'refusal';
+        const text = refused ? '' : answerOf(spec, response);
+        problems = refused ? [refusalReason(response)] : spec.check(text, input);
+        log(`${logLabel(attempts)}: ${text}${problems.length ? `\n    ⚠ ${problems.join(' / ')}` : '\n    ✓ 点検を通過'}`);
+        if (problems.length === 0) return { text, attempts };
+        if (refused && !spec.retryRefusal) return { text: null, reason: problems[0], attempts };
+        extra = refused
+          ? '' // 断られたときは、前の答えを渡さずに書き直させる
+          : retryBlock(spec, text, `前に書いた${spec.label}`, `次の点を直して、${spec.label}をもう一度書いてください（ほかの守ることもそのまま守る）。`, problems);
+      }
+      return { text: null, reason: `${maxAttempts - 1}回書き直しても点検を通らなかった（${problems.join(' / ')}）`, attempts: maxAttempts, problems };
+    } catch (error) {
+      return apiFailure(error, attempts, `${logLabel(attempts)}で Claude API のエラー`);
+    }
+  }
+
+  const writeFresh = (kind, input) =>
+    attemptFresh(kind, input, { maxAttempts: KINDS[kind].maxAttempts, logLabel: (n) => `  AI（${KINDS[kind].label}） ${n}回目` });
 
   /**
    * 1記事分の見どころを書く（点検に引っかかったら1回だけ書き直させる）
@@ -535,7 +638,8 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
 
   /**
    * 1記事分のひとこと（一覧のカードに出す TAGLINE_MIN〜TAGLINE_MAX 字）を書く。
-   * 点検（reviewTagline。長さのはみ出しを含む）に引っかかったら、理由を伝えて1回だけ書き直させる
+   * 点検（reviewTagline。長さのはみ出しを含む）に引っかかったら、理由（「今○字なので、あと○字削って」など）を伝えて2回まで書き直させる。
+   * 答えは JSON の tagline（完成したひとこと1本だけ）で受け取る。断られた・空の答えも書き直させる
    * @param input write と同じもの＋ highlight（その記事の見どころ。参考）。others は [{ slug, tagline, names }]
    * @returns {Promise<{ text: string, attempts: number } | { text: null, reason: string, attempts: number }>}
    */
@@ -586,6 +690,26 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
   async function fix(input, text, reasons, { kind = 'highlight' } = {}) {
     const spec = KINDS[kind];
     if (!api) return { text: null, reason: 'ANTHROPIC_API_KEY が設定されていない' };
+    if (spec.fresh) {
+      // ひとこと: 直す前の文と「誤り」の理由を渡して直させる。直した文が長さなどの点検に引っかかったら、もう1回だけ書き直させる
+      const r = await attemptFresh(kind, input, {
+        first: {
+          text,
+          heading: `直す前の${spec.label}`,
+          request: `この${spec.label}を公式テキストと見比べたチェック役が、次の点を「誤り」と指摘しました。公式テキストに合うように誤りを直し、${spec.label}をもう一度書いてください（ほかの守ることもそのまま守る）。`,
+          reasons,
+        },
+        maxAttempts: TAGLINE_FIX_ATTEMPTS,
+        logLabel: (n) => `    直した文${n > 1 ? `（${n}回目）` : ''}`,
+        onCall: () => stats.fixCalls++,
+      });
+      if (r.text) return { text: r.text };
+      if (!r.problems) {
+        const { attempts, ...rest } = r;
+        return rest;
+      }
+      return { text: null, reason: `直した文が点検を通らなかった（${r.problems.join(' / ')}）` };
+    }
     const messages = [
       { role: 'user', content: spec.prompt(input) },
       { role: 'assistant', content: text },

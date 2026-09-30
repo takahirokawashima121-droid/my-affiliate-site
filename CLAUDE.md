@@ -43,7 +43,7 @@
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run ai-highlight-test -- --slug=スラッグ`（公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて出す。ファイルは変えない。`ANTHROPIC_API_KEY` が必要。GitHub Actions の「AI highlight test (manual)」からも実行できる）
   - `npm run ai-highlight-review`（公開済みの記事の見どころをチェック役の AI にかけて結果を出す。`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の9本（`scripts/test/fixtures/ai-highlight-review-cases.json`）も一緒にチェックし、`mustFlag: true` の2本（手で直す前の文＝`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`）をどちらも「要確認」にでき、`mustNotFlag: true` の5本（今サイトに出ている文＝`slowking-deck`・`n-zoroark-ex-deck`・`mabusoruex-deck-0928`・`n-zoroark-ex-deck-0927`・`mega-lopunny-ex-deck-0927`）をすべて「問題なし」にできれば合格と出す。ファイルは変えない。GitHub Actions の「AI highlight review (manual)」からも実行できる）
-  - `npm run ai-highlight-rewrite`（公開済みの記事の見どころを Claude API でまとめて書き直す。`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。`--only-flagged` で「要確認の記事だけ直す」。`--tagline-only` で「ひとことだけ作る」（一覧のカードの `tagline` だけ。見どころは変えない）。ふだんは GitHub Actions の「AI highlight rewrite (manual)」から実行し、結果を `auto/ai-highlight-rewrite`（要確認の記事だけ直すときは `auto/ai-highlight-fix`・ひとことだけ作るときは `auto/ai-tagline`）ブランチの PR にする。main には直接入れない）
+  - `npm run ai-highlight-rewrite`（公開済みの記事の見どころを Claude API でまとめて書き直す。`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。`--only-flagged` で「要確認の記事だけ直す」。`--tagline-only` で「ひとことだけ作る」（一覧のカードの `tagline` だけ。見どころは変えない。`--tagline-missing` も付けると「ひとことがまだない記事だけ作る」）。ふだんは GitHub Actions の「AI highlight rewrite (manual)」から実行し、結果を `auto/ai-highlight-rewrite`（要確認の記事だけ直すときは `auto/ai-highlight-fix`・ひとことだけ作るときは `auto/ai-tagline`）ブランチの PR にする。main には直接入れない）
   - `npm run apply-name-rules`（デッキ名の付け足しを外し、通称ルールを既存の記事に当てはめる。`--dry-run` あり。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
@@ -155,15 +155,17 @@
       - コードは変えなくてよい（`scripts/lib/ai-highlight.js` が読み込む）
   - PR の「生成した記事」の各記事に「見どころ（AIで作成）」「見どころ（従来の方法・理由）」を出し、「Claude API（見どころ）の使用量」にモデル・呼んだ回数・トークン数・おおよその料金（ドル）を出す
   - **モデルの変え方**: `scripts/lib/ai-highlight.js` の `AI_HIGHLIGHT_CONFIG.model` だけを書き換える（今は `claude-sonnet-5-5`）。料金の目安は同じファイルの `PRICES` にあるモデルだけ出る（ないモデルは「不明」。追記すれば出る）。effort に対応していないモデル（`claude-haiku-4-5` など）にするときは `effort` を `null` にする。変えたら「AI highlight test (manual)」で数本試してから PR にする
-  - 1回の実行（`npm run auto-decks` / `npm run auto-city` それぞれ）で API を呼ぶ回数の上限は `AI_HIGHLIGHT_CONFIG.maxCallsPerRun`（80回。ひとこと・チェック役・直しの分も数える。1本あたり見どころ最大5回＋ひとこと最大5回。見どころを先に全部書いてから、ひとことを書く）
+  - 1回の実行（`npm run auto-decks` / `npm run auto-city` それぞれ）で API を呼ぶ回数の上限は `AI_HIGHLIGHT_CONFIG.maxCallsPerRun`（80回。ひとこと・チェック役・直しの分も数える。1本あたり見どころ最大5回＋ひとこと最大7回。見どころを先に全部書いてから、ひとことを書く）
   - API のエラーのときは、API が返した理由の文（残高不足など）をログと PR 本文に出す（`apiErrorDetail`）。**キーの文字は出さない**（`sk-ant-…` と渡したキーは伏せる）
 - **一覧のカードの「ひとこと」**（`deck-columns.json` の各記事の `tagline`・`taglineBy`。`highlightBy`（なければ `highlight`）のすぐ後ろに置く）
   - トップの特集・デッキ解説の一覧のカードは、`tagline` があればそれ、なければ `highlight` を出す（`src/data/deck-columns.ts` の `cardBlurb`）。記事の本文の「このデッキのポイント」・X投稿文は見どころのまま
   - 自動生成では、見どころをすべて決めたあとに Claude API で1本書く（`scripts/lib/ai-highlight.js` の `writeTagline`。渡すのは見どころと同じデータ＋その記事の見どころ（参考））。長さは `TAGLINE_MIN`〜`TAGLINE_MAX`（30〜40字）
-  - 点検は `reviewTagline`（長さ・主役のカード名が入っている・データにない「」の名前や数字・誇張・決まった文・同じ日の記事と同じ文）。**30〜40字をはみ出したら、理由を伝えてもう一度短く書き直させる**（1回だけ）。それでも通らない・API のエラー・上限のときは、ひとことなし（一覧は見どころを出す）
-  - チェック役・直しは見どころと同じ基準（`checkAndFix(input, text, { kind: 'tagline' })`。チェック役には「## ひとこと」として渡す）。要確認なら1回だけ直させ、それでも要確認なら直した文を使い、PR のいちばん上に「⚠ 要確認」で出す
+  - 最初の指示で「40字を1字でも超えると使えない（35字くらいが目安）」と強く伝える。**答えは structured outputs の JSON（`{"tagline": "…"}`。`TAGLINE_SCHEMA`）で受け取り、完成したひとこと1本だけを入れさせる**（字数を数える考えごと・下書きを本文に書かせない。以前は本文に考えごとが混ざり、書き直しで refusal・空の答えになった）
+  - 点検は `reviewTagline`（長さ・主役のカード名が入っている・データにない「」の名前や数字・誇張・決まった文・同じ日の記事と同じ文）。**点検に通らない・断られた（refusal）・空の答えなら、理由を伝えて書き直させる（2回まで。`TAGLINE_MAX_ATTEMPTS` = 3回書く）**。長さは「長すぎます（今46字）。あと6字以上削って、40字以内…」のように具体的な数で伝える。書き直しは毎回1通のメッセージで呼び直す（前の答えと直す点は渡す文の後ろに「## 前に書いたひとこと」として書く。前の応答を会話に戻さない。断られたときは前の答えを渡さない）。それでも通らない・API のエラー・上限のときは、ひとことなし（一覧は見どころを出す）
+  - チェック役・直しは見どころと同じ基準（`checkAndFix(input, text, { kind: 'tagline' })`。チェック役には「## ひとこと」として渡す）。要確認なら1回だけ直させ（直した文が長さなどの点検に通らなければ、もう1回だけ書き直させる。`TAGLINE_FIX_ATTEMPTS`）、それでも要確認なら直した文を使い、PR のいちばん上に「⚠ 要確認」で出す
+  - 1本あたりの呼び出しは最大7回（書く3回・チェック・直す2回・チェック）
   - `"taglineBy": "ai"` … AI が書いたひとこと / `"manual"` … 人が手で直したひとこと。**自動生成でも「ひとことだけ作る」でも上書きしない**（ひとことを手で直したら必ず `"taglineBy": "manual"` にする）
-  - 公開済みの記事は「AI highlight rewrite (manual)」の「ひとことだけ作る」（`--tagline-only`）で書く。**見どころ（`highlight`・`highlightBy`）は変えない**（`"highlightBy": "manual"` の記事も、見どころはそのままでひとことだけ書く）。PR は `auto/ai-tagline` ブランチ。変えるのは `deck-columns.json` の `tagline`・`taglineBy` だけ（レシピ・価格・カードの効果は触らない）
+  - 公開済みの記事は「AI highlight rewrite (manual)」の「ひとことだけ作る」（`--tagline-only`）で書く。「ひとことがまだない記事だけ作る」（`--tagline-only --tagline-missing`）なら `tagline` がまだない記事だけを書き、書けたひとことは変えない（PR は同じ `auto/ai-tagline`）。**見どころ（`highlight`・`highlightBy`）は変えない**（`"highlightBy": "manual"` の記事も、見どころはそのままでひとことだけ書く）。PR は `auto/ai-tagline` ブランチ。変えるのは `deck-columns.json` の `tagline`・`taglineBy` だけ（レシピ・価格・カードの効果は触らない）
 - **見どころを書いたのは誰かの印**（`deck-columns.json` の各記事の `highlightBy`。`highlight` のすぐ後ろに置く）
   - `"ai"` … Claude API が書いた見どころ。自動生成・まとめ書き直しで AI の文を使ったときに自動で付く
   - `"manual"` … 人が手で直した見どころ。**自動生成でも、まとめ書き直し（`npm run ai-highlight-rewrite`・`npm run rewrite-highlights`）でも上書きしない**

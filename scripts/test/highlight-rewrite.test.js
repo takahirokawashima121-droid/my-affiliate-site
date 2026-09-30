@@ -364,11 +364,34 @@ test('ひとことだけ作る: 対象は公開済みの記事（見どころが
   copy.find((c) => c.slug === 'tauros-deck-0928').taglineBy = 'manual';
   const { targets, manual, all } = taglineTargets(copy, { today });
   assert.ok(targets.some((c) => c.slug === 'n-zoroark-ex-deck' && c.highlightBy === 'manual'));
-  assert.deepEqual(manual.map((c) => c.slug), ['tauros-deck-0928']);
+  assert.ok(manual.some((c) => c.slug === 'tauros-deck-0928'));
+  assert.ok(manual.every((c) => c.taglineBy === 'manual'));
   assert.ok(!targets.some((c) => c.slug === 'tauros-deck-0928'));
-  assert.equal(all, copy.filter((c) => c.pubDate <= today).length - 1);
+  assert.equal(all, copy.filter((c) => c.pubDate <= today).length - manual.length);
   for (let i = 1; i < targets.length; i++) assert.ok(targets[i - 1].pubDate >= targets[i].pubDate);
   assert.equal(taglineTargets(copy, { today, limit: 2 }).targets.length, 2);
+});
+
+test('ひとことがまだない記事だけ作る: ひとこと（tagline）がある記事は対象にしない（書けたひとことは変えない）', () => {
+  const today = '2026-09-30';
+  const copy = structuredClone(columns);
+  const has = copy.find((c) => c.pubDate <= today && c.taglineBy !== 'manual' && c.tagline);
+  const none = copy.find((c) => c.pubDate <= today && c.taglineBy !== 'manual' && c !== has);
+  delete none.tagline;
+  delete none.taglineBy;
+  const { targets, all, existing } = taglineTargets(copy, { today, missingOnly: true });
+  assert.ok(targets.length > 0);
+  assert.ok(targets.every((c) => !c.tagline && c.taglineBy !== 'manual'));
+  assert.ok(targets.some((c) => c.slug === none.slug));
+  assert.ok(!targets.some((c) => c.slug === has.slug));
+  assert.equal(all + existing, taglineTargets(copy, { today }).all);
+  // missingOnly なしでは、ひとことがある記事も対象（existing は 0）
+  assert.ok(taglineTargets(copy, { today }).targets.some((c) => c.slug === has.slug));
+  assert.equal(taglineTargets(copy, { today }).existing, 0);
+  // PR: ひとことがまだない記事だけを対象にしたこと・変えなかった本数を出す
+  const body = taglinePrBody({ results: [], manual: [], stats: { model: 'm', calls: 0, reviewCalls: 0, fixCalls: 0, maxCalls: 250, inputTokens: 0, outputTokens: 0 }, limit: null, all, missingOnly: true, existing });
+  assert.ok(body.includes(`**ひとことがまだない記事だけ**を対象にしました（ひとことがある ${existing}本は変えていません）`));
+  assert.match(body, /--tagline-only --tagline-missing/);
 });
 
 test('ひとことだけ作る: 見どころ（highlight・highlightBy）は変えず、tagline と taglineBy: "ai" だけを入れる', async () => {
@@ -380,11 +403,11 @@ test('ひとことだけ作る: 見どころ（highlight・highlightBy）は変�
   }
   const long = (c) => `${taglineFor(c)}デッキで、じっくり戦っていく`;
   const client = fakeClient((params) => {
-    if (params.output_config?.format) return reviewOk;
+    if (/校閲者/.test(params.system)) return reviewOk;
     const prompt = params.messages[0].content;
     const target = prompt.includes(`主役のカード: ${manualHighlight.keyCards[0]}`) ? manualHighlight : other;
     // 1本目は最初にはみ出し、短く書き直させる
-    if (target === manualHighlight && params.messages.length === 1) return long(target);
+    if (target === manualHighlight && !prompt.includes('## 前に書いたひとこと')) return long(target);
     return taglineFor(target);
   });
   const ai = createAiHighlighter({ client, config: { ...AI_HIGHLIGHT_CONFIG, maxCallsPerRun: REWRITE_MAX_CALLS } });
@@ -443,7 +466,7 @@ test('ひとことだけ作る: チェック役が要確認のまま・書けな
   assert.ok(quote);
   const client = fakeClient((params) => {
     const prompt = params.messages[0].content;
-    if (params.output_config?.format) {
+    if (/校閲者/.test(params.system)) {
       return prompt.includes(a.keyCards[0]) ? JSON.stringify({ checks: [{ point: '効果', judgment: '誤り', reason: '対象が違う', quote }], notes: [] }) : reviewOk;
     }
     // b は何度書いても短すぎる

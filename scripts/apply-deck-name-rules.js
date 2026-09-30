@@ -13,6 +13,7 @@
 // - 書き換えるのは deck-columns.json の deckName・title・description・highlight と、ページ（src/pages/columns/{slug}.astro）のデッキ名の表記。
 //   付け足しつきの名前（「ドラパルトex（ヨノワール採用型）」）は、ほかの記事のページ・紹介文・コラム（src/content/blog）に出てきても置き換える。
 //   「〇〇デッキ」の形は、その記事自身のページ・紹介文だけで置き換える（カード名と同じデッキ名の「ヤドキング」などを、カード名としての表記まで変えないため）
+// - 同じ日・同じ名前の記事は、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する（scripts/lib/title-place.js）。店舗のデータがない記事は一覧に出す
 // - X投稿文は deckName と highlight から作るため、ここで直した名前がそのまま使われる
 // URL（slug）は変えない（公開済みの記事の URL を保つため）。URL を変える場合は astro.config.mjs の redirects に旧URL → 新URL を追加する
 
@@ -20,7 +21,8 @@ import { existsSync, mkdirSync, readdirSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { baseDeckName, columnDay } from './lib/deck-variant.js';
+import { baseDeckName } from './lib/deck-variant.js';
+import { placeTitles } from './lib/title-place.js';
 import { matchDeckNameRule } from './lib/deck-name-rules.js';
 
 const ROOT = new URL('../', import.meta.url);
@@ -69,25 +71,29 @@ async function main() {
     if (name !== c.deckName) changes.push({ c, before: { deckName: c.deckName, base }, after: { deckName: name }, byRule: norm(name) !== norm(base) });
   }
 
-  // 同じ日・同じ名前の記事（付け足しを外した結果、一覧で同じ名前が並ぶもの）
-  const nameOf = (c) => changes.find((x) => x.c === c)?.after.deckName ?? c.deckName;
-  const groups = new Map();
-  for (const c of columns) {
-    const day = columnDay(c);
-    if (!day) continue;
-    const key = `${day}#${norm(nameOf(c))}`;
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key).push(c);
-  }
-  const sameDay = [...groups.values()].filter((g) => g.length > 1);
+  // 同じ日・同じ名前の記事（付け足しを外した結果、一覧で同じ名前が並ぶもの）は、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する。
+  // 名前を変えたあとの記事で判定する（scripts/lib/title-place.js）
+  const projected = columns.map((c) => {
+    const x = changes.find((ch) => ch.c === c);
+    return x ? { ...c, deckName: x.after.deckName, title: renameOwnText(c.title, x.before, x.after) } : c;
+  });
+  const place = placeTitles(projected);
 
   const url = (c) => `\`/columns/${c.slug}/\``;
   const report = [
     `### 名前が変わる記事（${changes.length}件）`,
     ...(changes.length ? changes.map(({ c, before, after, byRule }) => `- ${url(c)} ${before.deckName} → **${after.deckName}**${byRule ? '（通称ルール）' : ''}`) : ['- なし']),
     '',
-    `### 同じ日・同じ名前の記事（${sameDay.length}組）`,
-    ...(sameDay.length ? sameDay.map((g) => `- ${nameOf(g[0])}（${columnDay(g[0])}）: ${g.map(url).join('・')}`) : ['- なし']),
+    `### 同じ日・同じ名前の記事（${place.groups.length}組）`,
+    ...(place.groups.length
+      ? place.groups.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map(({ c, tag }) => `${url(c)}${tag ? `（${tag}）` : ''}`).join('・')}`)
+      : ['- なし']),
+    '',
+    `### タイトルに開催地を付けた記事（${place.titles.size}件）`,
+    ...(place.titles.size ? [...place.titles].map(([slug, title]) => `- \`/columns/${slug}/\` → ${title}`) : ['- なし']),
+    '',
+    `### ⚠ 店舗のデータがなく、タイトルで区別できない記事（${place.unresolved.length}組）`,
+    ...(place.unresolved.length ? place.unresolved.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map(url).join('・')}`) : ['- なし']),
     '',
     `### 通称ルールに当てはまった記事（${ruled.length}件）`,
     ...(ruled.length ? ruled.map(({ c, name, rule, before }) => `- ${url(c)} **${name}**（${rule.note ?? ''}。変更前: ${before}）`) : ['- なし']),
@@ -125,6 +131,7 @@ async function main() {
     }
     c.deckName = after.deckName;
   }
+  for (const c of columns) if (place.titles.has(c.slug)) c.title = place.titles.get(c.slug);
   for (const [f, text] of texts) if (text !== (await readFile(f, 'utf8'))) await writeFile(f, text, 'utf8');
   await writeFile(COLUMNS_PATH, `${JSON.stringify(columns, null, 2)}\n`, 'utf8');
   console.log(`${changes.length}件を書き換えました（src/data/deck-columns.json・src/pages/columns/*.astro・src/content/blog/*.md）。本文の表記は git diff で確認してください`);

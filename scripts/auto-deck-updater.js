@@ -39,7 +39,8 @@ import { fileURLToPath } from 'node:url';
 import { cardEffects, deckCards, norm, romaji } from './lib/official.js';
 import { CITY_RANKS, FEEDS, articleDecks, cityArticleDecks, feedItems, isDeckName } from './lib/pokecabook.js';
 import { importDecks } from './import-official-decks.js';
-import { STAPLES, baseDeckName, columnDay, variantLabel } from './lib/deck-variant.js';
+import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
+import { placeTitles } from './lib/title-place.js';
 import { deckEnglishName, englishName } from './lib/english-name.js';
 import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
@@ -444,6 +445,24 @@ async function main() {
     const g = generated.find((x) => x.slug === column.slug);
     if (g) g.highlight = column.highlight;
   }
+  // 同じ日・同じ名前の記事ができたら、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する（scripts/lib/title-place.js）。
+  // 今回の記事を含むグループだけを直す（同じグループの既存の記事のタイトルも変わることがある。URL は変えない）
+  const place = placeTitles(columns);
+  const generatedSlugSet = new Set(generated.map((g) => g.slug));
+  const touches = (g) => g.columns.some(({ c }) => generatedSlugSet.has(c.slug));
+  const sameNameDay = place.groups.filter(touches);
+  const unresolvedTitles = place.unresolved.filter((g) => g.columns.some((c) => generatedSlugSet.has(c.slug)));
+  const retitled = [];
+  for (const g of sameNameDay) {
+    for (const { c } of g.columns) {
+      const title = place.titles.get(c.slug);
+      if (!title) continue;
+      retitled.push({ slug: c.slug, before: c.title, after: title, existing: !generatedSlugSet.has(c.slug) });
+      c.title = title;
+      const gen = generated.find((x) => x.slug === c.slug);
+      if (gen) gen.title = title;
+    }
+  }
   await writeJson(COLUMNS_PATH, columns);
 
   // 処理済みを記録（選ばなかったデッキ・無効だったデッキも記録し、次回は新しい記事のデッキだけを見る）
@@ -487,10 +506,6 @@ async function main() {
   const ruleColumns = generated.filter((c) => c.renamedByRule);
   const uncertainColumns = generated.filter((c) => c.ruleUncertain);
   const conflictColumns = generated.filter((c) => c.ruleConflict);
-  // 同じ日・同じ名前の記事（付け足しをしないため、一覧・トップで同じ名前が並ぶ。PR で確認する）
-  const sameNameDay = generated
-    .map((g) => ({ g, others: columns.filter((c) => c.slug !== g.slug && norm(c.deckName) === norm(g.deckName) && columnDay(g) && columnDay(c) === columnDay(g)) }))
-    .filter((x) => x.others.length > 0);
   const body = [
     `## 🏭 ポケカファクトリー｜新着${source.label}入賞デッキ記事の自動生成`,
     '',
@@ -538,8 +553,16 @@ async function main() {
       : []),
     ...(sameNameDay.length
       ? [
-          '### 同じ日・同じ名前の記事（デッキ名に付け足しをしないため、一覧で同じ名前が並びます）',
-          ...sameNameDay.map(({ g, others }) => `- ${g.deckName}（${columnDay(g)}）: \`/columns/${g.slug}/\`・${others.map((c) => `\`/columns/${c.slug}/\``).join('・')}`),
+          '### 同じ日・同じ名前の記事（デッキ名に付け足しをしないため、タイトルの【】に都道府県・店舗名を付けて区別しました）',
+          ...sameNameDay.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map(({ c, tag }) => `\`/columns/${c.slug}/\`${tag ? `（${tag}）` : ''}`).join('・')}`),
+          ...retitled.map((r) => `  - \`/columns/${r.slug}/\`${r.existing ? '（既存の記事）' : ''}: ${r.before} → **${r.after}**`),
+          '',
+        ]
+      : []),
+    ...(unresolvedTitles.length
+      ? [
+          '### ⚠ 店舗のデータがなく、タイトルで区別できない記事（ジムバトルなど。タイトルが同じになっています）',
+          ...unresolvedTitles.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map((c) => `\`/columns/${c.slug}/\``).join('・')}`),
           '',
         ]
       : []),
@@ -553,6 +576,7 @@ async function main() {
     ...(inferredColumns.length ? ['- [ ] 推定したデッキ名が元記事のデッキ名と合っている'] : []),
     ...(uncertainColumns.length ? ['- [ ] 通称ルールに当てはまるか迷う記事のデッキ名を決めた'] : []),
     ...(conflictColumns.length ? ['- [ ] 2つ以上の通称ルールに当てはまる記事のデッキ名を決めた'] : []),
+    ...(unresolvedTitles.length ? ['- [ ] タイトルで区別できない同じ日・同じ名前の記事をどうするか決めた'] : []),
     ...(approxColumns.length ? [`- [ ] デッキ名を英語にできず主役ポケモンの英語名にした URL でよいか確認した（scripts/lib/english-name.js の DECK_WORDS に追記すると直訳になる）: ${approxColumns.map((c) => `\`${c.slug}\``).join('・')}`] : []),
     ...(romajiColumns.length ? [`- [ ] 英語名が分からずローマ字の slug になった記事の URL を英語表記に直した（scripts/lib/pokemon-names-en.json に追記）: ${romajiColumns.map((c) => `\`${c.slug}\``).join('・')}`] : []),
     '- [ ] 自動生成の立ち回り（序盤・中盤・終盤）をプレビューで読み、不自然な箇所があれば deck-columns.json の gamePlan を直した',

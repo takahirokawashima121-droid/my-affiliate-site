@@ -19,7 +19,8 @@
   - `src/pages/columns/{slug}.astro` ＋ `src/layouts/DeckColumn.astro` … デッキ解説
   - `src/content/blog/` … コラム記事（Markdown）
   - `scripts/lib/official.js` の `SET_MARKS` … 弾ごとのレギュレーションマーク
-  - `scripts/lib/deck-variant.js` … 同名デッキの型名付け
+  - `scripts/lib/deck-variant.js` … 同名デッキの URL の区別（デッキ名には付けない）
+  - `scripts/lib/title-place.js` … 同じ日・同じ名前の記事のタイトルに都道府県・店舗名を付けて区別する
   - `scripts/lib/deck-name-rules.js` … デッキ名の通称ルール（`DECK_NAME_RULES`。ポケカブックの名前より優先）。特性で判定するルール用の特性の一覧は `scripts/lib/card-abilities.json`（自動生成のときに公式のカードテキストから追記される）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
   - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
@@ -35,7 +36,7 @@
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
-  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/pr-body.js` の PR 本文のテスト。どれかを変更したら必ず実行する）
+  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別のテスト。どれかを変更したら必ず実行する）
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run apply-name-rules`（デッキ名の付け足しを外し、通称ルールを既存の記事に当てはめる。`--dry-run` あり。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
@@ -65,7 +66,9 @@
   - レギュ落ち時は、両定数の更新・範囲外カードの削除・`astro.config.mjs` の `redirects` への旧URL追加をセットで行う
 - カードのURL（id）を変える場合は、必ず `redirects` に旧URL → 新URLを追加する
 - デッキ名は**ポケカブックのまとめ記事の●付き小見出しの名前を正とする**（例: 「●スッカラカン」「●ボムファイアロー」「●ケンタロス」）
-  - **デッキ名に、カードの採用や枚数による付け足し（「（ハンディサーキュレーター採用型）」「（ヒカリ2枚型）」など）を付けない。** 同じ日に同じ名前のデッキが並んでもそのままにし、自動生成の PR に「同じ日・同じ名前の記事」として一覧で出す（URL は `-2` や区別のカードの英語名で重ならないようにする）
+  - **デッキ名に、カードの採用や枚数による付け足し（「（ハンディサーキュレーター採用型）」「（ヒカリ2枚型）」など）を付けない。** 同じ日に同じ名前のデッキが並んでもデッキ名はそのままにし、自動生成の PR に「同じ日・同じ名前の記事」として一覧で出す（URL は `-2` や区別のカードの英語名で重ならないようにする）
+    - 同じ日・同じ名前の記事があるときだけ、タイトルの【】の中に都道府県を付けて区別する（例: 【9/26 シティリーグ優勝・千葉】メガゲッコウガexデッキレシピ！…）。都道府県も同じなら店舗名を付ける。`scripts/lib/title-place.js`（自動生成と `npm run apply-name-rules` の両方で使う）。URL は変えない
+    - 店舗のデータ（`venue`）がない記事（ジムバトルなど）は区別できないので、タイトルは変えず PR の「人が確認すべき点」で知らせる
   - ただし、次の**通称ルールに当てはまるデッキは、ルールの名前を優先する**（●付き小見出しから名前が取れた場合も、推定した場合も）
     - ヤドキングが入っている → 「ひらめきチャレンジ」
     - カミッチュが入っていて、カミツオロチexが入っていない → 「おまつりおんど」（「カミッチュ（おまつりおんど）」とは書かない）

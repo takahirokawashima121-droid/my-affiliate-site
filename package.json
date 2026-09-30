@@ -19,6 +19,7 @@
     "apply-name-rules": "node scripts/apply-deck-name-rules.js",
     "rewrite-highlights": "node scripts/rewrite-highlights.js",
     "check-highlights": "node scripts/rewrite-highlights.js --check",
+    "ai-highlight-test": "node scripts/ai-highlight-test.js",
     "test": "node --test scripts/test/*.test.js"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.129.0",
     "@astrojs/check": "^0.9.10",
     "cheerio": "^1.2.0",
     "typescript": "^6.0.3"

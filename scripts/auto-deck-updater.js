@@ -26,6 +26,8 @@
 // 4. src/data/deck-columns.json に記事情報を追記し、src/pages/columns/{slug}.astro を生成する。
 //    本文は公式のカードテキストから作る「デッキの構成」「主力カードの効果」と、最安値つき60枚レシピ・代替案の枠。
 //    序盤・中盤・終盤の立ち回り（gamePlan）は60枚の構成と公式のカードテキストから自動生成する（scripts/lib/game-plan.js）。
+//    見どころ（highlight）は Claude API で書き（scripts/lib/ai-highlight.js。ANTHROPIC_API_KEY が必要）、
+//    点検を通らない・API のエラー・キーがないときは公式のカードテキストから組み立てる従来の方法（scripts/lib/highlight.js）を使う。
 //    代替カード・カスタマイズ案は自動では書かないため、Pull Request で追記してから公開する。
 //    デッキ名には「（〇〇採用型）」のような付け足しをしない（同じ日・同じ名前のデッキが並んでもそのまま。PR に一覧で出す）
 // 5. Pull Request の本文（.cache/auto-deck-pr.md）を書き出す（GitHub Actions の auto-deck-sync.yml が使う）
@@ -46,7 +48,8 @@ import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
 import { CARD_ABILITIES_PATH, loadCardAbilities, matchDeckNameRule, needsAbilities, ruleMainCard } from './lib/deck-name-rules.js';
 import { auditHighlights, chooseHighlights, highlightCandidates } from './lib/highlight.js';
-import { generatedItem } from './lib/pr-body.js';
+import { generatedItem, highlightMethod } from './lib/pr-body.js';
+import { AI_HIGHLIGHT_CONFIG, createAiHighlighter, usageLines } from './lib/ai-highlight.js';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
@@ -440,10 +443,33 @@ async function main() {
     })),
     sameDay,
   );
+  // AI（Claude API）で見どころを書く（scripts/lib/ai-highlight.js）。点検を通らない・API のエラー・キーがない・呼び出し回数の上限のときは、
+  // 上で選んだ従来の方法の見どころを使う（AI の失敗で記事の自動生成を止めない）
+  const ai = createAiHighlighter({ log: (msg) => console.log(msg) });
+  const current = new Map(highlightInputs.map(({ column }) => [column.slug, chosen.get(column.slug) ?? null]));
+  const highlightBy = new Map(); // slug → { ai: boolean, reason?: string }
+  if (highlightInputs.length) console.log(`\n■ 見どころ（AI: ${ai.stats.enabled ? AI_HIGHLIGHT_CONFIG.model : 'ANTHROPIC_API_KEY なし → 従来の方法'}）`);
+  for (const { column, recipe, profiles } of highlightInputs) {
+    try {
+      if (ai.stats.enabled) console.log(`- ${column.slug}`);
+      // 書き出しを比べる相手: 同じ日の既存の記事と、今回のほかの記事（AI で書き直したものはその文）
+      const others = [
+        ...sameDay,
+        ...highlightInputs.filter((h) => h.column !== column).map((h) => ({ slug: h.column.slug, highlight: current.get(h.column.slug), names: namesOf(h.recipe, h.column) })),
+      ].filter((o) => o.highlight && o.highlight !== HIGHLIGHT_TODO);
+      const r = await ai.write({ deckName: column.deckName, main: column.keyCards[0], recipe, profiles, names: namesOf(recipe, column), others });
+      if (r.text) current.set(column.slug, r.text);
+      highlightBy.set(column.slug, r.text ? { ai: true } : { ai: false, reason: r.reason });
+    } catch (error) {
+      console.log(`  ⚠ AI の見どころを作れませんでした（${error?.message ?? error}）。従来の方法を使います`);
+      highlightBy.set(column.slug, { ai: false, reason: '予期しないエラー' });
+    }
+  }
+  console.log(usageLines(ai.stats).join('\n'));
   for (const { column } of highlightInputs) {
-    column.highlight = chosen.get(column.slug) ?? HIGHLIGHT_TODO;
+    column.highlight = current.get(column.slug) ?? HIGHLIGHT_TODO;
     const g = generated.find((x) => x.slug === column.slug);
-    if (g) g.highlight = column.highlight;
+    if (g) Object.assign(g, { highlight: column.highlight, highlightBy: highlightBy.get(column.slug) ?? { ai: false } });
   }
   // 同じ日・同じ大会の種類・同じ名前の記事ができたら、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する。
   // 店舗のデータがない記事（ジムバトルなど）は、レシピの違いからタイトルに「（〇〇採用型）」を付ける（scripts/lib/title-place.js。デッキ名には付けない）。
@@ -530,7 +556,10 @@ async function main() {
     `### 生成した記事（${generated.length}本）`,
     '（「〇会場目」は、元記事の会場の見出しを上から数えた順番です。結果の画像がない会場も数えます。ジムバトルは店舗名が載っていないため、デッキ1つを1会場として上から数えています）',
     '',
-    ...(generated.length ? generated.map((c) => `${generatedItem(c)}\n  - 見どころ: ${c.highlight}`) : ['- なし']),
+    ...(generated.length ? generated.map((c) => `${generatedItem(c)}\n  - 見どころ（${highlightMethod(c)}）: ${c.highlight}`) : ['- なし']),
+    '',
+    '### Claude API（見どころ）の使用量',
+    ...usageLines(ai.stats),
     '',
     ...(bannedHits.length || similarHits.length || todoHighlights.length
       ? [
@@ -580,6 +609,7 @@ async function main() {
     ...(xSection.length ? ['### 📱 X（Twitter）投稿用コピペ文', 'マージして公開されたあとに投稿してください（見どころを書き直した場合は、公開後の記事末尾「Xシェア用テキスト」の文面を使うと最新になります）。', '', ...xSection] : []),
     '### マージ前に確認すること',
     ...(bannedHits.length || similarHits.length || todoHighlights.length ? ['- [ ] 「紹介文の確認すべき点」の見どころを書き直した'] : []),
+    ...(generated.some((c) => c.highlightBy?.ai) ? ['- [ ] 「AIで作成」の見どころを記事の「主力カードの効果」と見比べ、カードテキストにないことが書かれていないか確認した'] : []),
     ...(inferredColumns.length ? ['- [ ] 推定したデッキ名が元記事のデッキ名と合っている'] : []),
     ...(uncertainColumns.length ? ['- [ ] 通称ルールに当てはまるか迷う記事のデッキ名を決めた'] : []),
     ...(conflictColumns.length ? ['- [ ] 2つ以上の通称ルールに当てはまる記事のデッキ名を決めた'] : []),

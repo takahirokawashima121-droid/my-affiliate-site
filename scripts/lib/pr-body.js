@@ -17,6 +17,15 @@ export function nameSourceText(c) {
 }
 
 /**
+ * 見どころをどちらの方法で書いたか（c.highlightBy は scripts/auto-deck-updater.js が入れる { ai, reason }）。
+ * 「AIで作成」= Claude API（scripts/lib/ai-highlight.js）、「従来の方法」= 公式のカードテキストの組み立て（scripts/lib/highlight.js）
+ */
+export function highlightMethod(c) {
+  if (c.highlightBy?.ai) return 'AIで作成';
+  return c.highlightBy?.reason ? `従来の方法・${c.highlightBy.reason}` : '従来の方法';
+}
+
+/**
  * PR の「生成した記事」の1本分（Markdown のリスト項目。行の区切りは <br>）。
  * c は auto-deck-updater.js の generated の要素（c.source に大会の情報）。例:
  * - 【9/27 シティリーグ 優勝】青馬堂矢向店（神奈川）

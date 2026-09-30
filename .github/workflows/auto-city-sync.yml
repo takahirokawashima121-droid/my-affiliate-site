@@ -63,6 +63,7 @@ jobs:
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
           YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }} # 見どころを AI で書く（なければ従来の方法）
 
       # サイトのビルドはここでは行わない（PR のプレビュー・main へのマージ時に Vercel がビルドするため、壊れていればそこで分かる）
 

@@ -2,7 +2,13 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { generatedItem } from '../lib/pr-body.js';
+import { generatedItem, highlightMethod } from '../lib/pr-body.js';
+
+test('見どころをどちらの方法で書いたか（AIで作成・従来の方法と理由）', () => {
+  assert.equal(highlightMethod({ highlightBy: { ai: true } }), 'AIで作成');
+  assert.equal(highlightMethod({ highlightBy: { ai: false, reason: 'ANTHROPIC_API_KEY が設定されていない' } }), '従来の方法・ANTHROPIC_API_KEY が設定されていない');
+  assert.equal(highlightMethod({}), '従来の方法');
+});
 
 const article = { articleTitle: 'シティリーグ9/27【日】ベスト16デッキまとめ', articleLink: 'https://pokecabook.com/archives/335123' };
 const city = (source, extra = {}) => ({

@@ -9,6 +9,7 @@ import CardImage from '../components/CardImage.astro';
 import EventBadge from '../components/EventBadge.astro';
 import GamePlan from '../components/GamePlan.astro';
 import AffiliatePixels from '../components/AffiliatePixels.astro';
+import ToretokuNotice from '../components/ToretokuNotice.astro';
 import { SITE } from '../consts';
 import { SHOPS } from '../config/affiliate';
 import { DECK_COLUMNS, columnPath } from '../data/deck-columns';
@@ -185,8 +186,13 @@ const jsonLd = {
       <p class="mt-4 flex flex-wrap gap-4 text-sm"><a href="/columns/" class="text-blue-600 underline">デッキ解説の一覧へ</a><a href="/tier/" class="text-blue-600 underline">最新環境Tier表へ</a></p>
     </aside>
 
+    <!-- 記事の最後：組み替えで使わなくなったカードの手放し方（上の「3. 使わなくなったカードを買取に出して資金にする」の買取案内とは離して置く） -->
+    <ToretokuNotice variant="deck" item={`${column.deckName}デッキ解説`} />
+
     <XShareBox posts={xPosts} />
 
-    <AffiliatePixels cards={deckCards} shops={['furuichi']} />
+    {/* このページにリンクがあるのはふるいち（上の「3.」）とトレトク（ToretokuNotice の中で計測画像も出す）だけ。
+        楽天・Yahoo!・カードごとの買取リンクはカードページにあり、ここには出さないため計測画像も読み込まない */}
+    <AffiliatePixels cards={[]} shops={['furuichi']} />
   </div>
 </BaseLayout>

@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { cardDisplayName, modelCode } from './cardFormat';
 import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../consts';
+import { isShopNameEnabled } from '../config/affiliate';
 
 export type Card = CollectionEntry<'cards'>;
 
@@ -88,6 +89,19 @@ export function productJsonLd(card: Card, pageUrl: string, description: string):
   };
 }
 
+/** 買取の提携リンク（遷移先・計測画像） */
+export type BuybackLink = { shop: string; url: string; impressionUrl?: string; network?: 'a8' | 'moshimo' };
+
+/**
+ * カードごとの買取提携リンク（cards.json の buybackShop・buybackUrl）。
+ * 未設定、または src/config/affiliate.ts の SHOPS で止めている提携先（enabled: false）なら null
+ */
+export function cardBuybackLink(card: Card): BuybackLink | null {
+  const { buybackShop, buybackUrl, buybackImpressionUrl } = card.data;
+  if (!buybackShop || !buybackUrl || !isShopNameEnabled(buybackShop)) return null;
+  return { shop: buybackShop, url: buybackUrl, impressionUrl: buybackImpressionUrl, network: buybackUrl.includes('a8.net') ? 'a8' : undefined };
+}
+
 /** 販売在庫があるか（楽天・Yahoo! のどちらかに在庫のある出品がある） */
 export function hasSaleStock(card: Card): boolean {
   return bestOffer(card) !== null;
@@ -96,16 +110,15 @@ export function hasSaleStock(card: Card): boolean {
 /**
  * 販売価格と買取価格の差。
  * 買取価格が販売価格以上（逆ザヤ）の場合は、データが古い・誤っている可能性が高いため
- * valid=false とし、画面では差額・買取率の代わりに「相場確認中」と表示する。
+ * valid=false とし、画面では差の代わりに「相場確認中」と表示する。
  */
-export function priceGap(card: Card): { valid: boolean; spread: number; rate: number } {
+export function priceGap(card: Card): { valid: boolean; spread: number } {
   const salePrice = bestOffer(card)?.price ?? 0; // 2大モールの最安値
   const { buybackPrice } = card.data;
   const valid = salePrice > 0 && buybackPrice < salePrice;
   return {
     valid,
     spread: salePrice - buybackPrice,
-    rate: salePrice > 0 ? Math.round((buybackPrice / salePrice) * 100) : 0,
   };
 }
 

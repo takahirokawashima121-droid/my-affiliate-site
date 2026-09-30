@@ -13,6 +13,8 @@ export type AffiliateShop = {
   /** インプレッション計測画像（1x1） */
   impressionUrl: string;
   network: 'a8' | 'moshimo';
+  /** false にすると、リンク・計測画像を画面に出さない（省略時は表示する） */
+  enabled?: boolean;
 };
 
 export const SHOPS = {
@@ -32,9 +34,47 @@ export const SHOPS = {
     impressionUrl: 'https://www13.a8.net/0.gif?a8mat=4BCL3T+ANF6CY+5NJ8+5YJRM',
     network: 'a8',
   },
+  /**
+   * トレトク（トレカの宅配買取）。ToretokuNotice.astro だけで使う（リンクと計測画像を同じ部品の中で出す）。
+   * ほかのショップと並べない・比べないため、価格比較の表・買取目安の欄・BuybackOptions には入れないこと。
+   * url・impressionUrl は A8.net の広告コードのまま（一文字も変えない）
+   */
+  toretoku: {
+    name: 'トレトク',
+    kind: 'buyback',
+    url: 'https://px.a8.net/svt/ejp?a8mat=4BCKBZ+92UZW2+2QOI+2T849U',
+    impressionUrl: 'https://www15.a8.net/0.gif?a8mat=4BCKBZ+92UZW2+2QOI+2T849U',
+    network: 'a8',
+  },
+  /**
+   * カーナベル（カードごとの買取リンク。cards.json の buybackShop・buybackUrl・buybackImpressionUrl）。
+   * A8.net の案内で、ポケカは新サイトへの移行に伴い 2026/05/13 から成果が発生しないため、いったん止めている。
+   * enabled: false の間は、トップ・カードページ・関連カードなどにリンクと計測画像を出さず、買取ボタンはふるいちに向ける。
+   * cards.json のデータは残してあるので、成果が発生するようになったら true に戻すだけで元の表示になる
+   * （scripts/add-cards.js も、true のときだけ新しいカードにこのリンクを書き込む）
+   */
+  kanabell: {
+    name: 'カーナベル',
+    kind: 'buyback',
+    url: 'https://px.a8.net/svt/ejp?a8mat=4BCKBZ+9OALO2+49YI+656YQ',
+    impressionUrl: 'https://www17.a8.net/0.gif?a8mat=4BCKBZ+9OALO2+49YI+656YQ',
+    network: 'a8',
+    enabled: false,
+  },
 } as const satisfies Record<string, AffiliateShop>;
 
 export type ShopKey = keyof typeof SHOPS;
+
+/** 提携先を画面に出してよいか（SHOPS の enabled が false なら出さない） */
+export function isShopEnabled(key: ShopKey): boolean {
+  const shop: AffiliateShop = SHOPS[key];
+  return shop.enabled !== false;
+}
+
+/** 表示名（cards.json の buybackShop など）から、止めている提携先かどうかを判定する */
+export function isShopNameEnabled(name: string): boolean {
+  return (Object.keys(SHOPS) as ShopKey[]).every((key) => SHOPS[key].name !== name || isShopEnabled(key));
+}
 
 /**
  * GA4 の affiliate_click で送る shop_name（リンクの data-aff-shop の表示名 → 英字キー）。
@@ -46,7 +86,8 @@ export const GA_SHOP_KEYS: Record<string, string> = {
   メルカリ: 'mercari',
   [SHOPS.beehonpo.name]: 'beehonpo',
   [SHOPS.furuichi.name]: 'furuichi',
-  カーナベル: 'carnavel',
+  [SHOPS.toretoku.name]: 'toretoku',
+  [SHOPS.kanabell.name]: 'carnavel',
   カードラッシュ: 'cardrush',
   晴れる屋2: 'hareruya2',
   駿河屋: 'surugaya',

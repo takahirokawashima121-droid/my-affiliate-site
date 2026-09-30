@@ -25,7 +25,7 @@
 | `npm run check-deck-names` | 公開済み記事のデッキ名をポケカブックの●付き小見出しと照合（記事は書き換えない。結果は `.cache/deck-name-check.md`） |
 | `npm run rewrite-highlights` | 決まった文（「〇〇を採用した〇〇デッキ。主力カードの効果と最安値をまとめて確認」など）のままの見どころ（highlight）を、記事ページに載っている公式のカードテキストから書き直す（`--dry-run` で確認のみ。具体的な見どころは変えない） |
 | `npm run check-highlights` | 見どころの点検だけ（決まった文・同じ日の記事同士の書き出しの似かよい。結果は `.cache/highlight-check.md`） |
-| `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・デッキ名の言い換えルール・見どころの自動生成（`scripts/lib/highlight.js`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
+| `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・デッキ名の言い換えルール・見どころの自動生成（`scripts/lib/highlight.js`）・自動生成の PR 本文（`scripts/lib/pr-body.js`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
 
 ## 最初にやること
 
@@ -51,7 +51,7 @@
 | `substituteIds` | 予算を抑えたい人向けの代用・関連カードの `id`（任意）。現行スタンダードで使えるカードを指定する |
 | `imageUrl` | 画像URL（`public/` 配下のパスも可。空なら仮画像を表示） |
 | `salePrice` / `saleShop` / `saleUrl` | 販売最安値（円）/ ショップ名 / アフィリエイトURL |
-| `buybackPrice` / `buybackShop` / `buybackUrl` | 買取最高値（円）/ ショップ名 / アフィリエイトURL |
+| `buybackPrice` / `buybackShop` / `buybackUrl` | 買取目安（円。販売最安値から計算）/ ショップ名 / アフィリエイトURL（ショップ名・URL は省略可。表示は `src/config/affiliate.ts` の `SHOPS` の `enabled` で切り替え） |
 | `updatedAt` | 更新日時（例: `2026-09-26T10:00:00+09:00`）。「新着順」の並び替えに使用 |
 
 画面上の表記は「ナンジャモ SAR [SV2D 096/071]」、楽天API・モール検索のキーワードは「ナンジャモ SAR 096/071 ポケカ」の形式で自動生成されます（`src/utils/cardFormat.ts`）。

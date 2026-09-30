@@ -14,6 +14,8 @@ const blog = defineCollection({
     draft: z.boolean().default(false),
     // アフィリエイトリンクを含む記事は true（PR表記を自動表示）
     affiliate: z.boolean().default(true),
+    // レギュ落ちを説明している記事は true（記事の最後に、レギュ落ちしたカードの手放し方としてトレトクの案内を表示）
+    regulationBuyback: z.boolean().default(false),
     // デッキレシピ（任意）。記事下に最新の最安値つきのレシピ表を表示する。合計は60枚であること（ビルド時に検証）
     deck: z
       .array(
@@ -48,9 +50,9 @@ const cards = defineCollection({
     yahooPrice: z.number().int().nonnegative().nullable().optional(), // 在庫のある該当商品なしは null、未取得は省略
     yahooUrl: z.string().optional(), // 商品ページURL（もしもアフィリエイト経由）。該当なしは ''
     yahooUpdatedAt: z.coerce.date().optional(), // Yahoo! の価格・リンクが変化した日時
-    buybackPrice: z.number().int().nonnegative(), // 買取最高値（円）
-    buybackShop: z.string(), // 買取ショップ名
-    buybackUrl: z.url(), // 買取アフィリエイトリンク
+    buybackPrice: z.number().int().nonnegative(), // 買取目安（円）。販売最安値から当サイトが計算した目安
+    buybackShop: z.string().optional(), // 買取ショップ名（表示するかは src/config/affiliate.ts の SHOPS の enabled で決まる）
+    buybackUrl: z.url().optional(), // 買取アフィリエイトリンク
     buybackImpressionUrl: z.url().optional(), // 買取側のインプレッション計測用画像
     // 予算を抑えたい人向けの代用・関連カード（cards.json 内の id。存在しない id はビルド時にエラー）
     substituteIds: z.array(z.string()).optional(),

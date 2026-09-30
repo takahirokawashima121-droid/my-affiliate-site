@@ -23,6 +23,7 @@
   - `scripts/lib/deck-name-rules.js` … デッキ名の言い換え表（`DECK_NAME_RULES`。ポケカブックの名前より優先）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
   - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
+  - `scripts/lib/pr-body.js` … 自動生成の PR 本文の「生成した記事」の1本分（大会の日付・開催店舗と都道府県・順位・元記事の何会場目か・デッキ名が●付き小見出しか推定か）。取れなかった項目は「取得できず」と書く
   - `scripts/cache/processed-decks.json` … 処理済みの記事・デッキ
   - `public/og-default.png` … 個別の画像がないページの OG 画像（1200×630）。元は `scripts/assets/og-default.html` で、`node scripts/render-og-image.js` で作り直す（手順は README の「OG画像」）
   - `public/generate-assets.html` … X のアイコン・プロフィールのヘッダー（1500×500）・サイト紹介バナー（1200×675）の描画と保存（デザインはサイト・OG画像に合わせた白基調）。`node scripts/render-x-assets.js` でフォントを確認してから PNG に書き出せる（手順は README の「X（旧Twitter）用の画像」）
@@ -34,7 +35,7 @@
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
-  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の言い換えルール、`scripts/lib/highlight.js` の見どころの自動生成のテスト。どれかを変更したら必ず実行する）
+  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の言い換えルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/pr-body.js` の PR 本文のテスト。どれかを変更したら必ず実行する）
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run apply-name-rules`（言い換えルールを既存の記事に当てはめる。`--dry-run` あり。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
@@ -104,6 +105,12 @@
 - APIキー（`RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`・`YAHOO_APP_ID` など）は GitHub Secrets と `.env` のみ。コード・ログ・PR 本文に出力しない
 - リポジトリは Public。秘密情報をコミットしていないか、push 前に必ず確認する
 - アフィリエイト設定（もしもアフィリエイトのID）は変更しない
+- トレトク（A8.net・宅配買取）の案内は `src/components/ToretokuNotice.astro` だけで出す（リンクと計測画像はセットで、コードは `src/config/affiliate.ts` の `SHOPS.toretoku`）
+  - 置き場所: デッキ記事の最後・レギュ落ちを説明する記事（frontmatter `regulationBuyback: true`）・カードページ（価格比較・買取目安の欄とは別の場所に小さく）
+  - ほかのショップと並べたり比べたりしない（価格比較の表・買取目安の欄・`BuybackOptions` に入れない）。書くのは事実（送料・手数料無料／無料の宅配キット／スリーブやファイルのまま送れる／まとめて買取）だけで、「高価買取」などの言いすぎ・体験談風の文は使わない。案内のすぐ近くに「PR」を出す
+- カーナベル（カードごとの買取リンク）は A8.net の案内でポケカの成果が 2026/05/13 から発生しないため、`src/config/affiliate.ts` の `SHOPS.kanabell.enabled = false` で止めている。止めている間はリンク・計測画像を出さず、買取ボタンは古本市場（ふるいち）に向ける。`cards.json` の `buybackShop`・`buybackUrl`・`buybackImpressionUrl` は消さない（`true` に戻せば元の表示になる。`scripts/add-cards.js` もこの設定に従う）
+- 買取価格は「買取目安」（販売価格をもとに当サイトが計算した目安）として出し、金額の横に店名やお店のボタンを出さない（カードページ・トップのカード一覧とも、目安の数字と説明だけ）。買取査定の申込先はカードページの「買取査定に出す」（`BuybackOptions`）の欄だけに置く。「最高値」「高価」「一番高く」は使わない
+- 広告表記「当サイトはアフィリエイト広告（PR）を利用しています」はヘッダーの上（`Header.astro`）に全ページ共通で出している。消さない
 
 ## 9. 迷ったとき
 - 仕様にない判断が必要な場合は、実装を止めて PR か出力で質問を明記する

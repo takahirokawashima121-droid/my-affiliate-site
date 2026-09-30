@@ -1,9 +1,9 @@
 ---
-// 「最安値で購入する」「最高値で買い取ってもらう」ボタン（別タブで開く）
-import { BUYBACK_PRIMARY, BUYBACK_SECONDARY, SALE_PRIMARY } from '../utils/buttonStyles';
+// 「最安値で購入する」ボタン（別タブで開く）。
+// 買取のボタンは金額の近くに置かず、カードページの「買取査定に出す」（BuybackOptions）だけで出す
+import { SALE_PRIMARY } from '../utils/buttonStyles';
 
 interface Props {
-  kind: 'sale' | 'buyback' | 'bulk';
   href: string;
   shop: string;
   size?: 'sm' | 'lg';
@@ -11,19 +11,12 @@ interface Props {
   item?: string;
   /** ボタン文言の上書き（例: 在庫なし時の「楽天市場で探す」） */
   label?: string;
+  /** GA4 の affiliate_type（既定は sale） */
+  type?: string;
 }
 
-const { kind, href, shop, size = 'sm', item, label } = Astro.props;
+const { href, shop, size = 'sm', item, label = '最安値で購入する', type = 'sale' } = Astro.props;
 const network = href.includes('a8.net') ? 'a8' : href.includes('moshimo.com') ? 'moshimo' : undefined;
-
-const styles = {
-  // 購入：ファイアレッド
-  sale: { label: '最安値で購入する', color: SALE_PRIMARY, led: 'bg-white/90' },
-  // 買取：リーフグリーン
-  buyback: { label: '最高値で買い取ってもらう', color: BUYBACK_PRIMARY, led: 'bg-emerald-200' },
-  // まとめて送る宅配買取（ふるいち）。在庫なしのカードでシングル買取ボタンと並ぶため、白地 + 緑枠で区別する
-  bulk: { label: 'まとめて買取査定', color: BUYBACK_SECONDARY, led: 'bg-emerald-500' },
-}[kind];
 ---
 
 <a
@@ -32,18 +25,18 @@ const styles = {
   rel="sponsored nofollow noopener noreferrer"
   data-aff-network={network}
   data-aff-shop={shop}
-  data-aff-type={kind === 'bulk' ? 'buyback_bulk' : kind}
+  data-aff-type={type}
   data-aff-item={item}
   class:list={[
     'flex flex-col items-center justify-center gap-1 text-center font-bold leading-tight transition focus-visible:outline-2 focus-visible:outline-offset-2',
-    styles.color,
+    SALE_PRIMARY,
     size === 'lg' ? 'px-4 py-3.5 text-base' : 'min-h-[3.5rem] px-2 py-2 text-[13px]',
   ]}
 >
-  <span>{label ?? styles.label}</span>
+  <span>{label}</span>
   <!-- 遷移先：計器のランプ + 店舗名 -->
   <span class:list={['flex items-center gap-1.5 font-mono font-medium tracking-wide opacity-90', size === 'lg' ? 'text-xs' : 'text-[10px]']}>
-    <span class:list={['h-1.5 w-1.5 shrink-0 rounded-full', styles.led]} aria-hidden="true"></span>
+    <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-white/90" aria-hidden="true"></span>
     {shop}へ ↗
   </span>
 </a>

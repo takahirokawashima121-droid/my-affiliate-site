@@ -1,0 +1,18 @@
+---
+// デッキ解説の「このデッキのポイント」：記事の書き出しの文のすぐ下に出す見どころ（deck-columns.json の highlight）
+// highlight が空の記事では何も出さない
+interface Props {
+  highlight?: string;
+}
+
+const text = Astro.props.highlight?.trim();
+---
+
+{text && (
+  <section aria-labelledby="deck-highlight" class="not-prose my-6 rounded-xl border border-slate-200 border-l-4 border-l-blue-400 bg-slate-50 px-4 py-3 sm:px-5 sm:py-4">
+    <h2 id="deck-highlight" class="text-sm font-black text-slate-900">
+      <span aria-hidden="true">💡</span> このデッキのポイント
+    </h2>
+    <p class="mt-1.5 text-sm leading-relaxed break-words text-slate-700">{text}</p>
+  </section>
+)}

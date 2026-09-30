@@ -23,7 +23,7 @@
   - `scripts/lib/title-place.js` … 同じ日・同じ名前の記事のタイトルに都道府県・店舗名を付けて区別する
   - `scripts/lib/deck-name-rules.js` … デッキ名の通称ルール（`DECK_NAME_RULES`。ポケカブックの名前より優先）。特性で判定するルール用の特性の一覧は `scripts/lib/card-abilities.json`（自動生成のときに公式のカードテキストから追記される）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
-  - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
+  - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。記事の書き出しの下の「このデッキのポイント」（`src/components/DeckHighlight.astro`）・一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
   - `scripts/lib/ai-highlight.js` … 自動生成の見どころを Claude API で書く（設定は `AI_HIGHLIGHT_CONFIG`。くわしくは「6. 記事・紹介文の品質基準」）。API のエラーの理由の文（`apiErrorDetail`。キーの文字は伏せる）・見どころのチェック役（`review`）・要確認のときに AI に直させる処理（`checkAndFix`）もここ
   - `scripts/lib/game-rules.md` … ポケカの基本ルールのメモ（公式テキストには書かれていないが、ゲームのルールで決まっていること）。見どころを書く役とチェック役の両方に渡す。足し方は「6. 記事・紹介文の品質基準」
   - `scripts/lib/highlight-rewrite.js` … 公開済みの記事の見どころの AI でのまとめ書き直し（対象の選び方・同じ日の記事との点検・`deck-columns.json` への反映・PR 本文）。実行は `scripts/ai-highlight-rewrite.js`

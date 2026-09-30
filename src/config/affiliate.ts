@@ -32,6 +32,18 @@ export const SHOPS = {
     impressionUrl: 'https://www13.a8.net/0.gif?a8mat=4BCL3T+ANF6CY+5NJ8+5YJRM',
     network: 'a8',
   },
+  /**
+   * トレトク（トレカの宅配買取）。ToretokuNotice.astro だけで使う（リンクと計測画像を同じ部品の中で出す）。
+   * ほかのショップと並べない・比べないため、価格比較の表・買取最高値の欄・BuybackOptions には入れないこと。
+   * url・impressionUrl は A8.net の広告コードのまま（一文字も変えない）
+   */
+  toretoku: {
+    name: 'トレトク',
+    kind: 'buyback',
+    url: 'https://px.a8.net/svt/ejp?a8mat=4BCKBZ+92UZW2+2QOI+2T849U',
+    impressionUrl: 'https://www15.a8.net/0.gif?a8mat=4BCKBZ+92UZW2+2QOI+2T849U',
+    network: 'a8',
+  },
 } as const satisfies Record<string, AffiliateShop>;
 
 export type ShopKey = keyof typeof SHOPS;
@@ -46,6 +58,7 @@ export const GA_SHOP_KEYS: Record<string, string> = {
   メルカリ: 'mercari',
   [SHOPS.beehonpo.name]: 'beehonpo',
   [SHOPS.furuichi.name]: 'furuichi',
+  [SHOPS.toretoku.name]: 'toretoku',
   カーナベル: 'carnavel',
   カードラッシュ: 'cardrush',
   晴れる屋2: 'hareruya2',

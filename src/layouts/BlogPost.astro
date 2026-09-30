@@ -4,6 +4,7 @@ import BaseLayout from './BaseLayout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import PostCard from '../components/PostCard.astro';
 import DeckRecipe from '../components/DeckRecipe.astro';
+import ToretokuNotice from '../components/ToretokuNotice.astro';
 import { SITE } from '../consts';
 import { formatDate, readingTime, type Post } from '../utils/posts';
 
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const { post, headings, related } = Astro.props;
-const { title, description, pubDate, updatedDate, heroImage, tags, affiliate, deck } = post.data;
+const { title, description, pubDate, updatedDate, heroImage, tags, affiliate, deck, regulationBuyback } = post.data;
 const url = new URL(Astro.url.pathname, Astro.site).toString();
 const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
 
@@ -78,6 +79,8 @@ const jsonLd = {
       </div>
 
       {deck && <DeckRecipe deck={deck} />}
+
+      {regulationBuyback && <ToretokuNotice variant="regulation" item={title} />}
     </article>
 
     {related.length > 0 && (

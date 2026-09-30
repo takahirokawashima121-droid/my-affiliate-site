@@ -14,6 +14,8 @@ const blog = defineCollection({
     draft: z.boolean().default(false),
     // アフィリエイトリンクを含む記事は true（PR表記を自動表示）
     affiliate: z.boolean().default(true),
+    // レギュ落ちを説明している記事は true（記事の最後に、レギュ落ちしたカードの手放し方としてトレトクの案内を表示）
+    regulationBuyback: z.boolean().default(false),
     // デッキレシピ（任意）。記事下に最新の最安値つきのレシピ表を表示する。合計は60枚であること（ビルド時に検証）
     deck: z
       .array(

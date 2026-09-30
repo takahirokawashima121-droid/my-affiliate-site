@@ -347,6 +347,7 @@ test('チェック役: 引用が渡した公式テキストにない「誤り」
 test('ルールのメモ: 「## ルール」の下の「- 」の行だけを読み、書く役とチェック役の両方に渡す', async () => {
   assert.ok(GAME_RULES.length >= 1);
   assert.match(GAME_RULES[0], /このワザ自体のエネルギーだけで使える。借りたワザのエネルギーは要らない/);
+  assert.match(GAME_RULES[1], /^エネルギーをトラッシュして『その枚数×〇〇ダメージ』のワザは、ついている枚数ではなく捨てた枚数で数える。1枚だけとは限らない/);
   // 説明の行は渡さない
   assert.ok(!GAME_RULES.some((r) => r.includes('足し方')));
   assert.deepEqual(parseGameRules('# 見出し\n- 説明の行\n\n## ルール\n\n- ルール1\n  - ルール2 \n説明\n## 次の見出し\n- 入らない'), ['ルール1', 'ルール2']);
@@ -357,8 +358,12 @@ test('ルールのメモ: 「## ルール」の下の「- 」の行だけを読�
   await ai.review(reviewInput(SLUG, GOOD));
   for (const call of client.calls) {
     assert.match(call.system, /ポケカの基本ルール/);
-    assert.ok(call.system.includes(GAME_RULES[0]));
+    for (const rule of GAME_RULES) assert.ok(call.system.includes(rule));
   }
+  // ひとことを書く役にも渡す
+  const client2 = fakeClient([{ text: JSON.stringify({ tagline: TAGLINE }) }]);
+  await createAiHighlighter({ client: client2 }).writeTagline(taglineInput());
+  for (const rule of GAME_RULES) assert.ok(client2.calls[0].system.includes(rule));
 });
 
 // ---- 要確認なら、AI に自分で直させる（checkAndFix） ----

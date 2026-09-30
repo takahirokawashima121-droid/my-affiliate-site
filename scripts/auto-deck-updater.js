@@ -399,6 +399,8 @@ async function main() {
       // 見どころ: 主役の特性・ワザ（名前・ダメージ・効果）と組み合わせるカードを、公式のカードテキストから作る（scripts/lib/highlight.js）。
       // 下で同じ日の記事と書き出しが重ならない候補を選んで入れる。作れなかったときは TODO のまま PR で報告する
       highlight: HIGHLIGHT_TODO,
+      // 見どころを書いたのは誰か（'ai' = Claude API / 'manual' = 人が手で直した。従来の方法なら付けない）。下で AI の文を使ったら 'ai' にする
+      highlightBy: undefined,
       keyCards,
       // 序盤・中盤・終盤の立ち回り（60枚の構成と公式のカードテキストから自動生成。ページの「立ち回り・対戦の手順」に表示）
       gamePlan: buildGamePlan(recipe, profiles, keyCards[0]),
@@ -447,7 +449,7 @@ async function main() {
   // 上で選んだ従来の方法の見どころを使う（AI の失敗で記事の自動生成を止めない）
   const ai = createAiHighlighter({ log: (msg) => console.log(msg) });
   const current = new Map(highlightInputs.map(({ column }) => [column.slug, chosen.get(column.slug) ?? null]));
-  const highlightBy = new Map(); // slug → { ai: boolean, reason?: string }
+  const highlightResult = new Map(); // slug → { ai: boolean, reason?: string }（PR 本文用）
   if (highlightInputs.length) console.log(`\n■ 見どころ（AI: ${ai.stats.enabled ? AI_HIGHLIGHT_CONFIG.model : 'ANTHROPIC_API_KEY なし → 従来の方法'}）`);
   for (const { column, recipe, profiles } of highlightInputs) {
     try {
@@ -459,17 +461,19 @@ async function main() {
       ].filter((o) => o.highlight && o.highlight !== HIGHLIGHT_TODO);
       const r = await ai.write({ deckName: column.deckName, main: column.keyCards[0], recipe, profiles, names: namesOf(recipe, column), others });
       if (r.text) current.set(column.slug, r.text);
-      highlightBy.set(column.slug, r.text ? { ai: true } : { ai: false, reason: r.reason });
+      highlightResult.set(column.slug, r.text ? { ai: true } : { ai: false, reason: r.reason });
     } catch (error) {
       console.log(`  ⚠ AI の見どころを作れませんでした（${error?.message ?? error}）。従来の方法を使います`);
-      highlightBy.set(column.slug, { ai: false, reason: '予期しないエラー' });
+      highlightResult.set(column.slug, { ai: false, reason: '予期しないエラー' });
     }
   }
   console.log(usageLines(ai.stats).join('\n'));
   for (const { column } of highlightInputs) {
     column.highlight = current.get(column.slug) ?? HIGHLIGHT_TODO;
+    const result = highlightResult.get(column.slug) ?? { ai: false };
+    if (result.ai) column.highlightBy = 'ai';
     const g = generated.find((x) => x.slug === column.slug);
-    if (g) Object.assign(g, { highlight: column.highlight, highlightBy: highlightBy.get(column.slug) ?? { ai: false } });
+    if (g) Object.assign(g, { highlight: column.highlight, highlightBy: column.highlightBy, highlightResult: result });
   }
   // 同じ日・同じ大会の種類・同じ名前の記事ができたら、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する。
   // 店舗のデータがない記事（ジムバトルなど）は、レシピの違いからタイトルに「（〇〇採用型）」を付ける（scripts/lib/title-place.js。デッキ名には付けない）。
@@ -609,7 +613,7 @@ async function main() {
     ...(xSection.length ? ['### 📱 X（Twitter）投稿用コピペ文', 'マージして公開されたあとに投稿してください（見どころを書き直した場合は、公開後の記事末尾「Xシェア用テキスト」の文面を使うと最新になります）。', '', ...xSection] : []),
     '### マージ前に確認すること',
     ...(bannedHits.length || similarHits.length || todoHighlights.length ? ['- [ ] 「紹介文の確認すべき点」の見どころを書き直した'] : []),
-    ...(generated.some((c) => c.highlightBy?.ai) ? ['- [ ] 「AIで作成」の見どころを記事の「主力カードの効果」と見比べ、カードテキストにないことが書かれていないか確認した'] : []),
+    ...(generated.some((c) => c.highlightResult?.ai) ? ['- [ ] 「AIで作成」の見どころを記事の「主力カードの効果」と見比べ、カードテキストにないことが書かれていないか確認した'] : []),
     ...(inferredColumns.length ? ['- [ ] 推定したデッキ名が元記事のデッキ名と合っている'] : []),
     ...(uncertainColumns.length ? ['- [ ] 通称ルールに当てはまるか迷う記事のデッキ名を決めた'] : []),
     ...(conflictColumns.length ? ['- [ ] 2つ以上の通称ルールに当てはまる記事のデッキ名を決めた'] : []),

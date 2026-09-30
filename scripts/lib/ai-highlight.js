@@ -1,5 +1,6 @@
 // デッキ記事の見どころ（deck-columns.json の highlight）を Claude API で書く。
-// scripts/auto-deck-updater.js（新しい記事）と scripts/ai-highlight-test.js（手動の試し書き。ファイルは変えない）から使う
+// scripts/auto-deck-updater.js（新しい記事）・scripts/ai-highlight-test.js（手動の試し書き。ファイルは変えない）・
+// scripts/ai-highlight-rewrite.js（公開済みの記事のまとめ書き直し）から使う
 //
 // 方針（CLAUDE.md「6. 記事・紹介文の品質基準」）:
 // - AI に渡すのは、デッキ名・60枚のレシピ・採用カードの公式テキスト（scripts/lib/game-plan.js の recipeProfiles の内容）だけ
@@ -24,6 +25,9 @@ export const AI_HIGHLIGHT_CONFIG = {
   maxTokens: 8000,
   timeoutMs: 120_000,
 };
+
+/** まとめ書き直し（scripts/ai-highlight-rewrite.js）だけの、1回の実行で API を呼ぶ回数の上限（通常の自動生成は maxCallsPerRun のまま） */
+export const REWRITE_MAX_CALLS = 120;
 
 /** 料金の目安（ドル / 100万トークン。Anthropic の料金表 2026年9月時点）。載っていないモデルは料金を「不明」と出す */
 export const PRICES = {
@@ -216,11 +220,11 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
       }
       return { text: null, reason: `書き直しても点検を通らなかった（${problems.join(' / ')}）`, attempts: 2 };
     } catch (error) {
-      if (error instanceof LimitError) return { text: null, reason: error.message, attempts: attempts - 1 };
+      if (error instanceof LimitError) return { text: null, reason: error.message, attempts: attempts - 1, limit: true };
       stats.errors++;
-      const detail = error instanceof Anthropic.APIError ? `${error.status ?? '接続'} ${error.constructor.name}` : (error?.name ?? 'Error');
+      const detail = apiErrorDetail(error, [apiKey]);
       log(`  ⚠ Claude API のエラー: ${detail}`);
-      return { text: null, reason: `Claude API のエラー（${detail}）`, attempts };
+      return { text: null, reason: `Claude API のエラー（${detail}）`, attempts, apiError: true, fatal: isFatalApiError(error) };
     }
   }
 
@@ -228,6 +232,35 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
 }
 
 class LimitError extends Error {}
+
+/** API のキーらしい文字（sk-ant-…）と、渡したキーの文字を伏せる */
+export function redactSecrets(text, secrets = []) {
+  let out = String(text ?? '');
+  for (const secret of secrets) if (secret && secret.length >= 8) out = out.split(secret).join('[キーは伏せました]');
+  return out.replace(/sk-ant-[A-Za-z0-9_-]+/g, '[キーは伏せました]');
+}
+
+/**
+ * API のエラーの説明（ログ・PR 用）。HTTP の状態・エラーの種類に加えて、API が返した理由の文（残高不足など）を出す。キーの文字は出さない。
+ * 例: 400 BadRequestError invalid_request_error: Your credit balance is too low to access the Anthropic API. …
+ */
+export function apiErrorDetail(error, secrets = []) {
+  const isApi = error instanceof Anthropic.APIError;
+  const head = isApi ? [error.status ?? '接続', error.constructor.name, error.type].filter(Boolean).join(' ') : (error?.name ?? 'Error');
+  // API が返した本文の error.message（なければ SDK の文）。長すぎるときは切る
+  const message = String((isApi ? (error.error?.error?.message ?? error.error?.message ?? error.message) : error?.message) ?? '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const text = message.length > 300 ? `${message.slice(0, 300)}…` : message;
+  return redactSecrets(text ? `${head}: ${text}` : head, secrets);
+}
+
+/** 続けて呼んでも同じ結果になるエラー（キーが違う・権限がない・残高不足）。まとめ書き直しはここで呼び出しをやめる */
+export function isFatalApiError(error) {
+  if (!(error instanceof Anthropic.APIError)) return false;
+  const message = String(error.error?.error?.message ?? error.message ?? '');
+  return error.status === 401 || error.status === 403 || /credit balance|billing/i.test(message);
+}
 
 /** 使った量と料金の目安（PR 本文・ログ用の Markdown の行） */
 export function usageLines(stats) {

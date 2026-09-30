@@ -9,7 +9,7 @@
 //   - 記事ページ（src/pages/columns/{slug}.astro）の「主力カードの効果」（<KeyCardEffect>）に載っている公式のカードテキスト
 //   - deck-columns.json の gamePlan（主役の進化ライン「〇〇を経由して」「起点となる〇〇」の読み取りに使う）
 //   - src/data/official-decks.json の60枚レシピ・src/data/cards.json（カードID → カード名）
-// 決まった文になっていない見どころ（手作業で書いたもの・すでに具体的なもの）は書き換えない。
+// 決まった文になっていない見どころ（手作業で書いたもの・すでに具体的なもの）と、highlightBy: 'manual'（人が手で直した印）の見どころは書き換えない。
 
 import { existsSync, mkdirSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
@@ -101,7 +101,7 @@ async function main() {
   }
 
   // 決まった文の記事を、公開日ごとに書き直す（同じ日の、書き直さない記事とも書き出しが重ならないようにする）
-  const targets = columns.filter((c) => bannedPhrases(c.highlight).length > 0);
+  const targets = columns.filter((c) => c.highlightBy !== 'manual' && bannedPhrases(c.highlight).length > 0);
   console.log(`■ 決まった文のままの見どころ: ${targets.length}件 / ${columns.length}記事`);
   const changes = [];
   const todo = [];
@@ -120,6 +120,7 @@ async function main() {
       }
       changes.push({ slug: c.slug, deckName: c.deckName, before: c.highlight, after });
       c.highlight = after;
+      delete c.highlightBy; // 従来の方法で書き直した（AI の印は外す）
     }
   }
   for (const ch of changes) console.log(`\n- /columns/${ch.slug}/（${ch.deckName}）\n  変更前: ${ch.before}\n  変更後: ${ch.after}`);

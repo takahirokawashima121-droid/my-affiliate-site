@@ -17,6 +17,11 @@ export type DeckColumn = {
   pubDate: string;
   /** 見どころ（トップページの特集カードに表示する一言） */
   highlight: string;
+  /**
+   * 見どころを書いたのは誰か（'ai' = Claude API が書いた / 'manual' = 人が手で直した / なし = 従来の方法など）。
+   * 'manual' の見どころは、自動生成・まとめ書き直し（npm run ai-highlight-rewrite / rewrite-highlights）で上書きしない
+   */
+  highlightBy?: 'ai' | 'manual';
   /** 主力パーツ（レシピ内のカード名。最安値カードとして記事上部に表示する。同名が複数あれば最初の版） */
   keyCards: string[];
   /** 大会の種類（シティリーグ / ジムバトル）。省略時は result の文言から判定し、「ジムバトル」を含めば gym */

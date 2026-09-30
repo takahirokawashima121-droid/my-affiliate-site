@@ -20,6 +20,7 @@
     "rewrite-highlights": "node scripts/rewrite-highlights.js",
     "check-highlights": "node scripts/rewrite-highlights.js --check",
     "ai-highlight-test": "node scripts/ai-highlight-test.js",
+    "ai-highlight-rewrite": "node scripts/ai-highlight-rewrite.js",
     "test": "node --test scripts/test/*.test.js"
   },
   "dependencies": {

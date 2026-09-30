@@ -17,12 +17,12 @@ export function nameSourceText(c) {
 }
 
 /**
- * 見どころをどちらの方法で書いたか（c.highlightBy は scripts/auto-deck-updater.js が入れる { ai, reason }）。
+ * 見どころをどちらの方法で書いたか（c.highlightResult は scripts/auto-deck-updater.js が入れる { ai, reason }）。
  * 「AIで作成」= Claude API（scripts/lib/ai-highlight.js）、「従来の方法」= 公式のカードテキストの組み立て（scripts/lib/highlight.js）
  */
 export function highlightMethod(c) {
-  if (c.highlightBy?.ai) return 'AIで作成';
-  return c.highlightBy?.reason ? `従来の方法・${c.highlightBy.reason}` : '従来の方法';
+  if (c.highlightResult?.ai) return 'AIで作成';
+  return c.highlightResult?.reason ? `従来の方法・${c.highlightResult.reason}` : '従来の方法';
 }
 
 /**

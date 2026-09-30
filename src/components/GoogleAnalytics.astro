@@ -31,7 +31,7 @@ const moshimoIds = { [MALLS.rakuten.ids.a_id]: 'rakuten', [MALLS.yahoo.ids.a_id]
       window.gtag('config', id);
 
       // A8.net のプログラム（a8mat の3番目の値）→ ショップ
-      const a8Programs = { '5NJ8': 'beehonpo', '5W1M': 'furuichi', '49YI': 'carnavel' };
+      const a8Programs = { '5NJ8': 'beehonpo', '5W1M': 'furuichi', '49YI': 'carnavel', '2QOI': 'toretoku' };
       const shopFromUrl = (url) => {
         const host = url.hostname;
         if (host.endsWith('moshimo.com')) return moshimoIds[url.searchParams.get('a_id')] || 'moshimo';

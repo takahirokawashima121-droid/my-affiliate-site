@@ -1,0 +1,58 @@
+---
+// トレトク（トレカの宅配買取）の案内。リンクと A8.net の計測画像（1x1）を必ずこの部品の中で一緒に出す。
+// ほかのショップと並べたり比べたりしない：価格比較の表・買取最高値の欄・BuybackOptions の近くには置かないこと。
+// 文面は事実（送料・手数料無料／無料の宅配キット／スリーブやファイルのまま送れる／まとめて買取）だけにする
+import { SHOPS } from '../config/affiliate';
+
+interface Props {
+  /** 置く場所：deck＝デッキ記事の最後 / regulation＝レギュ落ちの説明ページ / card＝カードページ（小さく表示） */
+  variant: 'deck' | 'regulation' | 'card';
+  /** 計測用のページ名（GA4 の affiliate_click で item_name として送る） */
+  item?: string;
+}
+
+const { variant, item } = Astro.props;
+const toretoku = SHOPS.toretoku;
+
+const copy = {
+  deck: {
+    title: 'デッキを組み替えて使わなくなったカードは、まとめて手放せます',
+    body: 'トレトクはポケモンカードの宅配買取です。送料・手数料は無料で、無料の宅配キットもあります。スリーブやファイルに入れたままでも送れるので、組み替えで使わなくなったカードをまとめて買い取ってもらえます。',
+    label: 'トレトクでまとめて買取を申し込む',
+  },
+  regulation: {
+    title: 'レギュ落ちしたカードの手放し方',
+    body: 'スタンダードで使えなくなったカードは、宅配買取でまとめて手放す方法があります。トレトクは送料・手数料が無料で、無料の宅配キットもあります。スリーブやファイルに入れたままでも送れます。',
+    label: 'トレトクでレギュ落ちしたカードの買取を申し込む',
+  },
+  card: {
+    title: 'まとめて手放したい方へ',
+    body: 'トレトクの宅配買取なら、送料・手数料無料。無料の宅配キットがあり、スリーブやファイルに入れたままでもまとめて送れます。',
+    label: 'トレトクでまとめて買取を申し込む',
+  },
+}[variant];
+const small = variant === 'card';
+---
+
+<aside
+  id={`toretoku-${variant}`}
+  aria-label={copy.title}
+  class:list={['not-prose relative rounded-xl border border-slate-200 bg-white', small ? 'mt-8 p-3 text-xs' : 'mt-10 p-4 text-sm']}
+>
+  <p class="flex items-center gap-2">
+    <span class="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">PR</span>
+    <span class:list={['font-bold text-slate-900', !small && 'text-base']}>{copy.title}</span>
+  </p>
+  <p class="mt-2 leading-relaxed text-slate-600">{copy.body}</p>
+  <a
+    href={toretoku.url}
+    target="_blank"
+    rel="nofollow sponsored"
+    data-aff-network={toretoku.network}
+    data-aff-shop={toretoku.name}
+    data-aff-type={`buyback_toretoku_${variant}`}
+    data-aff-item={item}
+    class="mt-2 inline-block font-bold text-blue-600 underline hover:text-blue-700"
+  >{copy.label} →</a>
+  <img width="1" height="1" src={toretoku.impressionUrl} alt="" class="absolute h-px w-px opacity-0" />
+</aside>

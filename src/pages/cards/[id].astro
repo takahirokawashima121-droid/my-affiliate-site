@@ -13,6 +13,7 @@ import CompareShopLinks from '../../components/CompareShopLinks.astro';
 import { compareKeyword } from '../../config/compareShops';
 import BuybackOptions from '../../components/BuybackOptions.astro';
 import DecksUsingCard from '../../components/DecksUsingCard.astro';
+import ToretokuNotice from '../../components/ToretokuNotice.astro';
 import { cardSearchKeyword, nameWithRarity } from '../../utils/cardFormat';
 import { moshimoClickUrl } from '../../utils/moshimo';
 import { SITE, STANDARD_REGULATIONS } from '../../consts';
@@ -305,6 +306,9 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
       )}
 
       <DecksUsingCard card={card} />
+
+      <!-- 価格比較・買取最高値の欄とは別の場所に小さく置く（ほかのショップと並べない） -->
+      <ToretokuNotice variant="card" item={label} />
 
       <a href="/" class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline">← 相場一覧（トップページ）に戻る</a>
     </div>

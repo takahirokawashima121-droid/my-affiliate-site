@@ -55,10 +55,12 @@ test('9/27 シティリーグの4本は手で直した印（highlightBy: "manual
 test('対象: manual 以外の公開済みの記事を、公開日が新しい順に選ぶ。「試しに何本だけ」も選べる', () => {
   const today = '2026-09-30';
   const { targets, manual, all } = rewriteTargets(columns, { today });
-  assert.deepEqual(manual.map((c) => c.slug).sort(), [...MANUAL].sort());
+  // 手で直した印の記事はすべて対象外（9/27 シティリーグの4本を含む。あとで手で直した記事が増えてもよい）
+  assert.deepEqual(manual.map((c) => c.slug).sort(), columns.filter((c) => c.pubDate <= today && c.highlightBy === 'manual').map((c) => c.slug).sort());
+  for (const slug of MANUAL) assert.ok(manual.some((c) => c.slug === slug), slug);
   assert.ok(targets.every((c) => c.highlightBy !== 'manual'));
   assert.equal(all, targets.length);
-  assert.equal(targets.length, columns.filter((c) => c.pubDate <= today).length - MANUAL.length);
+  assert.equal(targets.length, columns.filter((c) => c.pubDate <= today).length - manual.length);
   for (let i = 1; i < targets.length; i++) assert.ok(targets[i - 1].pubDate >= targets[i].pubDate);
   const five = rewriteTargets(columns, { today, limit: 5 });
   assert.equal(five.targets.length, 5);

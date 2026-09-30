@@ -8,6 +8,7 @@ import DeckRecipe from '../components/DeckRecipe.astro';
 import CardImage from '../components/CardImage.astro';
 import EventBadge from '../components/EventBadge.astro';
 import GamePlan from '../components/GamePlan.astro';
+import DeckHighlight from '../components/DeckHighlight.astro';
 import AffiliatePixels from '../components/AffiliatePixels.astro';
 import ToretokuNotice from '../components/ToretokuNotice.astro';
 import { SITE } from '../consts';
@@ -53,6 +54,11 @@ const others = DECK_COLUMNS.filter((c) => c.slug !== slug)
   .slice(0, 3);
 const furuichi = SHOPS.furuichi;
 const pubDate = new Date(column.pubDate);
+
+// 本文の書き出しの文（最初の段落）のすぐ下に「このデッキのポイント」（見どころ）を差し込むため、本文を最初の </p> で分ける
+const body = await Astro.slots.render('default');
+const introEnd = body.indexOf('</p>');
+const [intro, rest] = introEnd === -1 ? ['', body] : [body.slice(0, introEnd + 4), body.slice(introEnd + 4)];
 
 const url = new URL(Astro.url.pathname, Astro.site).toString();
 // X 告知用の投稿文（記事末尾の折りたたみ。scripts/auto-deck-updater.js の PR 本文と同じ文面）
@@ -113,7 +119,9 @@ const jsonLd = {
       </section>
 
       <div class="prose prose-slate max-w-none prose-headings:scroll-mt-20 prose-h2:border-b prose-h2:border-slate-200 prose-h2:pb-2 prose-a:text-blue-600">
-        <slot />
+        <Fragment set:html={intro} />
+        <DeckHighlight highlight={column.highlight} />
+        <Fragment set:html={rest} />
       </div>
 
       <!-- 立ち回り（自動生成）：手書きの「回し方」がない記事だけ gamePlan を持つ -->

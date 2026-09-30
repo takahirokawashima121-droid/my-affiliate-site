@@ -4,64 +4,34 @@
   ],
   "cards": [
     {
-      "id": "kapukokekoex-svm-046",
-      "name": "カプ・コケコex",
-      "rarity": "-",
-      "cardNumber": "046/175",
-      "expansionCode": "SVM",
-      "regulationMark": "H",
-      "deck": "mega-kangaskhan-ex-deck-0927",
-      "role": "ポケモン（公式カードID 46500・再録弾のためマークは推定）"
-    },
-    {
-      "id": "iyui-u-sv5a-018",
-      "name": "イーユイ",
+      "id": "henkanoshixyo-u-m4-074",
+      "name": "変化の書",
       "rarity": "U",
-      "cardNumber": "018/066",
-      "expansionCode": "SV5a",
-      "regulationMark": "H",
-      "deck": "mega-kangaskhan-ex-deck-0927",
-      "role": "ポケモン（公式カードID 45594）"
+      "cardNumber": "074/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "n-zoroark-ex-deck-0929-budew",
+      "role": "グッズ（公式カードID 50158）"
     },
     {
-      "id": "nagetsukesaru-u-sv7a-031",
-      "name": "ナゲツケサル",
+      "id": "dotakun-u-sv5k-029",
+      "name": "ドータクン",
       "rarity": "U",
-      "cardNumber": "031/064",
-      "expansionCode": "SV7a",
+      "cardNumber": "029/071",
+      "expansionCode": "SV5K",
       "regulationMark": "H",
-      "deck": "mega-kangaskhan-ex-deck-0927",
-      "role": "ポケモン（公式カードID 46260）"
+      "deck": "bomb-dragapult-deck-0927-mew-ex",
+      "role": "ポケモン（公式カードID 45175）"
     },
     {
-      "id": "nnosujigaki-u-sv11b-083",
-      "name": "Nの筋書き",
-      "rarity": "U",
-      "cardNumber": "083/086",
-      "expansionCode": "SV11B",
-      "regulationMark": "I",
-      "deck": "mega-kangaskhan-ex-deck-0927",
-      "role": "サポート（公式カードID 47619）"
-    },
-    {
-      "id": "msamehadaex-rr-m2-051",
-      "name": "メガサメハダーex",
-      "rarity": "RR",
-      "cardNumber": "051/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "mega-sharpedo-ex-deck-0927",
-      "role": "ポケモン（公式カードID 48391）"
-    },
-    {
-      "id": "kibania-c-m2-050",
-      "name": "キバニア",
+      "id": "domira-c-sv5k-028",
+      "name": "ドーミラー",
       "rarity": "C",
-      "cardNumber": "050/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "mega-sharpedo-ex-deck-0927",
-      "role": "ポケモン（公式カードID 48390）"
+      "cardNumber": "028/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "bomb-dragapult-deck-0927-mew-ex",
+      "role": "ポケモン（公式カードID 45174）"
     }
   ]
 }

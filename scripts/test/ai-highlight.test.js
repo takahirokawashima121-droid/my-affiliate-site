@@ -4,8 +4,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { AI_HIGHLIGHT_CONFIG, buildPrompt, createAiHighlighter, estimateCost, reviewAiHighlight, usageLines } from '../lib/ai-highlight.js';
+import { AI_HIGHLIGHT_CONFIG, buildPrompt, buildReviewPrompt, createAiHighlighter, estimateCost, mentionedCards, parseReview, reviewAiHighlight, reviewLabel, usageLines } from '../lib/ai-highlight.js';
 import { effectsFromPage } from '../rewrite-highlights.js';
+import { testCaseMark, testCaseResult } from '../ai-highlight-review.js';
 
 const read = (p) => readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8');
 const recipes = JSON.parse(read('src/data/official-decks.json'));
@@ -148,6 +149,111 @@ test('料金の目安はモデルの料金表から計算し、表にないモ�
   assert.equal(estimateCost('claude-sonnet-5-5', 1_000_000, 100_000), 3);
   assert.equal(estimateCost('unknown-model', 1000, 1000), null);
   const lines = usageLines({ enabled: true, model: 'claude-sonnet-5-5', calls: 2, maxCalls: 10, inputTokens: 3000, outputTokens: 1000, errors: 0 }).join('\n');
-  assert.match(lines, /API を呼んだ回数: 2回（上限 10回）/);
+  assert.match(lines, /API を呼んだ回数: 2回（上限 10回。うちチェック役 0回）/);
   assert.match(lines, /\$0\.0160/);
+});
+
+// ---- チェック役（review） ----
+
+const reviewCases = JSON.parse(read('scripts/test/fixtures/ai-highlight-review-cases.json'));
+/** チェック役の答え（JSON の文） */
+const verdict = (v, reasons = []) => ({ text: JSON.stringify({ verdict: v, reasons }) });
+function reviewInput(slug, text) {
+  const data = input(slug);
+  return { text: text ?? columns.find((c) => c.slug === slug).highlight, main: data.main, recipe: data.recipe, profiles: data.profiles };
+}
+
+test('見どころを書かせる指示: 主役のカードと、それを支えるカード1枚まで', async () => {
+  const client = fakeClient([{ text: GOOD }]);
+  await createAiHighlighter({ client }).write(input());
+  assert.match(client.calls[0].system, /主役のカードと、それを支えるカード1枚まで。それ以外のカードは書かない/);
+});
+
+test('チェック役に渡すのは、見どころと、そこに出てくるカードの公式テキストだけ', () => {
+  const k = reviewCases.cases.find((c) => c.slug === 'n-zoroark-ex-deck');
+  const data = reviewInput(k.slug, k.highlight);
+  const prompt = buildReviewPrompt(data);
+  assert.ok(prompt.startsWith(`## 見どころ\n${k.highlight}\n`));
+  assert.match(prompt, /### Nのゾロアークex/);
+  assert.match(prompt, /### Nのゼクロム/);
+  assert.match(prompt, /ワザ「ナイトジョーカー」/);
+  // 見どころに出てこない主力カード（くさりもち）のテキストは渡さない
+  assert.ok(data.profiles.has('くさりもち'));
+  assert.ok(!prompt.includes('### くさりもち'));
+  assert.deepEqual(mentionedCards('どのカード名も出てこない文', input().profiles, 'メガサメハダーex'), ['メガサメハダーex']);
+});
+
+test('チェック役: 「要確認」と理由・「問題なし」を JSON で受け取り、上限の回数に数える', async () => {
+  const client = fakeClient([verdict('要確認', ['「Nのポイントアップ」でつける先は Nのゾロアークex']), verdict('問題なし')]);
+  const ai = createAiHighlighter({ client });
+  const warn = await ai.review(reviewInput('n-zoroark-ex-deck'));
+  assert.deepEqual(warn, { status: 'warn', reasons: ['「Nのポイントアップ」でつける先は Nのゾロアークex'] });
+  assert.deepEqual(await ai.review(reviewInput(SLUG)), { status: 'ok', reasons: [] });
+  // 答えの形（structured outputs）と、見どころを書くのとは別の指示
+  assert.equal(client.calls[0].output_config.format.type, 'json_schema');
+  assert.deepEqual(client.calls[0].output_config.format.schema.properties.verdict.enum, ['問題なし', '要確認']);
+  assert.equal(client.calls[0].output_config.effort, AI_HIGHLIGHT_CONFIG.effort);
+  assert.match(client.calls[0].system, /効果の条件/);
+  assert.equal(client.calls[0].model, AI_HIGHLIGHT_CONFIG.model);
+  assert.equal(ai.stats.calls, 2);
+  assert.equal(ai.stats.reviewCalls, 2);
+  assert.equal(reviewLabel(warn), '⚠ 要確認：「Nのポイントアップ」でつける先は Nのゾロアークex');
+  assert.equal(reviewLabel({ status: 'ok', reasons: [] }), '✅ チェック済み');
+});
+
+test('チェック役: 答えを読めない・API のエラー・上限・キーなしは「チェックできず」（例外は投げない）', async () => {
+  const bad = await createAiHighlighter({ client: fakeClient([{ text: 'たぶん大丈夫です' }]) }).review(reviewInput(SLUG));
+  assert.equal(bad.status, 'error');
+  assert.match(reviewLabel(bad), /^⚠ チェックできず/);
+  const err = await createAiHighlighter({ client: fakeClient([new Error('boom')]) }).review(reviewInput(SLUG));
+  assert.equal(err.status, 'error');
+  const noKey = await createAiHighlighter({ apiKey: '' }).review(reviewInput(SLUG));
+  assert.equal(noKey.status, 'error');
+  // 見どころを書いた分とチェック役の分を合わせて上限を数える
+  const client = fakeClient([{ text: GOOD }, verdict('問題なし')]);
+  const ai = createAiHighlighter({ client, config: { ...AI_HIGHLIGHT_CONFIG, maxCallsPerRun: 1 } });
+  assert.equal((await ai.write(input())).text, GOOD);
+  const limited = await ai.review(reviewInput(SLUG, GOOD));
+  assert.equal(limited.status, 'error');
+  assert.equal(limited.limit, true);
+  assert.equal(client.calls.length, 1);
+});
+
+test('チェック役: 答えの JSON の読み方', () => {
+  assert.deepEqual(parseReview('{"verdict":"要確認","reasons":[" 数字が違う ",""]}'), { ok: false, reasons: ['数字が違う'] });
+  assert.deepEqual(parseReview('```json\n{"verdict":"問題なし","reasons":[]}\n```'), { ok: true, reasons: [] });
+  assert.deepEqual(parseReview('{"verdict":"要確認","reasons":[]}'), { ok: false, reasons: ['理由の記載なし'] });
+  assert.throws(() => parseReview('{"verdict":"たぶん","reasons":[]}'));
+});
+
+test('テスト用の4本: git の履歴（まとめ書き直しの AI の文）から取り出した、手で直す前の文', () => {
+  assert.equal(reviewCases.cases.length, 4);
+  for (const k of reviewCases.cases) {
+    const column = columns.find((c) => c.slug === k.slug);
+    assert.ok(column, k.slug);
+    // 今の記事は手で直した文（manual）で、テスト用は直す前の文
+    assert.equal(column.highlight, k.fixed);
+    assert.equal(column.highlightBy, 'manual');
+    assert.notEqual(k.highlight, k.fixed);
+    assert.ok(k.problem);
+  }
+  // 合格の基準: 手で直す前の文が間違っていた2本だけを「要確認」にすべきとする
+  assert.deepEqual(
+    reviewCases.cases.filter((k) => k.mustFlag).map((k) => k.slug).sort(),
+    ['dipplin-festival-lead-deck-0927', 'seek-inspiration-deck-0929'],
+  );
+});
+
+test('テスト用の4本の合否: mustFlag の2本をどちらも「要確認」にできれば合格（ほかの2本は数えない）', () => {
+  const must = { mustFlag: true };
+  const free = { mustFlag: false };
+  const ok = { status: 'ok', reasons: [] };
+  const warn = { status: 'warn', reasons: ['x'] };
+  const error = { status: 'error', reasons: ['x'] };
+  assert.deepEqual(testCaseResult([{ testCase: must, review: warn }, { testCase: must, review: warn }, { testCase: free, review: ok }, { testCase: free, review: ok }]), { pass: true, flagged: 2, required: 2 });
+  assert.equal(testCaseResult([{ testCase: must, review: warn }, { testCase: must, review: ok }, { testCase: free, review: warn }]).pass, false);
+  assert.equal(testCaseResult([{ testCase: must, review: warn }, { testCase: must, review: error }]).pass, false);
+  assert.equal(testCaseMark(free, ok), '・ 問題なし（直す前の文も間違いではない）');
+  assert.equal(testCaseMark(must, ok), '✕ 見逃した（問題なし）');
+  assert.equal(testCaseMark(must, warn), '◯ 要確認にできた');
 });

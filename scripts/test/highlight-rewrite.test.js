@@ -80,8 +80,8 @@ test('--limit: 空欄・0・all はすべて、数字はその本数。数字で
   assert.throws(() => parseLimit(['--limit=abc']), /本数/);
 });
 
-test('API を呼ぶ回数の上限は、まとめ書き直しだけ120回（通常の自動生成は10回のまま）', () => {
-  assert.equal(REWRITE_MAX_CALLS, 120);
+test('API を呼ぶ回数の上限は、まとめ書き直しだけ250回（チェック役の分を含む。通常の自動生成は10回のまま）', () => {
+  assert.equal(REWRITE_MAX_CALLS, 250);
   assert.equal(AI_HIGHLIGHT_CONFIG.maxCallsPerRun, 10);
 });
 
@@ -171,11 +171,55 @@ test('PR の本文: 変更前・変更後の表、書き直せなかった記事
   ];
   const stats = { enabled: true, model: 'claude-sonnet-5-5', calls: 3, maxCalls: 120, inputTokens: 3000, outputTokens: 1500, errors: 0 };
   const body = rewritePrBody({ results, manual: [{ slug: 'm-deck' }], stats, audit: { banned: [], similar: [] }, limit: 2, all: 40 });
-  assert.match(body, /\| 記事 \| 変更前 \| 変更後 \|/);
-  assert.match(body, /\| `\/columns\/a-deck\/`<br>Aデッキ（2026-09-29） \| 前の\\\|文 \| 新しい文 \|/);
+  assert.match(body, /\| 記事 \| 変更前 \| 変更後 \| チェック \|/);
+  assert.match(body, /\| `\/columns\/a-deck\/`<br>Aデッキ（2026-09-29） \| 前の\\\|文 \| 新しい文 \| — \|/);
   assert.match(body, /- `\/columns\/b-deck\/`（Bデッキ）: 書き直しても点検を通らなかった（短すぎます）/);
   assert.match(body, /試しに2本だけ/);
-  assert.match(body, /API を呼んだ回数: 3回（上限 120回）/);
+  assert.match(body, /API を呼んだ回数: 3回（上限 120回。うちチェック役 0回）/);
   assert.match(body, /おおよその料金: \$0\.0210/);
   assert.match(body, /対象外: 1本（`m-deck`）/);
+});
+
+test('チェック役: 書き直せた文だけをチェックし、⚠ の記事は PR の本文のいちばん上にまとめる', async () => {
+  const [a, b, c] = columns.filter((x) => x.pubDate === '2026-09-29');
+  const verdictFor = { [a.keyCards[0]]: { verdict: '問題なし', reasons: [] }, [b.keyCards[0]]: { verdict: '要確認', reasons: ['条件が抜けている'] } };
+  const client = fakeClient((params) => {
+    const prompt = params.messages[0].content;
+    if (params.output_config?.format) {
+      // チェック役: a は問題なし・b は要確認・c のチェックは壊れた答え
+      const hit = Object.entries(verdictFor).find(([main]) => prompt.startsWith(`## 見どころ\n${main}`));
+      return hit ? JSON.stringify(hit[1]) : 'よくわかりません';
+    }
+    if (prompt.includes(`主役のカード: ${a.keyCards[0]}`)) return goodFor(a);
+    if (prompt.includes(`主役のカード: ${b.keyCards[0]}`)) return goodFor(b, 'を軸にして');
+    return goodFor(c, 'が主役で');
+  });
+  const ai = createAiHighlighter({ client });
+  const results = await rewriteHighlights({ columns, targets: [a, b, c], namesOf, materialsOf, ai });
+  assert.deepEqual(results.map((r) => r.review?.status), ['ok', 'warn', 'error']);
+  // ⚠ でも文は使う
+  assert.equal(results[1].after, goodFor(b, 'を軸にして'));
+  assert.equal(ai.stats.reviewCalls, 3);
+
+  const body = rewritePrBody({ results, manual: [], stats: ai.stats, audit: { banned: [], similar: [] }, limit: null, all: 3 });
+  const lines = body.split('\n');
+  assert.equal(lines[0], '> [!WARNING]');
+  const top = body.slice(0, body.indexOf('## 🤖'));
+  assert.match(top, new RegExp(`${b.slug}.*⚠ 要確認：条件が抜けている`));
+  assert.match(top, new RegExp(`${c.slug}.*⚠ チェックできず`));
+  assert.ok(!top.includes(a.slug));
+  assert.match(body, /チェック役: ✅ 1本・⚠ 2本/);
+  assert.match(body, new RegExp(`${a.slug}.*\| ✅ チェック済み \|`));
+  assert.match(body, /うちチェック役 3回/);
+});
+
+test('チェック役: 上限に達したら「チェックできず」とし、残りの記事は呼ばない', async () => {
+  const [a, b] = columns.filter((x) => x.pubDate === '2026-09-29');
+  const client = fakeClient((params) => (params.output_config?.format ? JSON.stringify({ verdict: '問題なし', reasons: [] }) : goodFor(a)));
+  const ai = createAiHighlighter({ client, config: { ...AI_HIGHLIGHT_CONFIG, maxCallsPerRun: 1 } });
+  const results = await rewriteHighlights({ columns, targets: [a, b], namesOf, materialsOf, ai });
+  assert.equal(results[0].after, goodFor(a));
+  assert.equal(results[0].review.status, 'error');
+  assert.match(results[1].reason, /上限に達した.*呼ばなかった/);
+  assert.equal(client.calls.length, 1);
 });

@@ -49,7 +49,7 @@ import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
 import { CARD_ABILITIES_PATH, loadCardAbilities, matchDeckNameRule, needsAbilities, ruleMainCard } from './lib/deck-name-rules.js';
 import { auditHighlights, chooseHighlights, highlightCandidates } from './lib/highlight.js';
 import { generatedItem, highlightMethod } from './lib/pr-body.js';
-import { AI_HIGHLIGHT_CONFIG, createAiHighlighter, usageLines } from './lib/ai-highlight.js';
+import { AI_HIGHLIGHT_CONFIG, createAiHighlighter, reviewLabel, usageLines } from './lib/ai-highlight.js';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
@@ -449,7 +449,7 @@ async function main() {
   // 上で選んだ従来の方法の見どころを使う（AI の失敗で記事の自動生成を止めない）
   const ai = createAiHighlighter({ log: (msg) => console.log(msg) });
   const current = new Map(highlightInputs.map(({ column }) => [column.slug, chosen.get(column.slug) ?? null]));
-  const highlightResult = new Map(); // slug → { ai: boolean, reason?: string }（PR 本文用）
+  const highlightResult = new Map(); // slug → { ai: boolean, reason?: string, review?: { status, reasons } }（PR 本文用）
   if (highlightInputs.length) console.log(`\n■ 見どころ（AI: ${ai.stats.enabled ? AI_HIGHLIGHT_CONFIG.model : 'ANTHROPIC_API_KEY なし → 従来の方法'}）`);
   for (const { column, recipe, profiles } of highlightInputs) {
     try {
@@ -461,7 +461,9 @@ async function main() {
       ].filter((o) => o.highlight && o.highlight !== HIGHLIGHT_TODO);
       const r = await ai.write({ deckName: column.deckName, main: column.keyCards[0], recipe, profiles, names: namesOf(recipe, column), others });
       if (r.text) current.set(column.slug, r.text);
-      highlightResult.set(column.slug, r.text ? { ai: true } : { ai: false, reason: r.reason });
+      // チェック役: AI の文を公式テキストと見比べる（⚠ でも文は使い、PR に出すだけ）
+      const review = r.text ? await ai.review({ text: r.text, main: column.keyCards[0], recipe, profiles }) : null;
+      highlightResult.set(column.slug, r.text ? { ai: true, review } : { ai: false, reason: r.reason });
     } catch (error) {
       console.log(`  ⚠ AI の見どころを作れませんでした（${error?.message ?? error}）。従来の方法を使います`);
       highlightResult.set(column.slug, { ai: false, reason: '予期しないエラー' });
@@ -543,7 +545,17 @@ async function main() {
   const ruleColumns = generated.filter((c) => c.renamedByRule);
   const uncertainColumns = generated.filter((c) => c.ruleUncertain);
   const conflictColumns = generated.filter((c) => c.ruleConflict);
+  // チェック役で ⚠（要確認・チェックできず）になった AI の見どころは、本文のいちばん上にまとめる
+  const reviewFlagged = generated.filter((c) => c.highlightResult?.ai && c.highlightResult.review?.status !== 'ok');
   const body = [
+    ...(reviewFlagged.length
+      ? [
+          '> [!WARNING]',
+          `> **見どころのチェック役の AI が ⚠ を付けた記事（${reviewFlagged.length}本）**。記事の「主力カードの効果」と見比べ、直すなら \`highlight\` を手で直して \`highlightBy\` を \`"manual"\` にしてください`,
+          ...reviewFlagged.map((c) => `> - \`/columns/${c.slug}/\`（${c.deckName}）: ${reviewLabel(c.highlightResult.review) || '⚠ チェックできず'}`),
+          '',
+        ]
+      : []),
     `## 🏭 ポケカファクトリー｜新着${source.label}入賞デッキ記事の自動生成`,
     '',
     `RSS（${source.feed}）の新着記事から自動生成しました。`,

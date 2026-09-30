@@ -6,6 +6,10 @@ import { generatedItem, highlightMethod } from '../lib/pr-body.js';
 
 test('見どころをどちらの方法で書いたか（AIで作成・従来の方法と理由）', () => {
   assert.equal(highlightMethod({ highlightResult: { ai: true } }), 'AIで作成');
+  // チェック役の結果
+  assert.equal(highlightMethod({ highlightResult: { ai: true, review: { status: 'ok', reasons: [] } } }), 'AIで作成・✅ チェック済み');
+  assert.equal(highlightMethod({ highlightResult: { ai: true, review: { status: 'warn', reasons: ['数字が違う'] } } }), 'AIで作成・⚠ 要確認：数字が違う');
+  assert.match(highlightMethod({ highlightResult: { ai: true, review: { status: 'error', reasons: ['Claude API のエラー（500）'] } } }), /^AIで作成・⚠ チェックできず/);
   assert.equal(highlightMethod({ highlightResult: { ai: false, reason: 'ANTHROPIC_API_KEY が設定されていない' } }), '従来の方法・ANTHROPIC_API_KEY が設定されていない');
   assert.equal(highlightMethod({}), '従来の方法');
 });

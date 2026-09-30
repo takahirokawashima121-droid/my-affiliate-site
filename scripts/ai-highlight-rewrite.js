@@ -8,7 +8,8 @@
 //
 // 書き方は自動生成と同じ（scripts/lib/ai-highlight.js: 同じ指示・同じ点検・1回だけの書き直し。AI に渡すのはデッキ名・60枚のレシピ・
 // 採用カードの公式テキストだけ）。点検に通らなかった・API のエラーの記事は今の見どころのまま残す。
-// 1回の実行で API を呼ぶ回数の上限は REWRITE_MAX_CALLS（120回。通常の自動生成は AI_HIGHLIGHT_CONFIG.maxCallsPerRun の10回のまま）。
+// 書き直せた文は、チェック役（別の呼び出し）が公式テキストと見比べ、記事ごとに「✅ チェック済み / ⚠ 要確認：理由 / ⚠ チェックできず」を PR に出す。
+// 1回の実行で API を呼ぶ回数の上限は REWRITE_MAX_CALLS（250回。チェック役の分も数える。通常の自動生成は AI_HIGHLIGHT_CONFIG.maxCallsPerRun の10回のまま）。
 // PR の本文は .cache/ai-highlight-rewrite-pr.md（GitHub Actions では実行結果の Summary にも出す）。ANTHROPIC_API_KEY が必要
 
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';

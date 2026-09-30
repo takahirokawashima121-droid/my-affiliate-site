@@ -2,6 +2,8 @@
 // 大会の日付・開催店舗と都道府県・順位・元記事の何会場目か・デッキ名の取り方を並べ、元記事と見比べやすくする。
 // 取れなかった項目は空欄にせず「取得できず」と書く（テストは scripts/test/pr-body.test.js）
 
+import { reviewLabel } from './ai-highlight.js';
+
 export const UNKNOWN = '取得できず';
 
 /** 「青馬堂矢向店（神奈川）」のように会場名の最後に都道府県があるか。なければ都道府県は取得できず */
@@ -17,11 +19,12 @@ export function nameSourceText(c) {
 }
 
 /**
- * 見どころをどちらの方法で書いたか（c.highlightResult は scripts/auto-deck-updater.js が入れる { ai, reason }）。
+ * 見どころをどちらの方法で書いたか（c.highlightResult は scripts/auto-deck-updater.js が入れる { ai, reason, review }）。
+ * AI で書いたものは、チェック役の結果（✅ チェック済み / ⚠ 要確認：理由 / ⚠ チェックできず）も付ける。
  * 「AIで作成」= Claude API（scripts/lib/ai-highlight.js）、「従来の方法」= 公式のカードテキストの組み立て（scripts/lib/highlight.js）
  */
 export function highlightMethod(c) {
-  if (c.highlightResult?.ai) return 'AIで作成';
+  if (c.highlightResult?.ai) return c.highlightResult.review ? `AIで作成・${reviewLabel(c.highlightResult.review)}` : 'AIで作成';
   return c.highlightResult?.reason ? `従来の方法・${c.highlightResult.reason}` : '従来の方法';
 }
 

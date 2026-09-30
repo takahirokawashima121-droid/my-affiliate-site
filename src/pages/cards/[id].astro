@@ -5,7 +5,6 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CardImage from '../../components/CardImage.astro';
 import CardItem from '../../components/CardItem.astro';
 import CardTags from '../../components/CardTags.astro';
-import AffiliateButton from '../../components/AffiliateButton.astro';
 import { SALE_PRIMARY } from '../../utils/buttonStyles';
 import AffiliatePixels from '../../components/AffiliatePixels.astro';
 import MallSearchButtons from '../../components/MallSearchButtons.astro';
@@ -17,7 +16,7 @@ import ToretokuNotice from '../../components/ToretokuNotice.astro';
 import { cardSearchKeyword, nameWithRarity } from '../../utils/cardFormat';
 import { moshimoClickUrl } from '../../utils/moshimo';
 import { SITE, STANDARD_REGULATIONS } from '../../consts';
-import { getCards, buybackLink, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, productJsonLd, type Card } from '../../utils/cards';
+import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, productJsonLd, type Card } from '../../utils/cards';
 
 export const getStaticPaths = (async () => {
   const cards = await getCards();
@@ -52,8 +51,6 @@ interface Props {
 const { card, related, variants, substitutes, cheapestIds } = Astro.props;
 const isCheapest = (c: Card) => cheapestIds.includes(c.id);
 const { name, rarity, cardNumber, expansionCode, imageUrl, saleInStock, saleShop, saleUrl, buybackPrice, updatedAt } = card.data;
-// 買取ボタンの遷移先（カードごとの買取リンクを src/config/affiliate.ts で止めている間は古本市場（ふるいち）の宅配買取）
-const buyback = buybackLink(card);
 const label = cardLabel(card); // 例: ナンジャモ SAR [SV2D 096/071]
 const model = cardModel(card); // 例: SV2D 096/071
 const updatedText = formatDateTime(updatedAt);
@@ -203,6 +200,7 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
               ))}
             </ul>
           </div>
+          <!-- 買取目安：お店と切り離して、目安の数字と説明だけを出す（買取査定の申込は「買取査定に出す」の欄だけ） -->
           <div class="flex flex-col rounded-2xl border-2 border-emerald-200 bg-white p-5 shadow-sm">
             <p class="text-sm font-bold text-emerald-600">買取目安</p>
             {buybackShown ? (
@@ -213,9 +211,6 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
             <p class="mt-1 text-xs leading-relaxed text-slate-600">{SITE.buybackEstimateNote}</p>
             {!buybackShown && <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">販売相場がないため買取目安を表示していません。買取価格はショップの査定でご確認ください。</p>}
             {buybackUnverified && <p class="mt-2 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">相場確認中：最新の買取価格はショップでご確認ください</p>}
-            <div class="mt-4">
-              <AffiliateButton kind="buyback" href={buyback.url} shop={buyback.shop} size="lg" item={label} />
-            </div>
           </div>
         </div>
 

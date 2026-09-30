@@ -7,7 +7,7 @@ import FeaturedDecks from '../components/FeaturedDecks.astro';
 import { DECK_COLUMNS } from '../data/deck-columns';
 import { TIER_LIST, TIER_SOURCES } from '../data/tier';
 import { SITE, STANDARD_REGULATIONS } from '../consts';
-import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cheapestVariantIds, hasSaleStock } from '../utils/cards';
+import { getCards, getRarities, latestUpdate, formatDateTime, cardPath, cardLabel, cheapestVariantIds } from '../utils/cards';
 import { getPosts } from '../utils/posts';
 
 const cards = await getCards();
@@ -225,7 +225,7 @@ const chip =
       <p class="mt-1 text-sm">キーワードやレアリティを変えてお試しください。</p>
     </div>
 
-    <AffiliatePixels cards={cards} shops={cards.some((c) => !hasSaleStock(c)) ? ['furuichi'] : []} />
+    <AffiliatePixels cards={cards} />
 
     <p class="mt-6 text-xs leading-relaxed text-slate-600">
       ※ 価格は各ショップの掲載情報をもとにした参考価格です。在庫状況や状態（美品・傷あり等）により実際の価格は変動します。購入・買取の前に必ず各ショップで最新情報をご確認ください。

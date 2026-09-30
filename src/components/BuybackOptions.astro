@@ -1,5 +1,5 @@
 ---
-// 買取の導線：まとめて送る（ふるいち宅配買取）。
+// 買取の導線：まとめて送る（ふるいち宅配買取）。カードページで買取査定の申込先を出すのはこの欄だけ（買取目安の欄にはボタンを置かない）。
 // カードごとの買取リンク（cards.json）は、src/config/affiliate.ts の SHOPS で提携先を止めている間は出さない
 import { SHOPS } from '../config/affiliate';
 import type { Card } from '../utils/cards';
@@ -67,4 +67,6 @@ const heading = Astro.props.heading ?? (options.length > 1 ? '買取に出す方
       </a>
     ))}
   </div>
+  {/* カードごとの買取リンク（SHOPS で止めていないとき）の計測画像は、リンクと同じこの部品で出す。ふるいちの計測画像はページ共通の AffiliatePixels で読み込む */}
+  {single?.impressionUrl && <img src={single.impressionUrl} width="1" height="1" alt="" class="absolute h-px w-px opacity-0" />}
 </section>

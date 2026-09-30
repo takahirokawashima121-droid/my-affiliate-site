@@ -1,11 +1,11 @@
 ---
 // アフィリエイトのインプレッション計測画像（同じURLはページ内で1回だけ読み込む）
-import { buybackLink, type Card } from '../utils/cards';
+import type { Card } from '../utils/cards';
 import { SHOPS, type ShopKey } from '../config/affiliate';
 import { moshimoImpressionUrl } from '../utils/moshimo';
 
 interface Props {
-  /** 販売・買取ボタン（CardItem など）を表示しているカード。買取はボタンの遷移先（止めている提携先の代わりはふるいち）の計測画像を読み込む */
+  /** 販売のボタン（CardItem など）を表示しているカード。カードごとの買取リンクの計測画像は BuybackOptions の中で読み込む */
   cards: Card[];
   /** ページ内に表示しているサイト共通の提携先（src/config/affiliate.ts） */
   shops?: ShopKey[];
@@ -14,7 +14,7 @@ interface Props {
 const { cards, shops = [] } = Astro.props;
 const urls = [
   ...new Set(
-    [...cards.flatMap((c) => [c.data.saleImpressionUrl, buybackLink(c).impressionUrl]), ...shops.map((key) => SHOPS[key].impressionUrl),
+    [...cards.flatMap((c) => [c.data.saleImpressionUrl]), ...shops.map((key) => SHOPS[key].impressionUrl),
       // Yahoo!ショッピングの商品リンク（もしも経由）を表示しているカードがあれば計測画像も読み込む
       ...(cards.some((c) => c.data.yahooUrl) ? [moshimoImpressionUrl('yahoo')] : [])].filter(
       (u) => u !== undefined,

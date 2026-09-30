@@ -44,6 +44,7 @@ import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
 import { matchDeckNameRule } from './lib/deck-name-rules.js';
 import { auditHighlights, chooseHighlights, highlightCandidates } from './lib/highlight.js';
+import { generatedItem } from './lib/pr-body.js';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
@@ -121,6 +122,7 @@ function applyNameRule(d) {
   }
   if (norm(hit.name) === norm(d.archetype)) return;
   d.sourceName = d.archetype;
+  d.sourceInferred = Boolean(d.inferred); // 元の名前が推定だったか（PR に出す）
   d.archetype = hit.name;
   d.nameRule = hit.rule;
   d.inferred = false; // ルールで決まった名前は推定ではない
@@ -324,7 +326,7 @@ async function main() {
     ({ slug: d.slug, fallback: d.slugFallback, approx: d.slugApprox } = makeSlug(d.archetype, d.list, d.date, taken, d.variant, d.nameRule?.has[0]));
     taken.add(d.slug);
     console.log(
-      `  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}${d.venue ? ` ${d.venue}` : ''} ${d.rank ?? ''}${d.nameRule ? `・言い換えルール（元の名前: ${d.sourceName}）` : d.inferred ? '・デッキ名は推定' : d.nameSource === 'bullet' ? '・デッキ名は●小見出し' : ''}${d.ruleUncertain ? `・⚠「${d.ruleUncertain}」に当てはまるか要確認` : ''}）→ /columns/${d.slug}/${d.slugFallback ? '（⚠ 英語名が不明のためローマ字）' : d.slugApprox ? '（⚠ デッキ名を英語にできないため主役ポケモンの英語名）' : ''}`,
+      `  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}${d.venue ? ` ${d.venue}` : ''} ${d.rank ?? '順位不明'}${d.venueNo ? `・元記事の${d.venueNo}会場目` : ''}${d.nameRule ? `・言い換えルール（元の名前: ${d.sourceName}）` : d.inferred ? '・デッキ名は推定' : d.nameSource === 'bullet' ? '・デッキ名は●小見出し' : ''}${d.ruleUncertain ? `・⚠「${d.ruleUncertain}」に当てはまるか要確認` : ''}）→ /columns/${d.slug}/${d.slugFallback ? '（⚠ 英語名が不明のためローマ字）' : d.slugApprox ? '（⚠ デッキ名を英語にできないため主役ポケモンの英語名）' : ''}`,
     );
   }
   if (opts.dryRun) return console.log('\n（dry-run: カード追加・記事生成・処理済みの記録は行いません）');
@@ -394,6 +396,18 @@ async function main() {
       sourceName: d.sourceName,
       renamedByRule: Boolean(d.nameRule),
       ruleUncertain: d.ruleUncertain,
+      // PR の「生成した記事」に出す大会の情報（取れなかった項目は「取得できず」と出す）
+      source: {
+        eventLabel: source.label,
+        date: d.date,
+        rank: d.rank,
+        venue: d.venue,
+        nameSource: d.nameSource,
+        sourceInferred: Boolean(d.sourceInferred),
+        articleTitle: d.article.title,
+        articleLink: d.article.link,
+        venueNo: d.venueNo,
+      },
     });
     console.log(`  ✓ src/pages/columns/${d.slug}.astro`);
   }
@@ -472,7 +486,9 @@ async function main() {
     ...fresh.map((it) => `- 元記事: [${it.title}](${it.link})`),
     '',
     `### 生成した記事（${generated.length}本）`,
-    ...(generated.length ? generated.map((c) => `- \`/columns/${c.slug}/\` ${c.title}\n  - 見どころ: ${c.highlight}`) : ['- なし']),
+    '（「〇会場目」は、元記事の会場の見出しを上から数えた順番です。結果の画像がない会場も数えます。ジムバトルは店舗名が載っていないため、デッキ1つを1会場として上から数えています）',
+    '',
+    ...(generated.length ? generated.map((c) => `${generatedItem(c)}\n  - 見どころ: ${c.highlight}`) : ['- なし']),
     '',
     ...(bannedHits.length || similarHits.length || todoHighlights.length
       ? [

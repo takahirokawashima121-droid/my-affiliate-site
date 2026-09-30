@@ -36,6 +36,23 @@ test('シティリーグ: 名前が画像にしかない記事は、会場ごと
     ['宝島　多治見店（岐阜）', '準優勝', '9/27', null, null],
   ]);
   assert.ok(decks.every((d) => ['優勝', '準優勝'].includes(d.rank) && d.archetype === null));
+  // venueNo は記事の中で何会場目か（会場の見出しを上から数える。結果の画像がない6会場目のオレタン松山店も数える）
+  assert.deepEqual(decks.slice(0, 3).map((d) => [d.venue, d.rank, d.venueNo]), [
+    ['宝島　多治見店（岐阜）', '優勝', 1],
+    ['宝島　多治見店（岐阜）', '準優勝', 1],
+    ['ドラグーン周南（山口）', '優勝', 2],
+  ]);
+  // PR #17 の4本（2026-09-30 生成）はどれも会場の「優勝」のリンクから読んだデッキ
+  const byId = new Map(decks.map((d) => [d.deckId, d]));
+  assert.deepEqual(
+    ['vwwbVf-nPrGK4-wFFkkw', 'Yxxc44-XqeDBA-K4G8Dc', 'cDGG88-iDJiq0-DxKx8D', 'HgNng9-ow8ILU-gPn6nN'].map((id) => [byId.get(id).venue, byId.get(id).rank, byId.get(id).venueNo]),
+    [
+      ['バトロコ　柏駅前（千葉）', '優勝', 5],
+      ['ドラゴンスター神戸三宮店（兵庫）', '優勝', 7],
+      ['三洋堂書店　新開橋店（愛知）', '優勝', 9],
+      ['トレカショップVOW（滋賀）', '優勝', 10],
+    ],
+  );
 });
 
 test('小見出しの形式: 文字の●あり・なし・<span>●</span> のどれでもデッキ名を読む', () => {
@@ -60,6 +77,10 @@ test('小見出しの形式: 文字の●あり・なし・<span>●</span> の�
       ['eee-555', null, null],
     ],
   );
+  // 何会場目か（ジムバトルはデッキ1つが1会場）。リンクの文字に成績がなければ順位は null（「優勝」と決めつけない）
+  const noRank = `<div class="entry-content"><h2>9/28【月】ジムバトル優勝</h2><h4>ケンタロス</h4><a href="https://www.pokemon-card.com/deck/result.html/deckID/fff-666/">デッキコード</a></div>`;
+  assert.deepEqual(parseGymArticle(noRank).map((d) => [d.rank, d.venueNo, d.date]), [[null, 1, '9/28']]);
+  assert.deepEqual(parseGymArticle(html).map((d) => d.venueNo), [1, 2, 3, 4, 5]);
 
 
 });

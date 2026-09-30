@@ -167,7 +167,7 @@
     "highlightBy": "manual",
     ```
   - AI の見どころに戻してよいときは `highlightBy` の行を消す（次のまとめ書き直しで書き直される）
-  - 今 `"manual"` の記事: 9/27 シティリーグの4本（`dragapult-ex-deck-0927`・`mega-kangaskhan-ex-deck-0927`・`n-zoroark-ex-deck-0927`・`mega-sharpedo-ex-deck-0927`）・`dipplin-festival-lead-deck-0929`・`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`・`n-zoroark-ex-deck`・`tauros-deck-0928`・`mega-lopunny-ex-deck-0927`
+  - 今 `"manual"` の記事: 9/27 シティリーグの4本（`dragapult-ex-deck-0927`・`mega-kangaskhan-ex-deck-0927`・`n-zoroark-ex-deck-0927`・`mega-sharpedo-ex-deck-0927`）・`dipplin-festival-lead-deck-0929`・`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`・`n-zoroark-ex-deck`・`tauros-deck-0928`・`mega-lopunny-ex-deck-0927`・`msanaitoex-deck-0926`・`mgekkougaex-deck-0926`・`orivuaex-deck-0926`・`okidogi-deck-0928`
 - **公開済みの記事の見どころのまとめ書き直し**（Actions の「AI highlight rewrite (manual)」= `.github/workflows/ai-highlight-rewrite.yml` → `scripts/ai-highlight-rewrite.js`。手動実行のみ）
   - 対象は、公開済みのデッキ記事のうち `highlightBy` が `"manual"` でないもの（公開日が新しい順）。入力欄「試しに何本だけ」に数字を入れるとその本数だけ（空欄ならすべて）
   - 書き方は自動生成と同じ（同じ指示・同じ点検・1回だけの書き直し・チェック役が要確認なら1回だけ直させる。AI に渡すのはデッキ名・60枚のレシピ・採用カードの公式テキスト・ルールのメモだけ）

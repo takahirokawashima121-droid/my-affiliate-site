@@ -14,8 +14,8 @@
 //    Wayback Machine（web.archive.org）に保存された、処理日の前後の版も読む
 // 3. まとめ記事を scripts/lib/pokecabook.js（記事の自動生成と同じ読み取り処理）で読み、デッキコードが一致するデッキの●付き小見出しの名前を取り出す
 // 4. 今のデッキ名と比べ、「一致」「不一致」「確認できなかった」に分ける。
-//    型名（「（ノココッチex採用型）」など当サイトで付けた区別）を外した名前が一致する場合も「一致」とする。
-//    デッキ名の言い換えルール（scripts/lib/deck-name-rules.js）に当てはまるデッキは、ルールの名前と比べる（ポケカブックの名前より優先）。
+//    古い記事の付け足し（「（ノココッチex採用型）」など当サイトで付けていた区別）を外した名前が一致する場合も「一致」とする。
+//    デッキ名の通称ルール（scripts/lib/deck-name-rules.js）に当てはまるデッキは、ルールの名前と比べる（ポケカブックの名前より優先）。
 //    ●付き小見出しがない（シティリーグのように名前が画像にしかない）、デッキコードが元記事に見つからない、取得に失敗した、などは「確認できなかった」
 //
 // マナー: ポケカブックへのリクエストは1.5秒以上あけ（scripts/lib/official.js の fetchText）、robots.txt で禁止されたページは取得しない。
@@ -174,7 +174,7 @@ async function checkColumn(column, deckId, articles, fallbackArticles, recipe = 
           : '●付き小見出しがない（デッキ名が画像にしかない）';
       return { ...row, source: article.link, note: article.archived ? `${note}（Wayback Machine の保存版）` : note };
     }
-    // 言い換えルールに当てはまるデッキは、ルールの名前が正（枚数が少なく迷うものは、ポケカブックの名前と比べる）
+    // 通称ルールに当てはまるデッキは、ルールの名前が正（枚数が少なく迷うもの・2つ以上のルールに当てはまるものは、ポケカブックの名前と比べる）
     const rule = matchDeckNameRule(recipe);
     const expected = rule && !rule.uncertain ? rule.name : deck.archetype;
     const exact = norm(column.deckName) === norm(expected);
@@ -186,9 +186,10 @@ async function checkColumn(column, deckId, articles, fallbackArticles, recipe = 
       status: exact || base ? STATUS.match : STATUS.mismatch,
       note: [
         article.archived ? 'Wayback Machine の保存版で確認' : '',
-        expected !== deck.archetype ? `言い換えルールにより「${expected}」が正` : '',
-        rule?.uncertain ? `言い換えルール「${rule.name}」に当てはまるか要確認（カードが少ない）` : '',
-        !exact && base ? '型名は当サイトで付けた区別' : '',
+        expected !== deck.archetype ? `通称ルールにより「${expected}」が正` : '',
+        rule?.conflict ? `通称ルール「${rule.rules.map((r) => r.name).join('」「')}」の両方に当てはまるため要確認` : '',
+        rule?.uncertain && !rule.conflict ? `通称ルール「${rule.name}」に当てはまるか要確認（カードが少ない）` : '',
+        !exact && base ? '付け足しは当サイトで付けた区別' : '',
         !exact && !base && withoutEx(baseDeckName(column.deckName)) === withoutEx(expected) ? '「ex」の有無だけが違う' : '',
       ]
         .filter(Boolean)
@@ -229,7 +230,7 @@ function renderMarkdown(rows) {
     `- ${STATUS.match}: ${count(STATUS.match)}件`,
     '',
     '> このチェックでは記事を書き換えていません。不一致の記事を直す場合は、deck-columns.json の deckName・title・slug とページを合わせて直し、slug を変えるときは astro.config.mjs の redirects に旧URLを追加してください（別の PR で行います）。',
-    '> 「型名は当サイトで付けた区別」は、同名デッキを区別するために当サイトで付けた「（〇〇採用型）」を外すと一致したものです。',
+    '> 「付け足しは当サイトで付けた区別」は、以前に同名デッキを区別するために当サイトで付けていた「（〇〇採用型）」を外すと一致したものです（今は付け足しをしません。`npm run apply-name-rules` で外せます）。',
     '',
     ...section(STATUS.mismatch),
     ...section(STATUS.unknown, 'シティリーグなど、デッキ名が画像にしかない記事や、まとめ記事が更新されて元のデッキが見つからない記事です。元記事（画像を含む）を人が見て確認してください。'),

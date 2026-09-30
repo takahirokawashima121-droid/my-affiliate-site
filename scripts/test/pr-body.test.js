@@ -36,11 +36,11 @@ test('取れなかった項目は空欄にせず「取得できず」と書く',
   assert.match(generatedItem(city({ venue: 'GIRAFULLなんば店（大阪）-1' })), /】GIRAFULLなんば店（大阪）-1<br>/);
 });
 
-test('デッキ名の取り方: ●付き小見出し・言い換えルール（元の名前の取り方つき）', () => {
+test('デッキ名の取り方: ●付き小見出し・通称ルール（元の名前の取り方つき）', () => {
   const gym = { eventLabel: 'ジムバトル', venue: undefined, nameSource: 'bullet' };
   assert.match(generatedItem(city(gym, { deckName: 'ケンタロス', inferred: false })), /\*\*ケンタロス\*\*（●付き小見出し）/);
   assert.match(generatedItem(city(gym, { inferred: false })), /】開催店舗・都道府県: 取得できず<br>/);
   const rule = { deckName: 'おまつりおんど', inferred: false, renamedByRule: true, sourceName: 'カミッチュ' };
-  assert.match(generatedItem(city({ sourceInferred: true }, rule)), /（言い換えルール・元の名前「カミッチュ」は⚠ 推定）/);
-  assert.match(generatedItem(city({ nameSource: 'bullet' }, rule)), /（言い換えルール・元の名前「カミッチュ」は●付き小見出し）/);
+  assert.match(generatedItem(city({ sourceInferred: true }, rule)), /（通称ルール・元の名前「カミッチュ」は⚠ 推定）/);
+  assert.match(generatedItem(city({ nameSource: 'bullet' }, rule)), /（通称ルール・元の名前「カミッチュ」は●付き小見出し）/);
 });

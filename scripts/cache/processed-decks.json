@@ -162,6 +162,34 @@
         "n-zoroark-ex-deck-0927",
         "mega-sharpedo-ex-deck-0927"
       ]
+    },
+    {
+      "key": "https://pokecabook.com/archives/336409#シティリーグ9/28【月】～10/2【金】ベスト16デッキまとめ",
+      "link": "https://pokecabook.com/archives/336409",
+      "title": "シティリーグ9/28【月】～10/2【金】ベスト16デッキまとめ",
+      "processedAt": "2026-10-01",
+      "decks": [
+        "yUR3yy-hxMPSP-MpMX2U",
+        "n9gg6n-RPOIY2-LnigLn"
+      ],
+      "columns": [
+        "n-zoroark-ex-deck-0929-budew",
+        "mega-starmie-ex-deck-0929"
+      ]
+    },
+    {
+      "key": "https://pokecabook.com/archives/335123#シティリーグ9/27【日】ベスト16デッキまとめ",
+      "link": "https://pokecabook.com/archives/335123",
+      "title": "シティリーグ9/27【日】ベスト16デッキまとめ",
+      "processedAt": "2026-10-01",
+      "decks": [
+        "3y3EEy-fZczTV-ypUpRM",
+        "nQHPLn-WMfYX1-9ggng6"
+      ],
+      "columns": [
+        "bomb-dragapult-deck-0927-mew-ex",
+        "seek-inspiration-deck-0927-metagross"
+      ]
     }
   ],
   "decks": [
@@ -215,6 +243,10 @@
     "vwwbVf-nPrGK4-wFFkkw",
     "Yxxc44-XqeDBA-K4G8Dc",
     "cDGG88-iDJiq0-DxKx8D",
-    "HgNng9-ow8ILU-gPn6nN"
+    "HgNng9-ow8ILU-gPn6nN",
+    "yUR3yy-hxMPSP-MpMX2U",
+    "n9gg6n-RPOIY2-LnigLn",
+    "3y3EEy-fZczTV-ypUpRM",
+    "nQHPLn-WMfYX1-9ggng6"
   ]
 }

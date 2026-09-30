@@ -6,7 +6,19 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import Anthropic from '@anthropic-ai/sdk';
 import { AI_HIGHLIGHT_CONFIG, REWRITE_MAX_CALLS, apiErrorDetail, createAiHighlighter, isFatalApiError } from '../lib/ai-highlight.js';
-import { applyRewrites, fixFlaggedHighlights, fixFlaggedPrBody, rewriteHighlights, rewritePrBody, rewriteTargets } from '../lib/highlight-rewrite.js';
+import {
+  applyRewrites,
+  applyTaglines,
+  fixFlaggedHighlights,
+  fixFlaggedPrBody,
+  rewriteHighlights,
+  rewritePrBody,
+  rewriteTargets,
+  taglinePrBody,
+  taglineTargets,
+  withTagline,
+  writeTaglines,
+} from '../lib/highlight-rewrite.js';
 import { parseLimit } from '../ai-highlight-rewrite.js';
 import { effectsFromPage } from '../rewrite-highlights.js';
 
@@ -80,9 +92,9 @@ test('--limit: 空欄・0・all はすべて、数字はその本数。数字で
   assert.throws(() => parseLimit(['--limit=abc']), /本数/);
 });
 
-test('API を呼ぶ回数の上限は、まとめ書き直しだけ250回（チェック役・直しの分を含む。通常の自動生成は40回）', () => {
+test('API を呼ぶ回数の上限は、まとめ書き直しだけ250回（チェック役・直しの分を含む。通常の自動生成は80回。見どころ＋ひとことで1本あたり最大10回）', () => {
   assert.equal(REWRITE_MAX_CALLS, 250);
-  assert.equal(AI_HIGHLIGHT_CONFIG.maxCallsPerRun, 40);
+  assert.equal(AI_HIGHLIGHT_CONFIG.maxCallsPerRun, 80);
 });
 
 test('書き直し: 点検に通れば新しい文、通らなければ今の見どころのまま。書き直した文どうしでも書き出しを比べる', async () => {
@@ -338,4 +350,123 @@ test('チェック役: 上限に達したら「チェックできず」とし、
   assert.equal(results[0].review.status, 'error');
   assert.match(results[1].reason, /上限に達した.*呼ばなかった/);
   assert.equal(client.calls.length, 1);
+});
+
+// ── 「ひとことだけ作る」モード（一覧のカードに出す tagline だけを書く。見どころは変えない） ──
+
+/** 主役のカード名を入れた、30〜40字のひとこと（データにない数字・名前は使わない） */
+const taglineFor = (c) => `${c.keyCards[0]}を軸に、ベンチと連携しながら相手のポケモンを追い詰めていく`;
+const reviewOk = JSON.stringify({ checks: [], notes: [] });
+
+test('ひとことだけ作る: 対象は公開済みの記事（見どころが manual の記事も含む）。taglineBy: "manual" の記事は対象外', () => {
+  const today = '2026-09-30';
+  const copy = structuredClone(columns);
+  copy.find((c) => c.slug === 'tauros-deck-0928').taglineBy = 'manual';
+  const { targets, manual, all } = taglineTargets(copy, { today });
+  assert.ok(targets.some((c) => c.slug === 'n-zoroark-ex-deck' && c.highlightBy === 'manual'));
+  assert.deepEqual(manual.map((c) => c.slug), ['tauros-deck-0928']);
+  assert.ok(!targets.some((c) => c.slug === 'tauros-deck-0928'));
+  assert.equal(all, copy.filter((c) => c.pubDate <= today).length - 1);
+  for (let i = 1; i < targets.length; i++) assert.ok(targets[i - 1].pubDate >= targets[i].pubDate);
+  assert.equal(taglineTargets(copy, { today, limit: 2 }).targets.length, 2);
+});
+
+test('ひとことだけ作る: 見どころ（highlight・highlightBy）は変えず、tagline と taglineBy: "ai" だけを入れる', async () => {
+  const manualHighlight = columns.find((c) => c.slug === 'tauros-deck-0928');
+  const other = columns.find((c) => c.slug === 'bomb-talonflame-deck-0928');
+  for (const c of [manualHighlight, other]) {
+    const len = [...taglineFor(c)].length;
+    assert.ok(len >= 30 && len <= 40, `${taglineFor(c)}（${len}字）`);
+  }
+  const long = (c) => `${taglineFor(c)}デッキで、じっくり戦っていく`;
+  const client = fakeClient((params) => {
+    if (params.output_config?.format) return reviewOk;
+    const prompt = params.messages[0].content;
+    const target = prompt.includes(`主役のカード: ${manualHighlight.keyCards[0]}`) ? manualHighlight : other;
+    // 1本目は最初にはみ出し、短く書き直させる
+    if (target === manualHighlight && params.messages.length === 1) return long(target);
+    return taglineFor(target);
+  });
+  const ai = createAiHighlighter({ client, config: { ...AI_HIGHLIGHT_CONFIG, maxCallsPerRun: REWRITE_MAX_CALLS } });
+  const results = await writeTaglines({ columns, targets: [manualHighlight, other], namesOf, materialsOf, ai });
+  assert.deepEqual(
+    results.map((r) => [r.slug, r.after, r.attempts, r.review.status]),
+    [
+      [manualHighlight.slug, taglineFor(manualHighlight), 2, 'ok'],
+      [other.slug, taglineFor(other), 1, 'ok'],
+    ],
+  );
+  // 見どころは参考として渡す（手で直した見どころもそのまま）
+  assert.ok(client.calls[0].messages[0].content.includes(manualHighlight.highlight));
+
+  const copy = structuredClone(columns);
+  const before = structuredClone(copy);
+  assert.equal(applyTaglines(copy, results), 2);
+  const t = copy.find((c) => c.slug === manualHighlight.slug);
+  assert.equal(t.tagline, taglineFor(manualHighlight));
+  assert.equal(t.taglineBy, 'ai');
+  assert.equal(t.highlight, manualHighlight.highlight);
+  assert.equal(t.highlightBy, 'manual');
+  // tagline・taglineBy は highlightBy のすぐ後ろ。ほかの欄（レシピのキー・keyCards など）は変えない
+  const keys = Object.keys(t);
+  assert.deepEqual(keys.slice(keys.indexOf('highlight'), keys.indexOf('highlight') + 4), ['highlight', 'highlightBy', 'tagline', 'taglineBy']);
+  for (const [i, c] of copy.entries()) {
+    const { tagline, taglineBy, ...rest } = c;
+    const { tagline: _t, taglineBy: _b, ...restBefore } = before[i];
+    assert.deepEqual(rest, restBefore, c.slug);
+  }
+
+  // taglineBy: 'manual' の記事は上書きしない
+  const manualTagline = structuredClone(columns);
+  const m = manualTagline.find((c) => c.slug === other.slug);
+  Object.assign(m, { tagline: '手で書いたひとこと', taglineBy: 'manual' });
+  applyTaglines(manualTagline, results);
+  assert.equal(manualTagline.find((c) => c.slug === other.slug).tagline, '手で書いたひとこと');
+
+  // PR: 見どころは変えていないこと・字数・今の見どころ（参考）を出す
+  const body = taglinePrBody({ results, manual: [], stats: ai.stats, limit: 2, all: 40 });
+  assert.match(body, /## 💬 公開済みデッキ記事の一覧のカードに出す「ひとこと」を Claude API で作成/);
+  assert.match(body, /\*\*見どころ（`highlight`・`highlightBy`）は変えていません\*\*/);
+  assert.match(body, /\| 記事 \| ひとこと（字数） \| 今の見どころ（参考・変えていない） \| チェック \|/);
+  assert.ok(body.includes(`${taglineFor(manualHighlight)}（${[...taglineFor(manualHighlight)].length}字）`));
+  assert.match(body, /試しに2本だけ/);
+  assert.ok(!body.includes('[!WARNING]'));
+});
+
+test('ひとことだけ作る: チェック役が要確認のまま・書けなかった記事は PR で知らせる', async () => {
+  const [a, b] = columns.filter((c) => c.pubDate === '2026-09-29' && new Set(['bomb-talonflame-deck-0928', 'tauros-deck-0928']).has(c.slug));
+  const quoteOf = async (c) => {
+    const { profiles } = await materialsOf(c);
+    return (profiles.get(c.keyCards[0])?.effects ?? []).map((e) => e.text).find((x) => x && x.length >= 10)?.split('。')[0];
+  };
+  const quote = await quoteOf(a);
+  assert.ok(quote);
+  const client = fakeClient((params) => {
+    const prompt = params.messages[0].content;
+    if (params.output_config?.format) {
+      return prompt.includes(a.keyCards[0]) ? JSON.stringify({ checks: [{ point: '効果', judgment: '誤り', reason: '対象が違う', quote }], notes: [] }) : reviewOk;
+    }
+    // b は何度書いても短すぎる
+    return prompt.includes(`主役のカード: ${b.keyCards[0]}`) ? `${b.keyCards[0]}で攻める` : taglineFor(a);
+  });
+  const ai = createAiHighlighter({ client, config: { ...AI_HIGHLIGHT_CONFIG, maxCallsPerRun: REWRITE_MAX_CALLS } });
+  const results = await writeTaglines({ columns, targets: [a, b], namesOf, materialsOf, ai });
+  const ra = results.find((r) => r.slug === a.slug);
+  const rb = results.find((r) => r.slug === b.slug);
+  assert.equal(ra.fix.outcome, 'unfixed');
+  assert.equal(ra.review.status, 'warn');
+  assert.equal(rb.after, null);
+  assert.match(rb.reason, /短すぎます/);
+  const body = taglinePrBody({ results, manual: [], stats: ai.stats, limit: null, all: 2 });
+  const top = body.slice(0, body.indexOf('## 💬'));
+  assert.match(top, /^> \[!WARNING\]/);
+  assert.match(top, new RegExp(`${a.slug}.*⚠ 要確認：効果：対象が違う.*🙋 直せずに人に知らせた`));
+  assert.match(body, new RegExp(`### 書けなかった記事（1本）\\n- \`/columns/${b.slug}/\`.*短すぎます`));
+});
+
+test('withTagline: highlightBy がない記事は highlight のすぐ後ろに置き、ほかの欄の順番は変えない', () => {
+  const c = { slug: 's', highlight: 'h', keyCards: ['x'] };
+  assert.deepEqual(Object.keys(withTagline(c, 't')), ['slug', 'highlight', 'tagline', 'taglineBy', 'keyCards']);
+  const again = withTagline({ ...withTagline(c, 't'), highlightBy: 'ai' }, 't2');
+  assert.equal(again.tagline, 't2');
 });

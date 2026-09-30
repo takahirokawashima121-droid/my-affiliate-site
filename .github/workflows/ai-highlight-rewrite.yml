@@ -2,6 +2,9 @@
 # 手で直した印（deck-columns.json の highlightBy: "manual"）の記事は書き直さない。main には直接入れない。
 # 入力欄「やること」で「要確認の記事だけ直す」を選ぶと、今の見どころをチェック役にかけ、要確認の記事だけを直す（--only-flagged。
 # 問題なしの記事は変えない。manual の記事は直さず、要確認なら PR で知らせるだけ）。PR は auto/ai-highlight-fix ブランチに作る
+# 「ひとことだけ作る」を選ぶと、一覧のカードに出すひとこと（tagline。30〜40字）だけを書く（--tagline-only。見どころは変えない。
+# taglineBy: "manual" の記事は書かない）。PR は auto/ai-tagline ブランチに作る
+# マージ前に試すときは「Use workflow from」で作業ブランチを選ぶ（PR はそのブランチ向けにできる）
 # Actions タブの「Run workflow」ボタンから手動実行のみ（定期実行はしない）
 #
 # 事前設定:
@@ -21,8 +24,9 @@ on:
         options:
           - 'すべて書き直す'
           - '要確認の記事だけ直す'
+          - 'ひとことだけ作る'
       limit:
-        description: '試しに何本だけ書き直すか（例: 5。公開日が新しい順。空欄ならすべて）'
+        description: '試しに何本だけ書き直す（作る）か（例: 2。公開日が新しい順。空欄ならすべて）'
         required: false
         default: ''
 
@@ -74,6 +78,8 @@ jobs:
         run: |
           if [ "$MODE" = '要確認の記事だけ直す' ]; then
             npm run ai-highlight-rewrite -- --only-flagged --limit="$LIMIT"
+          elif [ "$MODE" = 'ひとことだけ作る' ]; then
+            npm run ai-highlight-rewrite -- --tagline-only --limit="$LIMIT"
           else
             npm run ai-highlight-rewrite -- --limit="$LIMIT"
           fi
@@ -90,10 +96,10 @@ jobs:
         if: hashFiles('.cache/ai-highlight-rewrite-pr.md') != ''
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'auto/ai-highlight-fix' || 'auto/ai-highlight-rewrite' }}"
+          branch: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'auto/ai-highlight-fix' || github.event.inputs.mode == 'ひとことだけ作る' && 'auto/ai-tagline' || 'auto/ai-highlight-rewrite' }}"
           delete-branch: true
-          title: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'content: 公開済みデッキ記事の見どころのうち、要確認の記事だけを Claude API で直す' || 'content: 公開済みデッキ記事の見どころを Claude API で書き直し' }}"
-          commit-message: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'content: 要確認の見どころを Claude API で直す' || 'content: 公開済みデッキ記事の見どころを Claude API で書き直す' }}"
+          title: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'content: 公開済みデッキ記事の見どころのうち、要確認の記事だけを Claude API で直す' || github.event.inputs.mode == 'ひとことだけ作る' && 'content: 公開済みデッキ記事の一覧のひとことを Claude API で作成' || 'content: 公開済みデッキ記事の見どころを Claude API で書き直し' }}"
+          commit-message: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'content: 要確認の見どころを Claude API で直す' || github.event.inputs.mode == 'ひとことだけ作る' && 'content: 一覧のひとことを Claude API で作成' || 'content: 公開済みデッキ記事の見どころを Claude API で書き直す' }}"
           body-path: .cache/ai-highlight-rewrite-pr.md
           labels: auto-deck
           add-paths: |

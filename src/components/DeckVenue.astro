@@ -1,0 +1,12 @@
+---
+// デッキカードの開催店舗（「📍 青馬堂矢向店（神奈川）」）。トップページの特集とコラム一覧で共通。店舗のデータがなければ何も出さない
+import type { DeckColumn } from '../data/deck-columns';
+
+interface Props {
+  column: Pick<DeckColumn, 'venue'>;
+}
+
+const venue = Astro.props.column.venue?.trim();
+---
+
+{venue && <span class="mt-0.5 truncate text-[11px] text-slate-500" title={venue}>📍 {venue}</span>}

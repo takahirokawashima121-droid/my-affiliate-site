@@ -1,18 +1,18 @@
 ---
-// デッキ解説コラムの一覧（src/data/deck-columns.json の記事を新しい順に表示）
+// デッキ解説コラムの一覧（src/data/deck-columns.json の記事を、トップページの特集と同じ並び順で表示：開催日が新しい順 → 成績の高い順 → シティリーグ → ジムバトル）
 // 上部のタブでカテゴリを絞り込める（JS でカードの表示を切り替え、URL の ?filter= にも反映。JS なしでも全件表示）
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CardImage from '../../components/CardImage.astro';
+import DeckVenue from '../../components/DeckVenue.astro';
 import EventBadge from '../../components/EventBadge.astro';
-import { DECK_COLUMNS, columnPath, eventTypeOf } from '../../data/deck-columns';
+import { DECK_COLUMNS, columnPath, eventTypeOf, sortColumnsByEvent } from '../../data/deck-columns';
 import { formatYen, getCards } from '../../utils/cards';
 import { DECK_FILTERS, BUDGET_LIMIT, deckBadgeClass, deckSummary } from '../../utils/decks';
 
 const cards = await getCards();
-const columns = DECK_COLUMNS.map((c, i) => ({ ...c, ...deckSummary(c, cards), event: eventTypeOf(c) ?? 'other', order: i }))
-  // 新しい順（同じ日なら登録順）
-  .sort((a, b) => b.pubDate.localeCompare(a.pubDate) || a.order - b.order);
+// 絞り込みはカードの表示を切り替えるだけなので、どのタブでもこの並び順のまま
+const columns = sortColumnsByEvent(DECK_COLUMNS).map((c) => ({ ...c, ...deckSummary(c, cards), event: eventTypeOf(c) ?? 'other' }));
 // 大会の種類で絞り込むタブ（カテゴリのタブと組み合わせて使える）
 const EVENT_FILTERS = [
   { key: 'all', label: 'すべての大会' },
@@ -71,6 +71,7 @@ const tab =
               <span class="flex min-w-0 flex-1 flex-col">
                 <span><EventBadge column={c} /></span>
                 <span class="mt-1 text-base font-black leading-snug text-slate-900 group-hover:text-blue-600">{c.deckName}</span>
+                <DeckVenue column={c} />
                 <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{c.highlight}</span>
               </span>
             </span>

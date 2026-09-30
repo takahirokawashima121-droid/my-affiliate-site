@@ -110,19 +110,46 @@ export function eventBadge(c: DeckColumn): { label: string; className: string; t
 /** デッキの系統（「メガジガルデex（〇〇型）」→「メガジガルデex」）。特集に同じデッキが並ばないようにする */
 const deckBase = (c: DeckColumn) => c.deckName.replace(/（.*）$/, '');
 
+/** 成績の並び順（優勝 → 準優勝 → TOP4 → TOP8 → 「TOP16」などその他の順位 → 順位なし） */
+const RANK_ORDER: EventRank[] = ['優勝', '準優勝', 'TOP4', 'TOP8'];
+function rankScore(c: DeckColumn): number {
+  const rank = rankOf(c);
+  if (rank) return RANK_ORDER.indexOf(rank);
+  const top = c.result.match(/(?:TOP|ベスト)\s*(\d+)/i);
+  return top ? Number(top[1]) : Number.MAX_SAFE_INTEGER;
+}
+
+/** 大会の種類の並び順（同じ日付・同じ成績なら シティリーグ → ジムバトル → それ以外） */
+const EVENT_TYPE_ORDER: Record<EventType | 'other', number> = { city: 0, gym: 1, other: 2 };
+
 /**
- * トップページの「最新大会入賞デッキ特集」。deck-columns.json のシティリーグ・ジムバトル入賞デッキを、開催日（→ 公開日）が
- * 新しい順に並べて先頭から選ぶ（type を渡すとその大会だけ）。新しい大会のデッキが追加されれば、次のビルドで自動的に特集が切り替わる。
- * 同じ日付どうしはシティリーグ → ジムバトル、成績の高い順、deck-columns.json の掲載順。同じ系統のデッキは1件だけ載せる
+ * デッキ記事の並び順（コラム一覧・トップページの特集で共通）
+ * 開催日が新しい順 → 成績の高い順 → シティリーグ → ジムバトル → 公開日が新しい順 → deck-columns.json の掲載順。
+ * 開催日は YYYY-MM-DD で比べるため、12月 → 1月のように年をまたいでも正しく並ぶ（eventDate() が年を補う）
+ */
+export function sortColumnsByEvent<T extends DeckColumn>(columns: readonly T[]): T[] {
+  return columns
+    .map((c, order) => ({ c, order, date: eventDate(c) }))
+    .sort(
+      (a, b) =>
+        b.date.localeCompare(a.date) ||
+        rankScore(a.c) - rankScore(b.c) ||
+        EVENT_TYPE_ORDER[eventTypeOf(a.c) ?? 'other'] - EVENT_TYPE_ORDER[eventTypeOf(b.c) ?? 'other'] ||
+        b.c.pubDate.localeCompare(a.c.pubDate) ||
+        a.order - b.order,
+    )
+    .map(({ c }) => c);
+}
+
+/**
+ * トップページの「最新大会入賞デッキ特集」。deck-columns.json のシティリーグ・ジムバトル入賞デッキを、コラム一覧と同じ並び順
+ * （sortColumnsByEvent）で並べて先頭から選ぶ（type を渡すとその大会だけ）。新しい大会のデッキが追加されれば、次のビルドで自動的に特集が切り替わる。
+ * 同じ系統のデッキは1件だけ載せる
  */
 export function latestEventDecks(limit = 6, type?: EventType): { title: string; date: string; columns: DeckColumn[] } {
-  const rankOrder: EventRank[] = ['優勝', '準優勝', 'TOP4', 'TOP8'];
-  const score = (c: DeckColumn) => (eventTypeOf(c) === 'city' ? 0 : 10) + rankOrder.indexOf(rankOf(c)!);
-  const sorted = DECK_COLUMNS.map((c, order) => ({ c, order, date: eventDate(c) }))
-    .filter(({ c }) => isEventPlacing(c) && (!type || eventTypeOf(c) === type))
-    .sort((a, b) => b.date.localeCompare(a.date) || score(a.c) - score(b.c) || b.c.pubDate.localeCompare(a.c.pubDate) || a.order - b.order);
+  const sorted = sortColumnsByEvent(DECK_COLUMNS.filter((c) => isEventPlacing(c) && (!type || eventTypeOf(c) === type)));
   const seen = new Set<string>();
-  const columns = sorted.filter(({ c }) => !seen.has(deckBase(c)) && seen.add(deckBase(c))).slice(0, limit).map(({ c }) => c);
-  const date = sorted[0]?.date ?? '';
+  const columns = sorted.filter((c) => !seen.has(deckBase(c)) && seen.add(deckBase(c))).slice(0, limit);
+  const date = sorted[0] ? eventDate(sorted[0]) : '';
   return { title: `最新大会入賞デッキ特集（シティ＆ジムバ）${date ? `・${shortDate(date)}更新` : ''}`, date, columns };
 }

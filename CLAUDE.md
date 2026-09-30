@@ -43,7 +43,7 @@
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run ai-highlight-test -- --slug=スラッグ`（公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて出す。ファイルは変えない。`ANTHROPIC_API_KEY` が必要。GitHub Actions の「AI highlight test (manual)」からも実行できる）
   - `npm run ai-highlight-review`（公開済みの記事の見どころをチェック役の AI にかけて結果を出す。`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の9本（`scripts/test/fixtures/ai-highlight-review-cases.json`）も一緒にチェックし、`mustFlag: true` の2本（手で直す前の文＝`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`）をどちらも「要確認」にでき、`mustNotFlag: true` の5本（今サイトに出ている文＝`slowking-deck`・`n-zoroark-ex-deck`・`mabusoruex-deck-0928`・`n-zoroark-ex-deck-0927`・`mega-lopunny-ex-deck-0927`）をすべて「問題なし」にできれば合格と出す。ファイルは変えない。GitHub Actions の「AI highlight review (manual)」からも実行できる）
-  - `npm run ai-highlight-rewrite`（公開済みの記事の見どころを Claude API でまとめて書き直す。`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。`--only-flagged` で「要確認の記事だけ直す」。ふだんは GitHub Actions の「AI highlight rewrite (manual)」から実行し、結果を `auto/ai-highlight-rewrite`（要確認の記事だけ直すときは `auto/ai-highlight-fix`）ブランチの PR にする。main には直接入れない）
+  - `npm run ai-highlight-rewrite`（公開済みの記事の見どころを Claude API でまとめて書き直す。`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。`--only-flagged` で「要確認の記事だけ直す」。`--tagline-only` で「ひとことだけ作る」（一覧のカードの `tagline` だけ。見どころは変えない）。ふだんは GitHub Actions の「AI highlight rewrite (manual)」から実行し、結果を `auto/ai-highlight-rewrite`（要確認の記事だけ直すときは `auto/ai-highlight-fix`・ひとことだけ作るときは `auto/ai-tagline`）ブランチの PR にする。main には直接入れない）
   - `npm run apply-name-rules`（デッキ名の付け足しを外し、通称ルールを既存の記事に当てはめる。`--dry-run` あり。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
@@ -155,8 +155,15 @@
       - コードは変えなくてよい（`scripts/lib/ai-highlight.js` が読み込む）
   - PR の「生成した記事」の各記事に「見どころ（AIで作成）」「見どころ（従来の方法・理由）」を出し、「Claude API（見どころ）の使用量」にモデル・呼んだ回数・トークン数・おおよその料金（ドル）を出す
   - **モデルの変え方**: `scripts/lib/ai-highlight.js` の `AI_HIGHLIGHT_CONFIG.model` だけを書き換える（今は `claude-sonnet-5-5`）。料金の目安は同じファイルの `PRICES` にあるモデルだけ出る（ないモデルは「不明」。追記すれば出る）。effort に対応していないモデル（`claude-haiku-4-5` など）にするときは `effort` を `null` にする。変えたら「AI highlight test (manual)」で数本試してから PR にする
-  - 1回の実行（`npm run auto-decks` / `npm run auto-city` それぞれ）で API を呼ぶ回数の上限は `AI_HIGHLIGHT_CONFIG.maxCallsPerRun`（40回。チェック役・直しの分も数える。1本あたり最大5回）
+  - 1回の実行（`npm run auto-decks` / `npm run auto-city` それぞれ）で API を呼ぶ回数の上限は `AI_HIGHLIGHT_CONFIG.maxCallsPerRun`（80回。ひとこと・チェック役・直しの分も数える。1本あたり見どころ最大5回＋ひとこと最大5回。見どころを先に全部書いてから、ひとことを書く）
   - API のエラーのときは、API が返した理由の文（残高不足など）をログと PR 本文に出す（`apiErrorDetail`）。**キーの文字は出さない**（`sk-ant-…` と渡したキーは伏せる）
+- **一覧のカードの「ひとこと」**（`deck-columns.json` の各記事の `tagline`・`taglineBy`。`highlightBy`（なければ `highlight`）のすぐ後ろに置く）
+  - トップの特集・デッキ解説の一覧のカードは、`tagline` があればそれ、なければ `highlight` を出す（`src/data/deck-columns.ts` の `cardBlurb`）。記事の本文の「このデッキのポイント」・X投稿文は見どころのまま
+  - 自動生成では、見どころをすべて決めたあとに Claude API で1本書く（`scripts/lib/ai-highlight.js` の `writeTagline`。渡すのは見どころと同じデータ＋その記事の見どころ（参考））。長さは `TAGLINE_MIN`〜`TAGLINE_MAX`（30〜40字）
+  - 点検は `reviewTagline`（長さ・主役のカード名が入っている・データにない「」の名前や数字・誇張・決まった文・同じ日の記事と同じ文）。**30〜40字をはみ出したら、理由を伝えてもう一度短く書き直させる**（1回だけ）。それでも通らない・API のエラー・上限のときは、ひとことなし（一覧は見どころを出す）
+  - チェック役・直しは見どころと同じ基準（`checkAndFix(input, text, { kind: 'tagline' })`。チェック役には「## ひとこと」として渡す）。要確認なら1回だけ直させ、それでも要確認なら直した文を使い、PR のいちばん上に「⚠ 要確認」で出す
+  - `"taglineBy": "ai"` … AI が書いたひとこと / `"manual"` … 人が手で直したひとこと。**自動生成でも「ひとことだけ作る」でも上書きしない**（ひとことを手で直したら必ず `"taglineBy": "manual"` にする）
+  - 公開済みの記事は「AI highlight rewrite (manual)」の「ひとことだけ作る」（`--tagline-only`）で書く。**見どころ（`highlight`・`highlightBy`）は変えない**（`"highlightBy": "manual"` の記事も、見どころはそのままでひとことだけ書く）。PR は `auto/ai-tagline` ブランチ。変えるのは `deck-columns.json` の `tagline`・`taglineBy` だけ（レシピ・価格・カードの効果は触らない）
 - **見どころを書いたのは誰かの印**（`deck-columns.json` の各記事の `highlightBy`。`highlight` のすぐ後ろに置く）
   - `"ai"` … Claude API が書いた見どころ。自動生成・まとめ書き直しで AI の文を使ったときに自動で付く
   - `"manual"` … 人が手で直した見どころ。**自動生成でも、まとめ書き直し（`npm run ai-highlight-rewrite`・`npm run rewrite-highlights`）でも上書きしない**
@@ -173,7 +180,7 @@
   - 書き方は自動生成と同じ（同じ指示・同じ点検・1回だけの書き直し・チェック役が要確認なら1回だけ直させる。AI に渡すのはデッキ名・60枚のレシピ・採用カードの公式テキスト・ルールのメモだけ）
   - 点検に通らなかった・API のエラーの記事は、今の見どころのまま残す
   - 同じ日の記事と書き出しが似ないよう、比べる相手には「書き直した記事は新しい文・それ以外は今の文」を渡す（書き直した文どうしでも点検する）
-  - 1回の実行で API を呼ぶ回数の上限は `REWRITE_MAX_CALLS`（250回。チェック役・直しの分を含む。この作業と「AI highlight review (manual)」だけ。通常の自動生成は40回）。残高不足・キーの問題のエラーが出たとき、ほかのエラーが3回続いたときは、残りの記事は呼ばずにやめる
+  - 1回の実行で API を呼ぶ回数の上限は `REWRITE_MAX_CALLS`（250回。チェック役・直しの分を含む。この作業と「AI highlight review (manual)」だけ。通常の自動生成は80回）。残高不足・キーの問題のエラーが出たとき、ほかのエラーが3回続いたときは、残りの記事は呼ばずにやめる
   - 結果は `auto/ai-highlight-rewrite` ブランチの PR にする（main に直接入れない）。PR の本文に、記事ごとの変更前・変更後の見どころとチェック役の結果（表。自分で直せた / 直せずに人に知らせた も）、書き直せなかった記事と理由、使った量とおおよその料金、書き直し後の点検を出す
   - **要確認の記事だけ直すモード**（入力欄「やること」で「要確認の記事だけ直す」を選ぶ。`--only-flagged`）
     - manual 以外の公開済みの記事の今の見どころをチェック役にかけ、要確認になった記事だけを上の方法（「誤り」の理由を渡して1回だけ直させ、もう一度チェック）で直す

@@ -22,6 +22,13 @@ export type DeckColumn = {
    * 'manual' の見どころは、自動生成・まとめ書き直し（npm run ai-highlight-rewrite / rewrite-highlights）で上書きしない
    */
   highlightBy?: 'ai' | 'manual';
+  /**
+   * ひとこと（一覧のカード＝トップの特集・デッキ解説の一覧に出す30〜40字の短い紹介）。ないときは一覧に見どころ（highlight）を出す（cardBlurb）。
+   * Claude API が書く（scripts/lib/ai-highlight.js の writeTagline）。記事の本文・X投稿文には使わない
+   */
+  tagline?: string;
+  /** ひとことを書いたのは誰か（'ai' = Claude API / 'manual' = 人が手で直した。'manual' は自動生成・まとめ作成で上書きしない） */
+  taglineBy?: 'ai' | 'manual';
   /** 主力パーツ（レシピ内のカード名。最安値カードとして記事上部に表示する。同名が複数あれば最初の版） */
   keyCards: string[];
   /** 大会の種類（シティリーグ / ジムバトル）。省略時は result の文言から判定し、「ジムバトル」を含めば gym */
@@ -65,6 +72,9 @@ function titleWithLabel(c: DeckColumn): string {
 export const DECK_COLUMNS = (deckColumns as DeckColumn[]).map((c) => (c.titleLabel ? { ...c, title: titleWithLabel(c) } : c));
 
 export const columnPath = (c: DeckColumn) => `/columns/${c.slug}/`;
+
+/** 一覧のカードに出す短い紹介: ひとこと（tagline）があればそれ、なければ見どころ（highlight） */
+export const cardBlurb = (c: Pick<DeckColumn, 'tagline' | 'highlight'>) => c.tagline?.trim() || c.highlight;
 
 /** 大会の種類。明示されていなければ result の文言から判定（ジムバトル以外の大会・環境まとめ由来の記事は undefined） */
 export function eventTypeOf(c: DeckColumn): EventType | undefined {

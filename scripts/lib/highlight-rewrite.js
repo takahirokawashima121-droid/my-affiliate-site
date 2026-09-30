@@ -8,8 +8,10 @@
 // - 「要確認の記事だけ直す」モード（fixFlaggedHighlights）: 今の見どころをチェックし、要確認の記事だけを同じ方法で直す。
 //   問題なしの記事・直せなかった記事は変えない。manual の記事はチェックだけで直さない（要確認なら PR で知らせる）
 // - 同じ日の記事と書き出しが似ないよう、比べる相手には「書き直したものは新しい文・それ以外は今の文」を渡す（書き直した文どうしも比べる）
+// - 「ひとことだけ作る」モード（writeTaglines）: 一覧のカードに出すひとこと（tagline）だけを書く。見どころ（highlight・highlightBy）は変えない。
+//   taglineBy: 'manual'（人が手で直した印）の記事は書かない。チェック役・1回だけの直しは見どころと同じ（ai.checkAndFix(…, { kind: 'tagline' })）
 
-import { fixLabel, reviewLabel, usageLines } from './ai-highlight.js';
+import { TAGLINE_MAX, TAGLINE_MIN, fixLabel, reviewLabel, taglineLength, usageLines } from './ai-highlight.js';
 
 /** API のエラーがこの回数続いたら、残りの記事は呼ばずにやめる（残高不足・キーの問題はその場でやめる） */
 export const MAX_CONSECUTIVE_ERRORS = 3;
@@ -317,5 +319,175 @@ export function fixFlaggedPrBody({ results, stats, audit, limit, all }) {
     '### 確認すること',
     ...(fixed.length ? ['- [ ] 「🔧 自分で直せた」記事の変更後の見どころを、記事の「主力カードの効果」と見比べた'] : []),
     ...(notify.length ? ['- [ ] いちばん上の「要確認のまま人に知らせる記事」を確認し、直すなら手で直して `highlightBy` を `"manual"` にした'] : []),
+  ].join('\n');
+}
+
+/**
+ * 「ひとことだけ作る」モードで書く記事を選ぶ（公開日が新しい順。同じ日は deck-columns.json の順）。
+ * 見どころが手で直したもの（highlightBy: 'manual'）でも対象にする（見どころは変えず、ひとことだけ書く）。taglineBy: 'manual' の記事は対象外
+ * @param {object[]} columns deck-columns.json
+ * @param {{ limit?: number | null, today: string }} options
+ * @returns {{ targets: object[], manual: object[], all: number }}
+ */
+export function taglineTargets(columns, { limit = null, today }) {
+  const published = columns.filter((c) => c.pubDate <= today);
+  const manual = published.filter((c) => c.taglineBy === 'manual');
+  const order = new Map(columns.map((c, i) => [c.slug, i]));
+  const candidates = published
+    .filter((c) => c.taglineBy !== 'manual')
+    .sort((a, b) => b.pubDate.localeCompare(a.pubDate) || order.get(a.slug) - order.get(b.slug));
+  return { targets: limit ? candidates.slice(0, limit) : candidates, manual, all: candidates.length };
+}
+
+/**
+ * ひとことを書く（deck-columns.json はここでは変えない。applyTaglines で反映する）。見どころは渡すだけで変えない
+ * - 点検（長さ 30〜40字を含む）に通らなければ理由を伝えて1回だけ書き直させる（ai.writeTagline）
+ * - 書けた文はチェック役にかけ、要確認なら「誤り」の理由を渡して1回だけ直させ、もう一度チェックする（⚠ でも文は使い、PR で知らせる）
+ * - 書けなかった記事は今のひとことのまま（なければ一覧は見どころを出す）
+ * @param {{ columns: object[], targets: object[], namesOf: Function, materialsOf: Function, ai: { writeTagline: Function, checkAndFix: Function, stats: object }, log?: Function }} options
+ * @returns {Promise<{ slug, deckName, pubDate, highlight, before, after: string | null, reason?: string, attempts: number, review?: object, fix?: object }[]>}
+ */
+export async function writeTaglines({ columns, targets, namesOf, materialsOf, ai, log = () => {} }) {
+  const current = new Map(columns.map((c) => [c.slug, c.tagline]));
+  const results = [];
+  let consecutiveErrors = 0;
+  let stopReason = null;
+  for (const column of targets) {
+    const base = { slug: column.slug, deckName: column.deckName, pubDate: column.pubDate, highlight: column.highlight, before: column.tagline ?? null, after: null, attempts: 0 };
+    if (stopReason) {
+      results.push({ ...base, reason: `${stopReason}ため、この記事は呼ばなかった` });
+      continue;
+    }
+    log(`- ${column.slug}（${column.pubDate}）`);
+    const main = column.keyCards?.[0];
+    if (!main) {
+      results.push({ ...base, reason: '主力カード（keyCards）がない' });
+      continue;
+    }
+    let materials;
+    try {
+      materials = await materialsOf(column);
+    } catch (error) {
+      results.push({ ...base, reason: `採用カードの公式テキストを取れなかった（${error?.message ?? error}）` });
+      continue;
+    }
+    if (!materials.recipe?.length) {
+      results.push({ ...base, reason: '60枚のレシピ（official-decks.json）がない' });
+      continue;
+    }
+    // 同じ日のほかの記事のひとこと（書いたものは新しい文）と同じ文にしない
+    const others = columns
+      .filter((c) => c.pubDate === column.pubDate && c.slug !== column.slug)
+      .map((c) => ({ slug: c.slug, tagline: current.get(c.slug), names: namesOf(c) }))
+      .filter((o) => o.tagline);
+    const input = { deckName: column.deckName, main, recipe: materials.recipe, profiles: materials.profiles, names: namesOf(column), others, highlight: column.highlight };
+    const r = await ai.writeTagline(input);
+    const checked = r.text ? await ai.checkAndFix(input, r.text, { kind: 'tagline' }) : null;
+    if (r.text) {
+      const text = checked?.text ?? r.text;
+      current.set(column.slug, text);
+      results.push({ ...base, after: text, attempts: r.attempts, ...(checked?.review ? { review: checked.review } : {}), ...(checked?.fix ? { fix: checked.fix } : {}) });
+    } else {
+      results.push({ ...base, reason: r.reason, attempts: r.attempts });
+    }
+    if (r.limit || checked?.limit) stopReason = 'API を呼べる回数の上限に達した';
+    if (r.fatal || checked?.fatal) stopReason = 'API のエラー（キー・権限・残高の問題）が出た';
+    if (r.apiError || checked?.apiError) {
+      consecutiveErrors++;
+      if (!stopReason && consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) stopReason = `API のエラーが${MAX_CONSECUTIVE_ERRORS}回続いた`;
+    } else {
+      consecutiveErrors = 0;
+    }
+  }
+  return results;
+}
+
+/**
+ * 記事にひとことを入れる（tagline と taglineBy を、highlightBy（なければ highlight）のすぐ後ろに置く）。
+ * highlight・highlightBy・ほかの欄は変えない。taglineBy: 'manual' の記事は上書きしない
+ * @param {object} column
+ * @param {string} tagline
+ * @param {'ai' | 'manual'} by
+ */
+export function withTagline(column, tagline, by = 'ai') {
+  const next = {};
+  const anchor = 'highlightBy' in column ? 'highlightBy' : 'highlight';
+  for (const [k, v] of Object.entries(column)) {
+    if (k === 'tagline' || k === 'taglineBy') continue;
+    next[k] = v;
+    if (k === anchor) Object.assign(next, { tagline, taglineBy: by });
+  }
+  if (!('tagline' in next)) Object.assign(next, { tagline, taglineBy: by });
+  return next;
+}
+
+/** ひとことを書いた結果を deck-columns.json の記事に反映する（taglineBy: 'ai'）。見どころは変えない。反映した本数を返す */
+export function applyTaglines(columns, results) {
+  const after = new Map(results.filter((r) => r.after && r.after !== r.before).map((r) => [r.slug, r.after]));
+  let applied = 0;
+  for (let i = 0; i < columns.length; i++) {
+    const c = columns[i];
+    if (!after.has(c.slug) || c.taglineBy === 'manual') continue;
+    columns[i] = withTagline(c, after.get(c.slug), 'ai');
+    applied++;
+  }
+  return applied;
+}
+
+/**
+ * 「ひとことだけ作る」モードの PR の本文（Markdown）
+ * @param {{ results: object[], manual: object[], stats: object, limit: number | null, all: number }} r
+ */
+export function taglinePrBody({ results, manual, stats, limit, all }) {
+  const written = results.filter((r) => r.after && r.after !== r.before);
+  const same = results.filter((r) => r.after && r.after === r.before);
+  const failed = results.filter((r) => !r.after);
+  const flagged = written.filter((r) => r.review && r.review.status !== 'ok');
+  const apiErrors = [...new Set(failed.map((r) => r.reason).filter((reason) => /Claude API のエラー/.test(reason ?? '')))];
+  return [
+    ...(flagged.length
+      ? [
+          '> [!WARNING]',
+          `> **チェック役の AI が ⚠ を付けたひとこと（${flagged.length}本）**。記事の「主力カードの効果」と見比べ、直すなら \`tagline\` を手で直して \`taglineBy\` を \`"manual"\` にしてください`,
+          ...flagged.map((r) => `> - \`/columns/${r.slug}/\`（${cell(r.deckName)}）: ${cell(reviewLabel(r.review))}${r.fix ? `・${cell(fixLabel(r.fix))}` : ''}`),
+          '',
+        ]
+      : []),
+    '## 💬 公開済みデッキ記事の一覧のカードに出す「ひとこと」を Claude API で作成',
+    '',
+    `Actions の「AI highlight rewrite (manual)」の「ひとことだけ作る」（\`scripts/ai-highlight-rewrite.js --tagline-only\`）で作りました。ひとことは全角${TAGLINE_MIN}〜${TAGLINE_MAX}字で、はみ出したら AI に短く書き直させています。チェック役・1回だけの直しは見どころと同じ基準です。`,
+    '',
+    '- **見どころ（`highlight`・`highlightBy`）は変えていません**（手で直した見どころもそのまま）。変えたのは `tagline` と `taglineBy`（`"ai"`）だけです',
+    '- 一覧のカード（トップの特集・デッキ解説の一覧）は、ひとことがあればひとことを、なければ今までどおり見どころを出します',
+    `- 対象: 公開済みのデッキ記事のうち、手で直した印（\`taglineBy: "manual"\`）のない ${all}本${limit ? `のうち、公開日が新しい順に **${results.length}本（試しに${limit}本だけ）**` : ''}`,
+    `- 書いた: **${written.length}本**${written.some((r) => r.review) ? `（チェック役: ✅ ${written.filter((r) => r.review?.status === 'ok').length}本・⚠ ${flagged.length}本）` : ''}`,
+    ...(written.some((r) => r.fix) ? [`- 要確認になって AI に直させた: 🔧 自分で直せた ${written.filter((r) => r.fix?.outcome === 'fixed').length}本・🙋 直せずに人に知らせた ${written.filter((r) => r.fix?.outcome === 'unfixed').length}本`] : []),
+    `- 書けなかった: ${failed.length}本（今のまま。ひとことがなければ一覧は見どころを出す）${same.length ? `・AI の文が今と同じ: ${same.length}本` : ''}`,
+    `- 手で直した印があるため対象外: ${manual.length}本${manual.length ? `（${manual.map((c) => `\`${c.slug}\``).join('・')}）` : ''}`,
+    '',
+    `### 書いたひとこと（${written.length}本）`,
+    ...(written.length
+      ? [
+          '| 記事 | ひとこと（字数） | 今の見どころ（参考・変えていない） | チェック |',
+          '| --- | --- | --- | --- |',
+          ...written.map(
+            (r) =>
+              `| \`/columns/${r.slug}/\`<br>${cell(r.deckName)}（${r.pubDate}${r.attempts === 2 ? '・書き直し1回' : ''}） | ${cell(r.after)}（${taglineLength(r.after)}字）${r.before ? `<br>変更前：${cell(r.before)}` : ''} | ${cell(r.highlight)} | ${checkCell(r)} |`,
+          ),
+        ]
+      : ['- なし']),
+    '',
+    `### 書けなかった記事（${failed.length}本）`,
+    ...(failed.length ? failed.map((r) => `- \`/columns/${r.slug}/\`（${r.deckName}）: ${r.reason}`) : ['- なし']),
+    ...(apiErrors.length ? ['', '> ⚠ Claude API のエラーがありました（API が返した理由）:', ...apiErrors.map((e) => `> - ${e}`)] : []),
+    '',
+    '### Claude API の使用量',
+    ...(stats.enabled ? usageLines(stats) : ['- ANTHROPIC_API_KEY が設定されていないため、Claude API は使っていません（ひとことは作っていません）']),
+    '',
+    '### 確認すること',
+    ...(flagged.length ? ['- [ ] いちばん上の ⚠ のひとことを、記事の「主力カードの効果」と見比べた'] : []),
+    '- [ ] ひとことを記事の「主力カードの効果」と見比べ、カードテキストにないことが書かれていないか確認した',
+    '- [ ] Vercel のプレビューで、トップの特集とデッキ解説の一覧（ジムバトル・シティリーグ）のカードにひとことが出ているのを確認した',
+    '- [ ] 直したいひとことは `deck-columns.json` の `tagline` を手で直し、`taglineBy` を `"manual"` にした（次の実行で上書きされない）',
   ].join('\n');
 }

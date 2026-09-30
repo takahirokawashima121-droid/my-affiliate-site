@@ -14,6 +14,9 @@
 // - 公式テキストには書かれていないが、ゲームのルールで決まっていること（scripts/lib/game-rules.md）は、書く役とチェック役の両方に渡す
 // - それでも通らないとき・API のエラー・キーがないとき・呼び出し回数の上限に達したときは null を返し、
 //   呼び出し側は従来の方法（scripts/lib/highlight.js）の見どころを使う。ここで例外を投げて記事の自動生成を止めることはしない
+// - 一覧のカードに出す「ひとこと」（deck-columns.json の tagline。TAGLINE_MIN〜TAGLINE_MAX 字）も、見どころのあとに別の呼び出しで書く（writeTagline）。
+//   渡すのは見どころと同じデータ＋その記事の見どころ（参考）。点検は reviewTagline（長さをはみ出したら短く書き直させる）、
+//   チェック役・直し（checkAndFix(…, { kind: 'tagline' })）は見どころと同じ基準。書けなかったときは null を返し、一覧は見どころを出す
 
 import { readFileSync } from 'node:fs';
 import Anthropic from '@anthropic-ai/sdk';
@@ -23,12 +26,13 @@ import { HIGHLIGHT_MAX, bannedPhrases, opening } from './highlight.js';
  * AI の見どころの設定。**モデルを変えるときは model だけを書き換える**（料金の目安は下の PRICES に載っているモデルだけ出る）。
  * - effort: 考える深さ（low / medium / high）。effort に対応していないモデル（claude-haiku-4-5 など）にするときは null にする
  * - maxCallsPerRun: 1回の実行（npm run auto-decks / auto-city それぞれ）で API を呼ぶ回数の上限。不具合で何度も呼ばないための歯止め
+ *   （見どころ・ひとことのチェック役・直しの分も数える。1本あたり見どころ最大5回＋ひとこと最大5回）
  * - maxTokens: 1回の応答の上限（考える分を含む）
  */
 export const AI_HIGHLIGHT_CONFIG = {
   model: 'claude-sonnet-5-5',
   effort: 'medium',
-  maxCallsPerRun: 40,
+  maxCallsPerRun: 80,
   maxTokens: 8000,
   timeoutMs: 120_000,
 };
@@ -51,6 +55,10 @@ export const PRICES = {
 
 /** 見どころの長さの下限（全角。上限は従来の見どころと同じ HIGHLIGHT_MAX） */
 export const AI_HIGHLIGHT_MIN = 80;
+
+/** ひとこと（一覧のカードに出す短い紹介。deck-columns.json の tagline）の長さ（全角）。はみ出したら AI に書き直させる */
+export const TAGLINE_MIN = 30;
+export const TAGLINE_MAX = 40;
 
 /** この長さ（全角）以上の公式テキストの1文がそのまま入っていたら、説明文の貼り付けとみなす */
 const PASTE_LENGTH = 25;
@@ -193,6 +201,74 @@ export function reviewAiHighlight(text, input) {
   return problems;
 }
 
+/** ひとことを書く役への指示 */
+const TAGLINE_SYSTEM = `あなたはポケモンカードの大会入賞デッキを紹介するサイトの編集者です。デッキ記事の一覧のカードに出す「ひとこと」（そのデッキの勝ち筋をひと目で伝える短い紹介）を1本書きます。
+使ってよい情報は、ユーザーが渡す「デッキ名」「60枚のレシピ」「採用カードの公式テキスト」と、参考の「この記事の見どころ」だけです。
+
+守ること:
+- 長さは全角で${TAGLINE_MIN}〜${TAGLINE_MAX}字（数えて確かめる）。改行しない。文末に「。」を付けない
+- 主役のカードの名前を必ず入れ、そのデッキ固有の勝ち筋（キーになる特性・ワザ・組み合わせ）を1つだけ書く
+- 渡した情報に書かれていないこと（カードの効果・ダメージ・枚数・環境や大会での評判など）は書かない。知っている知識で補わない
+- 数字は、公式テキストかレシピに書いてある数字だけを使う。足し算などで新しい数字を作らない
+- ワザ・特性の名前は「」で囲み、公式テキストの表記のまま書く
+- 書くカードは、主役のカードと、それを支えるカード1枚まで
+- 見どころの文をそのまま縮めて貼らず、一覧で読んで何をするデッキかが伝わる言い方にする
+- 「最強」「必勝」「絶対」「無敵」のような誇張はしない
+- 「〇〇を採用した〇〇デッキ」のような、名前を入れ替えるだけでどのデッキにも使える決まり文句は使わない
+- 前置き・かぎかっこでくくった全体・説明は付けず、ひとことの文だけを出力する${rulesSection(GAME_RULES)}`;
+
+/**
+ * ひとことを書く役に渡す文（見どころと同じデータ＋その記事の見どころ）
+ * @param input buildPrompt と同じもの＋ highlight（その記事の見どころ。参考）
+ */
+export function buildTaglinePrompt(input) {
+  return [
+    buildPrompt(input).replace('（見どころはこのカード名から書き始める）', '（ひとことに必ず名前を入れる）'),
+    '',
+    '## この記事の見どころ（参考）',
+    input.highlight || '（なし）',
+    '',
+    `上のデータだけを使って、一覧のカードに出す「ひとこと」を全角${TAGLINE_MIN}〜${TAGLINE_MAX}字で1本書いてください。`,
+  ].join('\n');
+}
+
+/** ひとことの長さ（文字数。絵文字などのサロゲートペアも1字） */
+export const taglineLength = (text) => [...(text ?? '')].length;
+
+/** AI の答えのひとことを整える（前後の空白・全体を囲むかぎかっこ・文末の「。」を外す） */
+export function cleanTagline(text) {
+  let t = String(text ?? '').trim();
+  if (/^[「『].*[」』]$/.test(t) && !/[「『]/.test(t.slice(1, -1))) t = t.slice(1, -1).trim();
+  return t.replace(/[。．.]+$/, '');
+}
+
+/**
+ * AI が書いたひとことの点検。問題があれば理由の配列、なければ空（長さをはみ出したら書き直させる）
+ * @param text AI の文（cleanTagline をかけたもの）
+ * @param input { deckName, main, recipe, profiles, names, others: [{ slug, tagline, names }] }（others は同じ日のほかの記事）
+ */
+export function reviewTagline(text, input) {
+  const problems = [];
+  const t = text ?? '';
+  if (!t) return ['文が空でした'];
+  if (/\n/.test(t)) problems.push('改行を付けず、ひとことの文だけにしてください');
+  const len = taglineLength(t);
+  if (len > TAGLINE_MAX) problems.push(`長すぎます（${len}字）。${TAGLINE_MIN}〜${TAGLINE_MAX}字に短く書き直してください`);
+  if (len < TAGLINE_MIN) problems.push(`短すぎます（${len}字）。${TAGLINE_MIN}〜${TAGLINE_MAX}字にしてください`);
+  if (!nfkc(t).includes(nfkc(input.main))) problems.push(`主役のカード「${input.main}」の名前を入れてください`);
+  for (const label of bannedPhrases(t)) problems.push(`決まり文句${label}は使わないでください`);
+  const exaggeration = t.match(EXAGGERATION);
+  if (exaggeration) problems.push(`「${exaggeration[0]}」のような誇張は使わないでください`);
+  const facts = knownFacts(input);
+  const unknownQuotes = [...new Set([...nfkc(t).matchAll(/「([^」]+)」/g)].map((m) => m[1]).filter((q) => !facts.quotes.has(q)))];
+  if (unknownQuotes.length) problems.push(`「${unknownQuotes.join('」「')}」は渡したカードテキストにない名前です。公式テキストの表記のまま書いてください`);
+  const unknownNumbers = [...new Set([...nfkc(t).matchAll(/\d+/g)].map((m) => m[0]).filter((n) => !facts.numbers.has(n)))];
+  if (unknownNumbers.length) problems.push(`数字「${unknownNumbers.join('」「')}」は渡したデータに書かれていません。書かれている数字だけを使ってください`);
+  const same = (input.others ?? []).find((o) => o.tagline && nfkc(o.tagline) === nfkc(t));
+  if (same) problems.push(`同じ日の記事（${same.slug}）とひとことが同じです。このデッキ固有の勝ち筋が伝わる文にしてください`);
+  return problems;
+}
+
 /** チェック役への指示 */
 const REVIEW_SYSTEM = `あなたはポケモンカードのデッキ紹介記事の校閲者です。「見どころ」は短い紹介文なので、効果のすべては書きません。見るのは「書いていないこと」ではなく「書いてあることが間違っていないか」だけです。ユーザーが渡す見どころを、そこに出てくるカードの公式テキストと見比べ、次のどれかに当たるときだけ「要確認」にします。
 1. 書いてある内容が、公式テキストと食い違っている（例: 「山札にもどす」カードを「回収する」と書いている）
@@ -220,7 +296,9 @@ const REVIEW_SYSTEM = `あなたはポケモンカードのデッキ紹介記事
 - 理由を書いてみて「誤りではない」「問題なし」と思ったら、judgment は「問題なし」にする
 - 気になった点がなければ checks は空にする
 - 「要確認」かどうかはプログラムが checks から決める（「誤り」が1つでもあれば要確認）。確かめて問題がなかった点は、必ず「問題なし」にする
-- 公式テキストが渡されていないカードのことは checks に入れず、notes に書く${rulesSection(GAME_RULES)}`;
+- 公式テキストが渡されていないカードのことは checks に入れず、notes に書く
+
+「見どころ」の代わりに「ひとこと」（一覧のカードに出す${TAGLINE_MIN}〜${TAGLINE_MAX}字の短い紹介）が渡されたときも、同じ基準・同じ答え方で見る（とても短いので、省略は 4. に当たるとき以外すべて問題なし）${rulesSection(GAME_RULES)}`;
 
 /** チェック役の答えの形（structured outputs） */
 const REVIEW_SCHEMA = {
@@ -254,18 +332,18 @@ export function mentionedCards(text, profiles, main) {
 }
 
 /**
- * チェック役に渡す文（見どころと、そこに出てくるカードの公式テキストだけ）
- * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object> }} input
+ * チェック役に渡す文（見どころ・ひとことと、そこに出てくるカードの公式テキストだけ）
+ * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object>, label?: '見どころ' | 'ひとこと' }} input
  */
 export function buildReviewPrompt(input) {
   const cards = reviewCards(input);
   const missing = unverifiableNames(input.text, cards.join('\n'));
-  const { text } = input;
+  const { text, label = '見どころ' } = input;
   return [
-    '## 見どころ',
+    `## ${label}`,
     text,
     '',
-    '## 見どころに出てくるカードの公式テキスト',
+    `## ${label}に出てくるカードの公式テキスト`,
     ...(cards.length ? cards : ['（該当するカードなし）']),
     ...(missing.length ? ['', '## 公式テキストが渡されていない名前（確認できず。要確認にはせず notes に書く）', ...missing.map((n) => `- ${n}`)] : []),
   ].join('\n');
@@ -406,27 +484,38 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
   }
 
   /**
-   * 1記事分の見どころを書く（点検に引っかかったら1回だけ書き直させる）
-   * @returns {Promise<{ text: string, attempts: number } | { text: null, reason: string, attempts: number }>}
+   * 書く役の種類ごとの設定（見どころ / ひとこと）
+   * - system・prompt: 指示と渡す文
+   * - clean: AI の答えの整え方
+   * - check: 点検（問題の配列）
+   * - label: ログ・チェック役に渡す名前
    */
-  async function write(input) {
+  const KINDS = {
+    highlight: { system: SYSTEM, prompt: buildPrompt, clean: (t) => t, check: reviewAiHighlight, label: '見どころ' },
+    tagline: { system: TAGLINE_SYSTEM, prompt: buildTaglinePrompt, clean: cleanTagline, check: reviewTagline, label: 'ひとこと' },
+  };
+
+  /** 点検に引っかかったら1回だけ書き直させる（write・writeTagline の共通部分） */
+  async function writeKind(kind, input) {
+    const spec = KINDS[kind];
     if (!api) return { text: null, reason: 'ANTHROPIC_API_KEY が設定されていない', attempts: 0 };
-    const messages = [{ role: 'user', content: buildPrompt(input) }];
+    const messages = [{ role: 'user', content: spec.prompt(input) }];
     let problems = [];
     let attempts = 0;
     try {
       for (attempts = 1; attempts <= 2; attempts++) {
-        const response = await call(messages);
+        const response = await call(messages, { system: spec.system });
         if (response.stop_reason === 'refusal') return { text: null, reason: 'AI が応答を断った（refusal）', attempts };
         if (response.stop_reason === 'max_tokens') return { text: null, reason: `応答が長さの上限（max_tokens ${config.maxTokens}）で切れた`, attempts };
-        const text = textOf(response);
-        problems = reviewAiHighlight(text, input);
-        log(`  AI ${attempts}回目: ${text}${problems.length ? `\n    ⚠ ${problems.join(' / ')}` : '\n    ✓ 点検を通過'}`);
+        const text = spec.clean(textOf(response));
+        problems = spec.check(text, input);
+        const tag = kind === 'highlight' ? 'AI' : `AI（${spec.label}）`;
+        log(`  ${tag} ${attempts}回目: ${text}${problems.length ? `\n    ⚠ ${problems.join(' / ')}` : '\n    ✓ 点検を通過'}`);
         if (problems.length === 0) return { text, attempts };
         if (attempts === 2) break;
-        // 書き直し: 前の応答（考えた内容を含む）をそのまま返し、直す点を伝える
+        // 書き直し: 前の応答（考えた内容を含む）をそのまま返し、直す点を伝える（長さをはみ出したときも、ここで短く書き直させる）
         messages.push({ role: 'assistant', content: response.content });
-        messages.push({ role: 'user', content: `次の点を直して、見どころの文だけをもう一度書いてください。\n${problems.map((p) => `- ${p}`).join('\n')}` });
+        messages.push({ role: 'user', content: `次の点を直して、${spec.label}の文だけをもう一度書いてください。\n${problems.map((p) => `- ${p}`).join('\n')}` });
       }
       return { text: null, reason: `書き直しても点検を通らなかった（${problems.join(' / ')}）`, attempts: 2 };
     } catch (error) {
@@ -439,8 +528,22 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
   }
 
   /**
-   * チェック役: 見どころを、そこに出てくるカードの公式テキストと見比べる（1回だけ呼ぶ。例外は投げない）
-   * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object> }} input
+   * 1記事分の見どころを書く（点検に引っかかったら1回だけ書き直させる）
+   * @returns {Promise<{ text: string, attempts: number } | { text: null, reason: string, attempts: number }>}
+   */
+  const write = (input) => writeKind('highlight', input);
+
+  /**
+   * 1記事分のひとこと（一覧のカードに出す TAGLINE_MIN〜TAGLINE_MAX 字）を書く。
+   * 点検（reviewTagline。長さのはみ出しを含む）に引っかかったら、理由を伝えて1回だけ書き直させる
+   * @param input write と同じもの＋ highlight（その記事の見どころ。参考）。others は [{ slug, tagline, names }]
+   * @returns {Promise<{ text: string, attempts: number } | { text: null, reason: string, attempts: number }>}
+   */
+  const writeTagline = (input) => writeKind('tagline', input);
+
+  /**
+   * チェック役: 見どころ（またはひとこと）を、そこに出てくるカードの公式テキストと見比べる（1回だけ呼ぶ。例外は投げない）
+   * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object>, label?: '見どころ' | 'ひとこと' }} input
    * @returns {Promise<{ status: 'ok' | 'warn' | 'error', reasons: string[], notes?: string[], limit?: boolean, apiError?: boolean, fatal?: boolean }>}
    */
   async function review(input) {
@@ -473,29 +576,31 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
   }
 
   /**
-   * チェック役の「誤り」の理由を渡して、見どころを1回だけ直させる（点検 reviewAiHighlight も通す。例外は投げない）
-   * @param input write と同じもの
-   * @param text 要確認になった見どころ
+   * チェック役の「誤り」の理由を渡して、見どころ（またはひとこと）を1回だけ直させる（点検も通す。例外は投げない）
+   * @param input write（ひとことなら writeTagline）と同じもの
+   * @param text 要確認になった文
    * @param reasons チェック役の「誤り」の理由
+   * @param {{ kind?: 'highlight' | 'tagline' }} [options]
    * @returns {Promise<{ text: string } | { text: null, reason: string, limit?: boolean, apiError?: boolean, fatal?: boolean }>}
    */
-  async function fix(input, text, reasons) {
+  async function fix(input, text, reasons, { kind = 'highlight' } = {}) {
+    const spec = KINDS[kind];
     if (!api) return { text: null, reason: 'ANTHROPIC_API_KEY が設定されていない' };
     const messages = [
-      { role: 'user', content: buildPrompt(input) },
+      { role: 'user', content: spec.prompt(input) },
       { role: 'assistant', content: text },
       {
         role: 'user',
-        content: `この見どころを公式テキストと見比べたチェック役が、次の点を「誤り」と指摘しました。公式テキストに合うように誤りを直し、見どころの文だけをもう一度書いてください（ほかの守ることもそのまま守る）。\n${reasons.map((r) => `- ${r}`).join('\n')}`,
+        content: `この${spec.label}を公式テキストと見比べたチェック役が、次の点を「誤り」と指摘しました。公式テキストに合うように誤りを直し、${spec.label}の文だけをもう一度書いてください（ほかの守ることもそのまま守る）。\n${reasons.map((r) => `- ${r}`).join('\n')}`,
       },
     ];
     try {
-      const response = await call(messages);
+      const response = await call(messages, { system: spec.system });
       stats.fixCalls++;
       if (response.stop_reason === 'refusal') return { text: null, reason: 'AI が応答を断った（refusal）' };
       if (response.stop_reason === 'max_tokens') return { text: null, reason: `応答が長さの上限（max_tokens ${config.maxTokens}）で切れた` };
-      const fixed = textOf(response);
-      const problems = reviewAiHighlight(fixed, input);
+      const fixed = spec.clean(textOf(response));
+      const problems = spec.check(fixed, input);
       log(`    直した文: ${fixed}${problems.length ? `\n    ⚠ ${problems.join(' / ')}` : ''}`);
       if (problems.length) return { text: null, reason: `直した文が点検を通らなかった（${problems.join(' / ')}）` };
       return { text: fixed };
@@ -514,12 +619,13 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
    * 2. 要確認なら、「誤り」の理由を渡して直させ（fix）、直した文をもう一度チェックする
    * 3. 問題なしになれば直した文を返す（fix.outcome: 'fixed'）。それでも要確認・チェックできず・直せなかったときは fix.outcome: 'unfixed'
    *    （直した文があればその文と2回目のチェックの結果、なければ元の文と1回目の結果を返す。人に知らせる）
-   * @param input write と同じもの（deckName, main, recipe, profiles, names, others）
-   * @param text チェックする見どころ
+   * @param input write と同じもの（deckName, main, recipe, profiles, names, others。ひとことなら highlight も）
+   * @param text チェックする見どころ（またはひとこと）
+   * @param {{ kind?: 'highlight' | 'tagline' }} [options] kind: 'tagline' ならひとことをチェック・直す（基準は見どころと同じ）
    * @returns {Promise<{ text: string, review: object, fix: null | { outcome: 'fixed' | 'unfixed', before: string, after?: string, firstReview: object, reason?: string }, limit?: boolean, apiError?: boolean, fatal?: boolean }>}
    */
-  async function checkAndFix(input, text) {
-    const reviewOf = (t) => review({ text: t, main: input.main, recipe: input.recipe, profiles: input.profiles });
+  async function checkAndFix(input, text, { kind = 'highlight' } = {}) {
+    const reviewOf = (t) => review({ text: t, main: input.main, recipe: input.recipe, profiles: input.profiles, label: KINDS[kind].label });
     const flags = (...results) => {
       const out = {};
       for (const key of ['limit', 'apiError', 'fatal']) if (results.some((r) => r?.[key])) out[key] = true;
@@ -528,7 +634,7 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
     const first = await reviewOf(text);
     if (first.status !== 'warn') return { text, review: first, fix: null, ...flags(first) };
     log('    → 要確認のため、「誤り」の理由を渡して直させます');
-    const fixed = await fix(input, text, first.reasons);
+    const fixed = await fix(input, text, first.reasons, { kind });
     if (!fixed.text) return { text, review: first, fix: { outcome: 'unfixed', before: text, firstReview: first, reason: fixed.reason }, ...flags(fixed) };
     const second = await reviewOf(fixed.text);
     const outcome = second.status === 'ok' ? 'fixed' : 'unfixed';
@@ -541,7 +647,7 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
     };
   }
 
-  return { write, review, fix, checkAndFix, stats };
+  return { write, writeTagline, review, fix, checkAndFix, stats };
 }
 
 class LimitError extends Error {}

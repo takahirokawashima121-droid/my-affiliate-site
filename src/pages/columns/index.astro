@@ -6,7 +6,7 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CardImage from '../../components/CardImage.astro';
 import DeckVenue from '../../components/DeckVenue.astro';
 import EventBadge from '../../components/EventBadge.astro';
-import { DECK_COLUMNS, columnPath, eventTypeOf, sortColumnsByEvent } from '../../data/deck-columns';
+import { DECK_COLUMNS, cardBlurb, columnPath, eventTypeOf, sortColumnsByEvent } from '../../data/deck-columns';
 import { formatYen, getCards } from '../../utils/cards';
 import { DECK_FILTERS, BUDGET_LIMIT, deckBadgeClass, deckSummary } from '../../utils/decks';
 
@@ -72,7 +72,7 @@ const tab =
                 <span><EventBadge column={c} /></span>
                 <span class="mt-1 text-base font-black leading-snug text-slate-900 group-hover:text-blue-600">{c.deckName}</span>
                 <DeckVenue column={c} />
-                <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{c.highlight}</span>
+                <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{cardBlurb(c)}</span>
               </span>
             </span>
             <span class="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4">

@@ -37,8 +37,15 @@ test('AI highlight rewrite (manual): 「やること」の入力欄と、PR の�
   assert.deepEqual(Object.keys(workflow.on), ['workflow_dispatch']);
   const { mode } = workflow.on.workflow_dispatch.inputs;
   assert.equal(mode.type, 'choice');
-  assert.deepEqual(mode.options, ['すべて書き直す', '要確認の記事だけ直す']);
+  assert.deepEqual(mode.options, ['すべて書き直す', '要確認の記事だけ直す', 'ひとことだけ作る']);
   const pr = workflow.jobs.rewrite.steps.find((s) => s.name === 'Create pull request').with;
   for (const key of ['branch', 'title', 'commit-message']) assert.match(pr[key], /^\$\{\{ github\.event\.inputs\.mode == '要確認の記事だけ直す' && .+ \}\}$/, key);
   assert.match(pr.title, /'content: 公開済みデッキ記事の見どころのうち、要確認の記事だけを Claude API で直す'/);
+  // 「ひとことだけ作る」は auto/ai-tagline ブランチの PR にし、--tagline-only で実行する
+  assert.match(pr.branch, /github\.event\.inputs\.mode == 'ひとことだけ作る' && 'auto\/ai-tagline'/);
+  assert.match(pr.title, /'content: 公開済みデッキ記事の一覧のひとことを Claude API で作成'/);
+  const run = workflow.jobs.rewrite.steps.find((s) => s.name === 'Rewrite highlights with Claude API').run;
+  assert.match(run, /\[ "\$MODE" = 'ひとことだけ作る' \]; then\s+npm run ai-highlight-rewrite -- --tagline-only --limit="\$LIMIT"/);
+  // PR に入れるのは deck-columns.json だけ（レシピ・価格・カードのデータは変えない）
+  assert.equal(pr['add-paths'].trim(), 'src/data/deck-columns.json');
 });

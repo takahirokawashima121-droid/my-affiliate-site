@@ -4,7 +4,7 @@
 import CardImage from './CardImage.astro';
 import DeckVenue from './DeckVenue.astro';
 import EventBadge from './EventBadge.astro';
-import { columnPath, latestEventDecks, type EventType } from '../data/deck-columns';
+import { cardBlurb, columnPath, latestEventDecks, type EventType } from '../data/deck-columns';
 import { formatYen, type Card } from '../utils/cards';
 import { deckBadgeClass, deckSummary } from '../utils/decks';
 
@@ -74,7 +74,7 @@ const headingId = `featured-${type}`;
                 </span>
                 <span class="mt-1.5 text-base font-black leading-snug text-slate-900 group-hover:text-amber-700">{c.deckName}</span>
                 <DeckVenue column={c} />
-                <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{c.highlight}</span>
+                <span class="mt-0.5 line-clamp-2 text-xs leading-relaxed text-slate-600">{cardBlurb(c)}</span>
                 {c.estimate > 0 && (
                   <span class="mt-1.5 font-mono text-[11px] text-slate-600">60枚の概算 <span class="text-sm font-bold tabular-nums text-cyan-700">{formatYen(c.estimate)}</span></span>
                 )}

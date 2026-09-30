@@ -7,13 +7,16 @@
 //   npm run ai-highlight-rewrite -- --only-flagged  要確認の記事だけ直す: manual 以外の記事の今の見どころをチェックし、要確認の記事だけを
 //                                                   「誤り」の理由を渡して直させ、もう一度チェックして問題なしになったものだけ変える。
 //                                                   manual の記事はチェックだけ（直さない。要確認なら PR で知らせる）。--limit・--dry-run と一緒に使える
+//   npm run ai-highlight-rewrite -- --tagline-only  ひとことだけ作る: 一覧のカードに出すひとこと（tagline。30〜40字）だけを書く。
+//                                                   見どころ（highlight・highlightBy）は変えない（manual の見どころもそのまま）。
+//                                                   taglineBy: 'manual' の記事は書かない。--limit・--dry-run と一緒に使える
 //   GitHub Actions の「AI highlight rewrite (manual)」（.github/workflows/ai-highlight-rewrite.yml）から実行すると、結果を新しいブランチの PR にする
 //
 // 書き方は自動生成と同じ（scripts/lib/ai-highlight.js: 同じ指示・同じ点検・1回だけの書き直し。AI に渡すのはデッキ名・60枚のレシピ・
 // 採用カードの公式テキストだけ）。点検に通らなかった・API のエラーの記事は今の見どころのまま残す。
 // 書き直せた文は、チェック役（別の呼び出し）が公式テキストと見比べ、記事ごとに「✅ チェック済み / ⚠ 要確認：理由 / ⚠ チェックできず」を PR に出す。
 // チェック役が要確認にしたら、「誤り」の理由を渡して1回だけ直させ、もう一度チェックする（🔧 自分で直せた / 🙋 直せずに人に知らせた）。
-// 1回の実行で API を呼ぶ回数の上限は REWRITE_MAX_CALLS（250回。チェック役・直しの分も数える。通常の自動生成は AI_HIGHLIGHT_CONFIG.maxCallsPerRun の40回）。
+// 1回の実行で API を呼ぶ回数の上限は REWRITE_MAX_CALLS（250回。チェック役・直しの分も数える。通常の自動生成は AI_HIGHLIGHT_CONFIG.maxCallsPerRun の80回）。
 // PR の本文は .cache/ai-highlight-rewrite-pr.md（GitHub Actions では実行結果の Summary にも出す）。ANTHROPIC_API_KEY が必要
 
 import { appendFileSync, existsSync, mkdirSync } from 'node:fs';
@@ -22,7 +25,18 @@ import { fileURLToPath } from 'node:url';
 import { recipeProfiles } from './lib/game-plan.js';
 import { auditHighlights } from './lib/highlight.js';
 import { AI_HIGHLIGHT_CONFIG, REWRITE_MAX_CALLS, createAiHighlighter, usageLines } from './lib/ai-highlight.js';
-import { applyRewrites, fixFlaggedHighlights, fixFlaggedPrBody, rewriteHighlights, rewritePrBody, rewriteTargets } from './lib/highlight-rewrite.js';
+import {
+  applyRewrites,
+  applyTaglines,
+  fixFlaggedHighlights,
+  fixFlaggedPrBody,
+  rewriteHighlights,
+  rewritePrBody,
+  rewriteTargets,
+  taglinePrBody,
+  taglineTargets,
+  writeTaglines,
+} from './lib/highlight-rewrite.js';
 import { buildXPosts } from '../src/utils/shareText.ts';
 
 const ROOT = new URL('../', import.meta.url);
@@ -40,6 +54,25 @@ export function parseLimit(argv) {
   return n || null;
 }
 
+/** PR の本文を書き、Summary と使用量を出す */
+async function writeBody(body, ai) {
+  mkdirSync(path('.cache/'), { recursive: true });
+  await writeFile(PR_BODY_PATH, `${body}\n`, 'utf8');
+  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${body}\n`);
+  console.log(`\n${usageLines(ai.stats).join('\n')}`);
+}
+
+/** 「ひとことだけ作る」の後始末: PR の本文・deck-columns.json の保存・失敗の知らせ */
+async function finish({ body, columns, applied, dryRun, ai, what }) {
+  await writeBody(body, ai);
+  if (dryRun) console.log(`\n（dry-run: deck-columns.json は変えていません。${what}を書けた記事 ${applied}本）`);
+  else if (applied) {
+    await writeFile(COLUMNS_PATH, `${JSON.stringify(columns, null, 2)}\n`, 'utf8');
+    console.log(`\n${applied}本の${what}を書きました（src/data/deck-columns.json）。PR の本文: .cache/ai-highlight-rewrite-pr.md`);
+  } else console.log(`\n${what}を書いた記事はありません（deck-columns.json は変えていません）`);
+  if (!ai.stats.enabled || (ai.stats.errors > 0 && applied === 0)) process.exitCode = 1;
+}
+
 async function main() {
   // ローカルでは .env の ANTHROPIC_API_KEY も使う（GitHub Actions では Secrets から環境変数で渡す）
   if (existsSync(path('.env'))) process.loadEnvFile(path('.env'));
@@ -51,10 +84,13 @@ async function main() {
   const namesOf = (c) => [...(recipes[c.deckKey]?.cards ?? []).map((e) => e.name), ...(c.keyCards ?? [])];
 
   const onlyFlagged = argv.includes('--only-flagged');
-  const { targets, manual, all } = rewriteTargets(columns, { limit, today: todayJst() });
-  console.log(`■ ${onlyFlagged ? '要確認の記事だけ直す' : '見どころのまとめ書き直し'}（モデル: ${AI_HIGHLIGHT_CONFIG.model}・API を呼ぶ上限 ${REWRITE_MAX_CALLS}回）`);
+  const taglineOnly = argv.includes('--tagline-only');
+  if (onlyFlagged && taglineOnly) throw new Error('--only-flagged と --tagline-only は一緒に使えません');
+  const { targets, manual, all } = (taglineOnly ? taglineTargets : rewriteTargets)(columns, { limit, today: todayJst() });
+  const modeName = taglineOnly ? 'ひとことだけ作る（見どころは変えない）' : onlyFlagged ? '要確認の記事だけ直す' : '見どころのまとめ書き直し';
+  console.log(`■ ${modeName}（モデル: ${AI_HIGHLIGHT_CONFIG.model}・API を呼ぶ上限 ${REWRITE_MAX_CALLS}回）`);
   console.log(
-    `  対象: ${targets.length}本${limit ? `（試しに${limit}本だけ・対象は全部で${all}本）` : ''}・手で直した印がある記事: ${manual.length}本${onlyFlagged ? '（チェックだけで直さない）' : '（対象外）'}`,
+    `  対象: ${targets.length}本${limit ? `（試しに${limit}本だけ・対象は全部で${all}本）` : ''}・手で直した印${taglineOnly ? '（taglineBy）' : ''}がある記事: ${manual.length}本${onlyFlagged ? '（チェックだけで直さない）' : '（対象外）'}`,
   );
 
   const ai = createAiHighlighter({ config: { ...AI_HIGHLIGHT_CONFIG, maxCallsPerRun: REWRITE_MAX_CALLS }, log: (msg) => console.log(msg) });
@@ -72,6 +108,17 @@ async function main() {
   };
   const noKey = 'ANTHROPIC_API_KEY が設定されていない';
   let results;
+  if (taglineOnly) {
+    results = ai.stats.enabled
+      ? await writeTaglines(options)
+      : targets.map((c) => ({ slug: c.slug, deckName: c.deckName, pubDate: c.pubDate, highlight: c.highlight, before: c.tagline ?? null, after: null, reason: noKey, attempts: 0 }));
+    const applied = applyTaglines(columns, results);
+    const body = taglinePrBody({ results, manual, stats: ai.stats, limit, all });
+    await finish({ body, columns, applied, dryRun, ai, what: 'ひとこと' });
+    for (const r of results.filter((x) => !x.after)) console.log(`  ⚠ ひとことを書けなかった: ${r.slug}（${r.reason}）`);
+    for (const r of results.filter((x) => x.review && x.review.status !== 'ok')) console.log(`  ⚠ ひとことが要確認・チェックできず: ${r.slug}（${r.review.reasons.join(' / ')}）`);
+    return;
+  }
   if (onlyFlagged) {
     results = ai.stats.enabled
       ? await fixFlaggedHighlights({ ...options, manual })
@@ -87,10 +134,7 @@ async function main() {
   const audit = auditHighlights(columns.map((c) => ({ slug: c.slug, pubDate: c.pubDate, highlight: c.highlight, names: namesOf(c), xText: xText(c) })));
   const body = onlyFlagged ? fixFlaggedPrBody({ results, stats: ai.stats, audit, limit, all }) : rewritePrBody({ results, manual, stats: ai.stats, audit, limit, all });
 
-  mkdirSync(path('.cache/'), { recursive: true });
-  await writeFile(PR_BODY_PATH, `${body}\n`, 'utf8');
-  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${body}\n`);
-  console.log(`\n${usageLines(ai.stats).join('\n')}`);
+  await writeBody(body, ai);
   if (onlyFlagged) {
     for (const r of results.filter((x) => x.fix?.outcome === 'unfixed')) console.log(`  🙋 直せずに人に知らせる: ${r.slug}（${r.fix.firstReview.reasons.join(' / ')}）`);
     for (const r of results.filter((x) => x.manual && x.review.status === 'warn')) console.log(`  🙋 手で直した記事で要確認（直さない）: ${r.slug}（${r.review.reasons.join(' / ')}）`);

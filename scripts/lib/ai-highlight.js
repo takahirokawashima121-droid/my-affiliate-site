@@ -6,6 +6,8 @@
 // - AI に渡すのは、デッキ名・60枚のレシピ・採用カードの公式テキスト（scripts/lib/game-plan.js の recipeProfiles の内容）だけ
 // - 書いた文は reviewAiHighlight で点検する（scripts/lib/highlight.js の決まった文・同じ日の記事の書き出しに加え、
 //   主役のカードからの書き出し・長さ・誇張・データにない「」の名前や数字）。引っかかったら理由を伝えて1回だけ書き直させる
+// - 点検を通った文は、別の呼び出し（チェック役。review）で、見どころに出てくるカードの公式テキストと見比べさせ、
+//   効果の条件の抜け・公式テキストにないこと・数字・どのカードの効果かの取り違えがないかを「問題なし / 要確認」で返させる（PR に出すだけで、文は使う）
 // - それでも通らないとき・API のエラー・キーがないとき・呼び出し回数の上限に達したときは null を返し、
 //   呼び出し側は従来の方法（scripts/lib/highlight.js）の見どころを使う。ここで例外を投げて記事の自動生成を止めることはしない
 
@@ -21,13 +23,16 @@ import { HIGHLIGHT_MAX, bannedPhrases, opening } from './highlight.js';
 export const AI_HIGHLIGHT_CONFIG = {
   model: 'claude-sonnet-5-5',
   effort: 'medium',
-  maxCallsPerRun: 10,
+  maxCallsPerRun: 20,
   maxTokens: 8000,
   timeoutMs: 120_000,
 };
 
-/** まとめ書き直し（scripts/ai-highlight-rewrite.js）だけの、1回の実行で API を呼ぶ回数の上限（通常の自動生成は maxCallsPerRun のまま） */
-export const REWRITE_MAX_CALLS = 120;
+/**
+ * まとめ書き直し（scripts/ai-highlight-rewrite.js）とチェック役の試し（scripts/ai-highlight-review.js）だけの、1回の実行で API を呼ぶ回数の上限
+ * （チェック役の呼び出しも数える。通常の自動生成は maxCallsPerRun のまま）
+ */
+export const REWRITE_MAX_CALLS = 250;
 
 /** 料金の目安（ドル / 100万トークン。Anthropic の料金表 2026年9月時点）。載っていないモデルは料金を「不明」と出す */
 export const PRICES = {
@@ -58,6 +63,7 @@ const SYSTEM = `あなたはポケモンカードの大会入賞デッキを紹�
 - 渡した情報に書かれていないこと（カードの効果・HP・ダメージ・枚数・ほかのデッキとの相性・環境や大会での評判など）は書かない。知っている知識で補わない
 - 数字（ダメージ・ダメカンの数・枚数など）は、公式テキストかレシピに書いてある数字だけを使う。足し算などで新しい数字を作らない
 - ワザ・特性の名前は「」で囲み、公式テキストの表記のまま書く
+- 書くカードは、主役のカードと、それを支えるカード1枚まで。それ以外のカードは書かない
 - 公式テキストの文をそのまま貼り付けない。主役のカードが何をするのか、どのカードとどう組み合わせて戦うのかが伝わる、自然な日本語の文に言い換える
 - 長さは全角で${AI_HIGHLIGHT_MIN + 20}〜${HIGHLIGHT_MAX - 10}字くらい（${HIGHLIGHT_MAX}字を超えない）。改行しない。文末は「〜する」「〜できる」の形にする
 - 「最強」「必勝」「絶対」「無敵」のような誇張はしない
@@ -157,6 +163,65 @@ export function reviewAiHighlight(text, input) {
   return problems;
 }
 
+/** チェック役への指示 */
+const REVIEW_SYSTEM = `あなたはポケモンカードのデッキ紹介記事の校閲者です。ユーザーが渡す「見どころ」の文を、そこに出てくるカードの公式テキストと見比べ、次のずれだけを確認します。
+1. 効果の条件（「〇〇を持つポケモンなら」「〇〇が出ていれば」「ルールを持つポケモンをのぞく」「バトル場かベンチの」など）が抜けている・変わっている
+2. 公式テキストにないことが書いてある
+3. 数字（ダメージ・枚数・回数など）が公式テキストと合わない
+4. どのカードの効果かを取り違えている（例: エネルギーをつける先のポケモンが違う・別のカードの特性として書いている）
+
+- 文の上手さ・言い回し・長さ・カードの選び方は評価しない。言い換えや要約は、意味が公式テキストと合っていれば問題なしとする
+- 渡した公式テキストだけを根拠にする。知っている知識で補わない
+- ずれが1つでもあれば「要確認」にし、reasons に1つずつ「どのカードの・どの部分が・公式テキストではどうなっているか」を短く書く。なければ「問題なし」で reasons は空にする`;
+
+/** チェック役の答えの形（structured outputs） */
+const REVIEW_SCHEMA = {
+  type: 'object',
+  properties: {
+    verdict: { type: 'string', enum: ['問題なし', '要確認'] },
+    reasons: { type: 'array', items: { type: 'string' } },
+  },
+  required: ['verdict', 'reasons'],
+  additionalProperties: false,
+};
+
+/** 見どころに名前が出てくるカード（profiles のうち。出てこなければ主役のカード） */
+export function mentionedCards(text, profiles, main) {
+  const t = nfkc(text);
+  const names = [...profiles.keys()].filter((n) => t.includes(nfkc(n)));
+  return names.length ? names : [main].filter((n) => profiles.has(n));
+}
+
+/**
+ * チェック役に渡す文（見どころと、そこに出てくるカードの公式テキストだけ）
+ * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object> }} input
+ */
+export function buildReviewPrompt({ text, main, recipe = [], profiles }) {
+  const categoryOf = (n) => recipe.find((e) => e.name === n)?.category;
+  const cards = mentionedCards(text, profiles, main).map((n) => cardBlock(n, profiles.get(n), categoryOf(n)));
+  return ['## 見どころ', text, '', '## 見どころに出てくるカードの公式テキスト', ...(cards.length ? cards : ['（該当するカードなし）'])].join('\n');
+}
+
+/**
+ * チェック役の答え（JSON の文）を読む。形が違えば例外
+ * @returns {{ ok: boolean, reasons: string[] }}
+ */
+export function parseReview(raw) {
+  const json = JSON.parse(String(raw ?? '').replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, ''));
+  if (!['問題なし', '要確認'].includes(json?.verdict) || !Array.isArray(json.reasons)) throw new Error(`チェック役の答えの形が違う: ${String(raw).slice(0, 100)}`);
+  const reasons = json.reasons.map((r) => String(r).trim()).filter(Boolean);
+  if (json.verdict === '要確認') return { ok: false, reasons: reasons.length ? reasons : ['理由の記載なし'] };
+  return { ok: true, reasons: [] };
+}
+
+/** チェック役の結果の表示（PR・ログ用）。review は { status: 'ok' | 'warn' | 'error', reasons: string[] } */
+export function reviewLabel(review) {
+  if (!review) return '';
+  if (review.status === 'ok') return '✅ チェック済み';
+  if (review.status === 'warn') return `⚠ 要確認：${review.reasons.join(' / ')}`;
+  return `⚠ チェックできず${review.reasons?.length ? `（${review.reasons.join(' / ')}）` : ''}`;
+}
+
 /** 応答の本文（text ブロックをつなげ、前後の空白を除く） */
 const textOf = (response) =>
   response.content
@@ -178,16 +243,18 @@ export function estimateCost(model, inputTokens, outputTokens) {
  */
 export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, client, config = AI_HIGHLIGHT_CONFIG, log = () => {} } = {}) {
   const api = client ?? (apiKey ? new Anthropic({ apiKey, timeout: config.timeoutMs, maxRetries: 2 }) : null);
-  const stats = { model: config.model, enabled: Boolean(api), calls: 0, maxCalls: config.maxCallsPerRun, inputTokens: 0, outputTokens: 0, errors: 0 };
+  // reviewCalls: calls のうちチェック役の分
+  const stats = { model: config.model, enabled: Boolean(api), calls: 0, reviewCalls: 0, maxCalls: config.maxCallsPerRun, inputTokens: 0, outputTokens: 0, errors: 0 };
 
-  async function call(messages) {
+  async function call(messages, { system = SYSTEM, format } = {}) {
     if (stats.calls >= config.maxCallsPerRun) throw new LimitError(`1回の実行で API を呼べる上限（${config.maxCallsPerRun}回）に達した`);
     stats.calls++;
+    const outputConfig = { ...(config.effort ? { effort: config.effort } : {}), ...(format ? { format } : {}) };
     const response = await api.messages.create({
       model: config.model,
       max_tokens: config.maxTokens,
-      ...(config.effort ? { output_config: { effort: config.effort } } : {}),
-      system: SYSTEM,
+      ...(Object.keys(outputConfig).length ? { output_config: outputConfig } : {}),
+      system,
       messages,
     });
     stats.inputTokens += response.usage?.input_tokens ?? 0;
@@ -228,7 +295,39 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
     }
   }
 
-  return { write, stats };
+  /**
+   * チェック役: 見どころを、そこに出てくるカードの公式テキストと見比べる（1回だけ呼ぶ。例外は投げない）
+   * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object> }} input
+   * @returns {Promise<{ status: 'ok' | 'warn' | 'error', reasons: string[], limit?: boolean, apiError?: boolean, fatal?: boolean }>}
+   */
+  async function review(input) {
+    if (!api) return { status: 'error', reasons: ['ANTHROPIC_API_KEY が設定されていない'] };
+    try {
+      const response = await call([{ role: 'user', content: buildReviewPrompt(input) }], {
+        system: REVIEW_SYSTEM,
+        format: { type: 'json_schema', schema: REVIEW_SCHEMA },
+      });
+      stats.reviewCalls++;
+      if (response.stop_reason === 'refusal') return { status: 'error', reasons: ['AI が応答を断った（refusal）'] };
+      if (response.stop_reason === 'max_tokens') return { status: 'error', reasons: [`応答が長さの上限（max_tokens ${config.maxTokens}）で切れた`] };
+      const { ok, reasons } = parseReview(textOf(response));
+      const result = { status: ok ? 'ok' : 'warn', reasons };
+      log(`    チェック役: ${reviewLabel(result)}`);
+      return result;
+    } catch (error) {
+      if (error instanceof LimitError) return { status: 'error', reasons: [error.message], limit: true };
+      if (!(error instanceof Anthropic.APIError)) {
+        log(`    ⚠ チェック役の答えを読めませんでした: ${error?.message ?? error}`);
+        return { status: 'error', reasons: ['チェック役の答えを読めなかった'] };
+      }
+      stats.errors++;
+      const detail = apiErrorDetail(error, [apiKey]);
+      log(`    ⚠ チェック役で Claude API のエラー: ${detail}`);
+      return { status: 'error', reasons: [`Claude API のエラー（${detail}）`], apiError: true, fatal: isFatalApiError(error) };
+    }
+  }
+
+  return { write, review, stats };
 }
 
 class LimitError extends Error {}
@@ -268,7 +367,7 @@ export function usageLines(stats) {
   const cost = estimateCost(stats.model, stats.inputTokens, stats.outputTokens);
   return [
     `- モデル: \`${stats.model}\`（\`scripts/lib/ai-highlight.js\` の \`AI_HIGHLIGHT_CONFIG\`）`,
-    `- API を呼んだ回数: ${stats.calls}回（上限 ${stats.maxCalls}回）${stats.errors ? `・うちエラー ${stats.errors}回` : ''}`,
+    `- API を呼んだ回数: ${stats.calls}回（上限 ${stats.maxCalls}回。うちチェック役 ${stats.reviewCalls ?? 0}回）${stats.errors ? `・うちエラー ${stats.errors}回` : ''}`,
     `- 使った量: 入力 ${stats.inputTokens.toLocaleString('en-US')} トークン・出力 ${stats.outputTokens.toLocaleString('en-US')} トークン（出力には AI が考えた分を含む）`,
     `- おおよその料金: ${cost === null ? '不明（料金表 PRICES にないモデル）' : `$${cost.toFixed(4)}`}`,
   ];

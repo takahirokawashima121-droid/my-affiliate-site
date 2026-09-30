@@ -1,0 +1,58 @@
+# 公開済みの記事の見どころを、チェック役の AI にかけて結果をログに出す（scripts/ai-highlight-review.js）
+# テスト用の4本（まとめ書き直しで AI が書き、人が手で直す前の文）も一緒にチェックし、「要確認」にできたかを出す。
+# ファイルは変えず、コミットも PR も作らない。Actions タブの「Run workflow」ボタンから手動実行のみ
+#
+# 事前設定: Settings → Secrets and variables → Actions に ANTHROPIC_API_KEY を登録する（自動生成の auto-deck-sync.yml と共通）
+name: AI highlight review (manual)
+
+on:
+  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行（定期実行はしない）
+    inputs:
+      slug:
+        description: '記事の slug（例: n-zoroark-ex-deck）。空欄なら公開済みの記事すべて'
+        required: false
+        default: ''
+
+permissions:
+  contents: read # リポジトリの読み取りのみ（記事・データは書き換えない）
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    # 公式サイトのカード詳細の取得（1.5秒間隔。キャッシュにないカードだけ）と API の呼び出し（1回の実行で最大250回）
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24 # scripts/*.js は .ts を直接 import するため Node 22.18 以降が必要
+          cache: npm
+
+      - name: Restore node_modules
+        id: node-modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-node24-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+
+      # 公式のカード詳細を自動生成と共通のキャッシュから読む（読むだけで保存しない）
+      - name: Restore page cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/trending
+          key: trending-${{ github.run_id }}
+          restore-keys: trending-
+
+      - name: Review highlights with Claude API
+        # 入力はシェルに直接埋め込まず環境変数で渡す
+        run: npm run ai-highlight-review -- --slug="$SLUG"
+        env:
+          SLUG: ${{ github.event.inputs.slug }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

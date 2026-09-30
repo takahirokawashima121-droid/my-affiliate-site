@@ -28,7 +28,7 @@ concurrency:
 jobs:
   rewrite:
     runs-on: ubuntu-latest
-    # 公式サイトのカード詳細の取得（1.5秒間隔。キャッシュにないカードだけ）と API の呼び出し（1回の実行で最大120回）
+    # 公式サイトのカード詳細の取得（1.5秒間隔。キャッシュにないカードだけ）と API の呼び出し（チェック役の分を含め、1回の実行で最大250回）
     timeout-minutes: 60
     steps:
       - name: Checkout

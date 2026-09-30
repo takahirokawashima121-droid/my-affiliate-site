@@ -1,8 +1,8 @@
 {
-  "_comment": "チェック役（scripts/lib/ai-highlight.js の review）を試すための見どころ。mustFlag の4本: highlight はまとめ書き直し（commit efc69fd）で AI が書き、人が手で直す前の文、fixed は今の記事の文（commit be41934 で手で直した文。n-zoroark-ex-deck はそのあとさらに直した）。mustNotFlag: true の3本: highlight は今サイトに出ている見どころ（間違いのない文。書いていないことがあっても要確認にしてはいけない）。scripts/ai-highlight-review.js がこの7本を一緒にチェックし、合否を出す",
+  "_comment": "チェック役（scripts/lib/ai-highlight.js の review）を試すための見どころ。mustFlag の4本: highlight はまとめ書き直し（commit efc69fd）で AI が書き、人が手で直す前の文、fixed は今の記事の文（commit be41934 で手で直した文。n-zoroark-ex-deck はそのあとさらに直した）。mustNotFlag: true の4本: highlight は今サイトに出ている見どころ（間違いのない文。書いていないことがあっても要確認にしてはいけない）。scripts/ai-highlight-review.js がこの8本を一緒にチェックし、合否を出す",
   "sourceCommit": "efc69fd",
   "fixedCommit": "be41934",
-  "passCriteria": "mustFlag: true の2本（seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927）をどちらも「要確認」にでき、さらに mustNotFlag: true の3本（slowking-deck・n-zoroark-ex-deck・mabusoruex-deck-0928。今サイトに出ている文）をすべて「問題なし」にできれば合格。mustFlag: false の2本は、手で直す前の文も間違いではないため、「問題なし」でも「要確認」でも合否に数えない",
+  "passCriteria": "mustFlag: true の2本（seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927）をどちらも「要確認」にでき、さらに mustNotFlag: true の4本（slowking-deck・n-zoroark-ex-deck・mabusoruex-deck-0928・n-zoroark-ex-deck-0927。今サイトに出ている文）をすべて「問題なし」にできれば合格。mustFlag: false の2本は、手で直す前の文も間違いではないため、「問題なし」でも「要確認」でも合否に数えない",
   "cases": [
     {
       "slug": "seek-inspiration-deck-0929",
@@ -51,6 +51,12 @@
       "mustNotFlag": true,
       "highlight": "メガアブソルexは、ワザ「デスピリオド」で相手のバトルポケモンにダメカンが6個のっていれば、HPに関係なくきぜつさせる。ダメカンは特性「アドレナブレイン」や「バッドアッパー」で積み、ボスの指令で狙う相手を呼び出して仕留める。",
       "note": "「6個なら」→「6個のっていれば」は意味が同じ。「アドレナブレイン」「バッドアッパー」は公式テキストを渡していない（確認できず）ため、要確認にはしない"
+    },
+    {
+      "slug": "n-zoroark-ex-deck-0927",
+      "mustNotFlag": true,
+      "highlight": "Nのゾロアークexの「ナイトジョーカー」は、ベンチにいる「Nのポケモン」のワザを1つ選んでそのまま使えるワザ。選んだワザのエネルギーは要らないので、Nのゼクロムをベンチに置けば悪エネルギー2個で「ランページサンダー」の250ダメージを出せる。エネルギーが足りなければNのポイントアップでトラッシュから補う",
+      "note": "「選んだワザのエネルギーは要らない」はルールのとおりで正しい（ほかのポケモンのワザを、このワザとして使う効果は、このワザ自体のエネルギーだけで使える。scripts/lib/game-rules.md）。公式テキストに書かれていないだけで、要確認にしてはいけない"
     }
   ]
 }

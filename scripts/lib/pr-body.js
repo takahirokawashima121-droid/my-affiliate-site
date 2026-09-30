@@ -2,7 +2,7 @@
 // 大会の日付・開催店舗と都道府県・順位・元記事の何会場目か・デッキ名の取り方を並べ、元記事と見比べやすくする。
 // 取れなかった項目は空欄にせず「取得できず」と書く（テストは scripts/test/pr-body.test.js）
 
-import { reviewLabel } from './ai-highlight.js';
+import { fixLabel, reviewLabel } from './ai-highlight.js';
 
 export const UNKNOWN = '取得できず';
 
@@ -20,11 +20,17 @@ export function nameSourceText(c) {
 
 /**
  * 見どころをどちらの方法で書いたか（c.highlightResult は scripts/auto-deck-updater.js が入れる { ai, reason, review }）。
- * AI で書いたものは、チェック役の結果（✅ チェック済み / ⚠ 要確認：理由 / ⚠ チェックできず）も付ける。
+ * AI で書いたものは、チェック役の結果（✅ チェック済み / ⚠ 要確認：理由 / ⚠ チェックできず）と、
+ * 要確認で AI に直させたときの結果（🔧 自分で直せた / 🙋 直せずに人に知らせた）も付ける。
  * 「AIで作成」= Claude API（scripts/lib/ai-highlight.js）、「従来の方法」= 公式のカードテキストの組み立て（scripts/lib/highlight.js）
  */
 export function highlightMethod(c) {
-  if (c.highlightResult?.ai) return c.highlightResult.review ? `AIで作成・${reviewLabel(c.highlightResult.review)}` : 'AIで作成';
+  const r = c.highlightResult;
+  if (r?.ai) {
+    // 要確認で AI に直させたものは、その結果（自分で直せた / 直せずに人に知らせた）と直す前の文も付ける
+    const parts = ['AIで作成', r.review ? reviewLabel(r.review) : null, r.fix ? fixLabel(r.fix) : null, r.fix?.after ? `直す前の文：${r.fix.before}` : null];
+    return parts.filter(Boolean).join('・');
+  }
   return c.highlightResult?.reason ? `従来の方法・${c.highlightResult.reason}` : '従来の方法';
 }
 

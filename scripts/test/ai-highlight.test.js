@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { AI_HIGHLIGHT_CONFIG, buildPrompt, buildReviewPrompt, createAiHighlighter, estimateCost, mentionedCards, parseReview, reviewAiHighlight, reviewLabel, unverifiableNames, usageLines } from '../lib/ai-highlight.js';
+import { AI_HIGHLIGHT_CONFIG, GAME_RULES, buildPrompt, buildReviewPrompt, createAiHighlighter, estimateCost, fixLabel, mentionedCards, parseGameRules, parseReview, reviewAiHighlight, reviewLabel, unverifiableNames, usageLines } from '../lib/ai-highlight.js';
 import { effectsFromPage } from '../rewrite-highlights.js';
 import { testCaseMark, testCaseResult } from '../ai-highlight-review.js';
 
@@ -156,8 +156,13 @@ test('料金の目安はモデルの料金表から計算し、表にないモ�
 // ---- チェック役（review） ----
 
 const reviewCases = JSON.parse(read('scripts/test/fixtures/ai-highlight-review-cases.json'));
-/** チェック役の答え（JSON の文） */
-const verdict = (v, reasons = []) => ({ text: JSON.stringify({ verdict: v, reasons }) });
+/** チェック役の答え（JSON の文）。要確認なら reasons を「誤り」の点として、問題なしなら「問題なし」の点を1つだけ返す */
+const verdict = (v, reasons = [], notes = []) => ({
+  text: JSON.stringify({
+    checks: v === '要確認' ? reasons.map((r) => ({ point: '', judgment: '誤り', reason: r })) : [{ point: '気になった点', judgment: '問題なし', reason: '公式テキストと合っている' }],
+    notes,
+  }),
+});
 function reviewInput(slug, text) {
   const data = input(slug);
   return { text: text ?? columns.find((c) => c.slug === slug).highlight, main: data.main, recipe: data.recipe, profiles: data.profiles };
@@ -191,7 +196,7 @@ test('チェック役: 「要確認」と理由・「問題なし」を JSON で
   assert.deepEqual(await ai.review(reviewInput(SLUG)), { status: 'ok', reasons: [] });
   // 答えの形（structured outputs）と、見どころを書くのとは別の指示
   assert.equal(client.calls[0].output_config.format.type, 'json_schema');
-  assert.deepEqual(client.calls[0].output_config.format.schema.properties.verdict.enum, ['問題なし', '要確認']);
+  assert.deepEqual(client.calls[0].output_config.format.schema.properties.checks.items.properties.judgment.enum, ['誤り', '問題なし']);
   assert.equal(client.calls[0].output_config.effort, AI_HIGHLIGHT_CONFIG.effort);
   assert.match(client.calls[0].system, /対象を限定する条件/);
   assert.equal(client.calls[0].model, AI_HIGHLIGHT_CONFIG.model);
@@ -226,7 +231,7 @@ test('チェック役の指示: 書いていないことではなく、書いて
   for (const re of [/書いてあることが間違っていないか/, /山札にもどす.*回収する/, /ルールを持たないポケモンなら/, /ふしぎなアメ/, /回数の制限を書いていない/, /デメリットや代償/, /最初の番は使えない/, /おたがいに/, /6個のっていれば/, /確認できず/]) {
     assert.match(system, re);
   }
-  assert.deepEqual(client.calls[0].output_config.format.schema.required, ['verdict', 'reasons', 'notes']);
+  assert.deepEqual(client.calls[0].output_config.format.schema.required, ['checks', 'notes']);
 });
 
 test('チェック役に渡す文: 公式テキストが渡されていない「」の名前は「確認できず」として並べる', () => {
@@ -243,22 +248,119 @@ test('チェック役に渡す文: 公式テキストが渡されていない「
 });
 
 test('チェック役: notes（確認できず）は参考として出すだけで、「問題なし」のまま', async () => {
-  const ai = createAiHighlighter({ client: fakeClient([{ text: JSON.stringify({ verdict: '問題なし', reasons: [], notes: ['バッドアッパーは公式テキストがなく確認できず'] }) }]) });
+  const ai = createAiHighlighter({ client: fakeClient([verdict('問題なし', [], ['バッドアッパーは公式テキストがなく確認できず'])]) });
   const ok = await ai.review(reviewInput(SLUG));
   assert.deepEqual(ok, { status: 'ok', reasons: [], notes: ['バッドアッパーは公式テキストがなく確認できず'] });
   assert.equal(reviewLabel(ok), '✅ チェック済み（参考・確認できず：バッドアッパーは公式テキストがなく確認できず）');
 });
 
-test('チェック役: 答えの JSON の読み方', () => {
-  assert.deepEqual(parseReview('{"verdict":"要確認","reasons":[" 数字が違う ",""]}'), { ok: false, reasons: ['数字が違う'] });
-  assert.deepEqual(parseReview('```json\n{"verdict":"問題なし","reasons":[]}\n```'), { ok: true, reasons: [] });
-  assert.deepEqual(parseReview('{"verdict":"要確認","reasons":[]}'), { ok: false, reasons: ['理由の記載なし'] });
-  assert.throws(() => parseReview('{"verdict":"たぶん","reasons":[]}'));
-  assert.deepEqual(parseReview('{"verdict":"問題なし","reasons":[],"notes":[" 確認できず ",""]}'), { ok: true, reasons: [], notes: ['確認できず'] });
+test('チェック役: 答えの JSON の読み方（判定は「誤り」が1つでもあるかでプログラムが決める）', () => {
+  const answer = (checks, notes = []) => JSON.stringify({ checks, notes });
+  const wrong = (point, reason) => ({ point, judgment: '誤り', reason });
+  const fine = (point, reason) => ({ point, judgment: '問題なし', reason });
+  assert.deepEqual(parseReview(answer([wrong(' 「250ダメージ」 ', ' 公式テキストでは 220 ')])), { ok: false, reasons: ['「250ダメージ」：公式テキストでは 220'] });
+  assert.deepEqual(parseReview('```json\n{"checks":[],"notes":[]}\n```'), { ok: true, reasons: [] });
+  assert.deepEqual(parseReview(answer([wrong('', '')])), { ok: false, reasons: ['理由の記載なし'] });
+  // 「理由には問題なしと書いてあるのに要確認」は起きない: 「問題なし」の点しかなければ問題なし
+  assert.deepEqual(parseReview(answer([fine('「選んだワザのエネルギーは要らない」', 'ルールのとおりで正しい'), fine('「とりひき」', '回数の制限の省略')])), { ok: true, reasons: [] });
+  // PR・ログに出す理由は「誤り」の点だけ
+  assert.deepEqual(parseReview(answer([fine('A', '合っている'), wrong('B', '対象が違う'), fine('C', '省略')])), { ok: false, reasons: ['B：対象が違う'] });
+  assert.throws(() => parseReview(answer([{ point: 'x', judgment: 'たぶん', reason: '' }])));
+  // 前の形（verdict / reasons）は受け付けない
+  assert.throws(() => parseReview('{"verdict":"要確認","reasons":["x"]}'));
+  assert.deepEqual(parseReview(answer([], [' 確認できず ', ''])), { ok: true, reasons: [], notes: ['確認できず'] });
 });
 
-test('テスト用の7本: 手で直す前の文（mustFlag）と、今サイトに出ている文（mustNotFlag）', () => {
-  assert.equal(reviewCases.cases.length, 7);
+// ---- ポケカの基本ルールのメモ（scripts/lib/game-rules.md） ----
+
+test('ルールのメモ: 「## ルール」の下の「- 」の行だけを読み、書く役とチェック役の両方に渡す', async () => {
+  assert.ok(GAME_RULES.length >= 1);
+  assert.match(GAME_RULES[0], /このワザ自体のエネルギーだけで使える。借りたワザのエネルギーは要らない/);
+  // 説明の行は渡さない
+  assert.ok(!GAME_RULES.some((r) => r.includes('足し方')));
+  assert.deepEqual(parseGameRules('# 見出し\n- 説明の行\n\n## ルール\n\n- ルール1\n  - ルール2 \n説明\n## 次の見出し\n- 入らない'), ['ルール1', 'ルール2']);
+  assert.deepEqual(parseGameRules('- 見出しがない'), []);
+  const client = fakeClient([{ text: GOOD }, verdict('問題なし')]);
+  const ai = createAiHighlighter({ client });
+  await ai.write(input());
+  await ai.review(reviewInput(SLUG, GOOD));
+  for (const call of client.calls) {
+    assert.match(call.system, /ポケカの基本ルール/);
+    assert.ok(call.system.includes(GAME_RULES[0]));
+  }
+});
+
+// ---- 要確認なら、AI に自分で直させる（checkAndFix） ----
+
+const FIXED = GOOD.replace('150ダメージを上乗せできる', '150ダメージを追加できる');
+
+test('要確認なら「誤り」の理由を渡して直させ、もう一度チェックする。問題なしになれば「自分で直せた」', async () => {
+  const client = fakeClient([verdict('要確認', ['「ハングリージョー」の条件が違う']), { text: FIXED }, verdict('問題なし')]);
+  const ai = createAiHighlighter({ client });
+  const r = await ai.checkAndFix(input(), GOOD);
+  assert.equal(r.text, FIXED);
+  assert.equal(r.review.status, 'ok');
+  assert.equal(r.fix.outcome, 'fixed');
+  assert.equal(r.fix.before, GOOD);
+  assert.deepEqual(r.fix.firstReview.reasons, ['「ハングリージョー」の条件が違う']);
+  // 直す呼び出し: 書く役の指示・元のデータ・前の文・「誤り」の理由を渡す
+  const fixCall = client.calls[1];
+  assert.equal(fixCall.output_config.format, undefined);
+  assert.match(fixCall.system, /主役のカードと、それを支えるカード1枚まで/);
+  assert.equal(fixCall.messages[0].content, buildPrompt(input()));
+  assert.equal(fixCall.messages[1].content, GOOD);
+  assert.match(fixCall.messages[2].content, /「誤り」と指摘しました[\s\S]*- 「ハングリージョー」の条件が違う/);
+  // 2回目のチェックは直した文
+  assert.ok(client.calls[2].messages[0].content.startsWith(`## 見どころ\n${FIXED}`));
+  assert.equal(ai.stats.calls, 3);
+  assert.equal(ai.stats.reviewCalls, 2);
+  assert.equal(ai.stats.fixCalls, 1);
+  assert.equal(fixLabel(r.fix), '🔧 自分で直せた（最初の指摘：「ハングリージョー」の条件が違う）');
+  assert.match(usageLines(ai.stats).join('\n'), /うちチェック役 2回・直し 1回/);
+});
+
+test('直してもまだ要確認なら「直せずに人に知らせた」（直すのは1回まで）', async () => {
+  const client = fakeClient([verdict('要確認', ['誤り1']), { text: FIXED }, verdict('要確認', ['誤り2'])]);
+  const ai = createAiHighlighter({ client });
+  const r = await ai.checkAndFix(input(), GOOD);
+  assert.equal(client.calls.length, 3);
+  assert.equal(r.text, FIXED);
+  assert.deepEqual(r.review, { status: 'warn', reasons: ['誤り2'] });
+  assert.equal(r.fix.outcome, 'unfixed');
+  assert.equal(r.fix.after, FIXED);
+  assert.equal(fixLabel(r.fix), '🙋 直せずに人に知らせた');
+  assert.equal(reviewLabel(r.review), '⚠ 要確認：誤り2');
+});
+
+test('直した文が点検に通らない・直す呼び出しが上限のときは、元の文のまま「直せずに人に知らせた」', async () => {
+  const bad = await createAiHighlighter({ client: fakeClient([verdict('要確認', ['誤り1']), { text: '短い' }]) }).checkAndFix(input(), GOOD);
+  assert.equal(bad.text, GOOD);
+  assert.equal(bad.review.status, 'warn');
+  assert.equal(bad.fix.outcome, 'unfixed');
+  assert.match(bad.fix.reason, /直した文が点検を通らなかった/);
+  assert.match(fixLabel(bad.fix), /^🙋 直せずに人に知らせた（直した文が点検を通らなかった/);
+  const client = fakeClient([verdict('要確認', ['誤り1'])]);
+  const limited = await createAiHighlighter({ client, config: { ...AI_HIGHLIGHT_CONFIG, maxCallsPerRun: 1 } }).checkAndFix(input(), GOOD);
+  assert.equal(limited.text, GOOD);
+  assert.equal(limited.fix.outcome, 'unfixed');
+  assert.equal(limited.limit, true);
+  assert.equal(client.calls.length, 1);
+});
+
+test('問題なし・チェックできずなら直さない', async () => {
+  const client = fakeClient([verdict('問題なし'), { text: 'たぶん大丈夫です' }]);
+  const ai = createAiHighlighter({ client });
+  const ok = await ai.checkAndFix(input(), GOOD);
+  assert.deepEqual(ok, { text: GOOD, review: { status: 'ok', reasons: [] }, fix: null });
+  const error = await ai.checkAndFix(input(), GOOD);
+  assert.equal(error.review.status, 'error');
+  assert.equal(error.fix, null);
+  assert.equal(client.calls.length, 2);
+  assert.equal(fixLabel(null), '');
+});
+
+test('テスト用の8本: 手で直す前の文（mustFlag）と、今サイトに出ている文（mustNotFlag）', () => {
+  assert.equal(reviewCases.cases.length, 8);
   for (const k of reviewCases.cases) {
     const column = columns.find((c) => c.slug === k.slug);
     assert.ok(column, k.slug);
@@ -281,11 +383,13 @@ test('テスト用の7本: 手で直す前の文（mustFlag）と、今サイト
   );
   assert.deepEqual(
     reviewCases.cases.filter((k) => k.mustNotFlag).map((k) => k.slug).sort(),
-    ['mabusoruex-deck-0928', 'n-zoroark-ex-deck', 'slowking-deck'],
+    ['mabusoruex-deck-0928', 'n-zoroark-ex-deck', 'n-zoroark-ex-deck-0927', 'slowking-deck'],
   );
+  // n-zoroark-ex-deck-0927: 「選んだワザのエネルギーは要らない」はルールのとおりで正しい（scripts/lib/game-rules.md）
+  assert.match(reviewCases.cases.find((k) => k.slug === 'n-zoroark-ex-deck-0927').highlight, /選んだワザのエネルギーは要らない/);
 });
 
-test('テスト用の7本の合否: mustFlag の2本を「要確認」に、mustNotFlag の3本を「問題なし」にできれば合格（mustFlag: false は数えない）', () => {
+test('テスト用の8本の合否: mustFlag の2本を「要確認」に、mustNotFlag の4本を「問題なし」にできれば合格（mustFlag: false は数えない）', () => {
   const must = { mustFlag: true };
   const free = { mustFlag: false };
   const clean = { mustNotFlag: true };

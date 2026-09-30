@@ -12,6 +12,20 @@ test('見どころをどちらの方法で書いたか（AIで作成・従来の
   assert.match(highlightMethod({ highlightResult: { ai: true, review: { status: 'error', reasons: ['Claude API のエラー（500）'] } } }), /^AIで作成・⚠ チェックできず/);
   assert.equal(highlightMethod({ highlightResult: { ai: false, reason: 'ANTHROPIC_API_KEY が設定されていない' } }), '従来の方法・ANTHROPIC_API_KEY が設定されていない');
   assert.equal(highlightMethod({}), '従来の方法');
+  // 要確認で AI に直させた結果（自分で直せた / 直せずに人に知らせた）と直す前の文
+  const firstReview = { status: 'warn', reasons: ['対象が違う'] };
+  assert.equal(
+    highlightMethod({ highlightResult: { ai: true, review: { status: 'ok', reasons: [] }, fix: { outcome: 'fixed', before: '前の文', after: '新しい文', firstReview } } }),
+    'AIで作成・✅ チェック済み・🔧 自分で直せた（最初の指摘：対象が違う）・直す前の文：前の文',
+  );
+  assert.equal(
+    highlightMethod({ highlightResult: { ai: true, review: { status: 'warn', reasons: ['まだ違う'] }, fix: { outcome: 'unfixed', before: '前の文', after: '新しい文', firstReview } } }),
+    'AIで作成・⚠ 要確認：まだ違う・🙋 直せずに人に知らせた・直す前の文：前の文',
+  );
+  assert.equal(
+    highlightMethod({ highlightResult: { ai: true, review: firstReview, fix: { outcome: 'unfixed', before: '前の文', firstReview, reason: '直した文が点検を通らなかった（短すぎます）' } } }),
+    'AIで作成・⚠ 要確認：対象が違う・🙋 直せずに人に知らせた（直した文が点検を通らなかった（短すぎます））',
+  );
 });
 
 const article = { articleTitle: 'シティリーグ9/27【日】ベスト16デッキまとめ', articleLink: 'https://pokecabook.com/archives/335123' };

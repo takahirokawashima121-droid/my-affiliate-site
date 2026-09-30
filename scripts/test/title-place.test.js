@@ -2,7 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { placeTitles, recipeLabels, venueParts, withLabel, withPlace } from '../lib/title-place.js';
+import { cardUsage, isStapleCard, placeTitles, recipeLabels, venueParts, withLabel, withPlace } from '../lib/title-place.js';
 
 const city = (slug, venue, rank = '優勝', deckName = 'メガゲッコウガex') => ({
   slug,
@@ -69,7 +69,7 @@ test('採用型のカードの選び方: その記事にしかないカード・
   // ポケモンがサポートより優先。枚数が違うだけのカード（ハイパーボール）は選ばない
   const a = [...shared, E('リーリエの決心', 4, 'サポート'), E('ヨマワル', 1, 'ポケモン')];
   const b = [...shared.map((e) => (e.name === 'ハイパーボール' ? { ...e, qty: 2 } : e)), E('ヒーローマント', 1, 'ポケモンのどうぐ')];
-  assert.deepEqual(recipeLabels([a, b]), [{ card: 'ヨマワル', label: 'ヨマワル採用型' }, { card: 'ヒーローマント', label: 'ヒーローマント採用型' }]);
+  assert.deepEqual(recipeLabels([a, b]).map((x) => x.label), ['ヨマワル採用型', 'ヒーローマント採用型']);
   // 同じ種類なら枚数の多いカード、それも同じなら先に出てくるカード
   const c = [...shared, E('ペパー', 1, 'サポート'), E('ボスの指令', 2, 'サポート')];
   const d = [...shared, E('ジャンボアイス', 1, 'グッズ'), E('おいしいおむすび', 1, 'グッズ')];
@@ -84,10 +84,14 @@ test('店舗のデータがない記事（ジムバトル）は、レシピの�
     x: [{ name: 'メガジガルデex', qty: 3, category: 'ポケモン' }, { name: 'ヒーローマント', qty: 1, category: 'ポケモンのどうぐ' }],
     y: [{ name: 'メガジガルデex', qty: 3, category: 'ポケモン' }, { name: 'サバイブギプス', qty: 1, category: 'ポケモンのどうぐ' }],
   };
-  const { titles, groups, unresolved } = placeTitles([gym('x'), gym('y')], (c) => recipes[c.slug]);
+  // 定番カードの判定はサイトの全デッキ記事で行うので、ほかのデッキの記事も並べる
+  const others = ['p', 'q', 'r'].map((slug) => ({ ...gym(slug, 'ボムドラパ'), result: '9/27 ジムバトル優勝' }));
+  for (const o of others) recipes[o.slug] = [{ name: 'ドラパルトex', qty: 3, category: 'ポケモン' }];
+  const { titles, groups, unresolved } = placeTitles([gym('x'), gym('y'), ...others], (c) => recipes[c.slug]);
   assert.equal(titles.get('x'), '【9/26 ジムバトル優勝】メガジガルデex（ヒーローマント採用型）デッキレシピと回し方！採用カード最安値・代替パーツ提案');
   assert.equal(titles.get('y'), '【9/26 ジムバトル優勝】メガジガルデex（サバイブギプス採用型）デッキレシピと回し方！採用カード最安値・代替パーツ提案');
   assert.deepEqual(groups[0].columns.map((t) => t.card), ['ヒーローマント', 'サバイブギプス']);
+  assert.deepEqual(groups[0].columns.map((t) => t.decks), [1, 1]);
   assert.deepEqual(unresolved, []);
 });
 
@@ -95,4 +99,27 @@ test('レシピもない記事はタイトルが重なったままになり、PR
   const { titles, unresolved } = placeTitles([gym('x'), gym('y')]);
   assert.equal(titles.size, 0);
   assert.deepEqual(unresolved[0].columns.map((c) => c.slug), ['x', 'y']);
+});
+
+test('定番カード（全デッキ記事の半分以上）は選ばず、同じ種類なら入っている記事の数が少ないカードを優先する', () => {
+  const E = (name, qty, category) => ({ name, qty, category });
+  // サイトの全デッキ記事（4本）: ボスの指令は2本（半分以上 → 定番）、ムクは1本、アクロマの執念は1本
+  const site = [
+    [E('ボスの指令', 4, 'サポート'), E('ムク', 1, 'サポート'), E('アクロマの執念', 2, 'サポート')],
+    [E('ボスの指令', 2, 'サポート'), E('ゴヨウ', 4, 'サポート')],
+    [E('ゴヨウ', 1, 'サポート')],
+    [E('クラウン', 2, 'サポート')],
+  ];
+  const usage = cardUsage(site);
+  assert.equal(usage.total, 4);
+  assert.equal(isStapleCard(usage, 'ボスの指令'), true);
+  assert.equal(isStapleCard(usage, 'ゴヨウ'), true);
+  assert.equal(isStapleCard(usage, 'クラウン'), false);
+  // 1本目: ボスの指令（定番）を外し、ムク・アクロマの執念（どちらも1本）→ 枚数の多いアクロマの執念
+  // 2本目: ゴヨウ（定番）を外すと候補がない → 別構築
+  const labels = recipeLabels([site[0], site[1]], usage);
+  assert.deepEqual(labels, [{ card: 'アクロマの執念', decks: 1, label: 'アクロマの執念採用型' }, { card: null, decks: null, label: '別構築' }]);
+  // 入っている記事の数が少ないカードが、枚数より優先される
+  const usage2 = cardUsage([[E('X', 4, 'グッズ')], [E('X', 1, 'グッズ')], [E('Y', 1, 'グッズ')], [], [], []]);
+  assert.equal(recipeLabels([[E('X', 4, 'グッズ'), E('Y', 1, 'グッズ')], []], usage2)[0].card, 'Y');
 });

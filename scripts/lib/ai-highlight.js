@@ -23,7 +23,7 @@ import { HIGHLIGHT_MAX, bannedPhrases, opening } from './highlight.js';
 export const AI_HIGHLIGHT_CONFIG = {
   model: 'claude-sonnet-5-5',
   effort: 'medium',
-  maxCallsPerRun: 10,
+  maxCallsPerRun: 20,
   maxTokens: 8000,
   timeoutMs: 120_000,
 };

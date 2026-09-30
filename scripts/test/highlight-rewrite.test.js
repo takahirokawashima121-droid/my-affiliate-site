@@ -80,9 +80,9 @@ test('--limit: 空欄・0・all はすべて、数字はその本数。数字で
   assert.throws(() => parseLimit(['--limit=abc']), /本数/);
 });
 
-test('API を呼ぶ回数の上限は、まとめ書き直しだけ250回（チェック役の分を含む。通常の自動生成は10回のまま）', () => {
+test('API を呼ぶ回数の上限は、まとめ書き直しだけ250回（チェック役の分を含む。通常の自動生成は20回）', () => {
   assert.equal(REWRITE_MAX_CALLS, 250);
-  assert.equal(AI_HIGHLIGHT_CONFIG.maxCallsPerRun, 10);
+  assert.equal(AI_HIGHLIGHT_CONFIG.maxCallsPerRun, 20);
 });
 
 test('書き直し: 点検に通れば新しい文、通らなければ今の見どころのまま。書き直した文どうしでも書き出しを比べる', async () => {

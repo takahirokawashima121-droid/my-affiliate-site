@@ -1,5 +1,5 @@
 # 公開済みの記事の見どころを、チェック役の AI にかけて結果をログに出す（scripts/ai-highlight-review.js）
-# テスト用の4本（まとめ書き直しで AI が書き、人が手で直す前の文）も一緒にチェックし、「要確認」にできたかを出す。
+# テスト用の7本（手で直す前の文＝要確認にすべき2本・今サイトに出ている文＝問題なしにすべき3本など）も一緒にチェックし、合否を出す。
 # ファイルは変えず、コミットも PR も作らない。Actions タブの「Run workflow」ボタンから手動実行のみ
 #
 # 事前設定: Settings → Secrets and variables → Actions に ANTHROPIC_API_KEY を登録する（自動生成の auto-deck-sync.yml と共通）

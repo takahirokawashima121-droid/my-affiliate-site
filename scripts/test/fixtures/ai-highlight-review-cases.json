@@ -1,8 +1,8 @@
 {
-  "_comment": "チェック役（scripts/lib/ai-highlight.js の review）を試すための見どころ。highlight はまとめ書き直し（commit efc69fd）で AI が書き、人が手で直す前の文、fixed は今の記事の文（commit be41934 で手で直した文。n-zoroark-ex-deck はそのあとさらに直した）。scripts/ai-highlight-review.js がこの4本を一緒にチェックし、mustFlag: true の2本を「要確認」にできたかを出す",
+  "_comment": "チェック役（scripts/lib/ai-highlight.js の review）を試すための見どころ。mustFlag の4本: highlight はまとめ書き直し（commit efc69fd）で AI が書き、人が手で直す前の文、fixed は今の記事の文（commit be41934 で手で直した文。n-zoroark-ex-deck はそのあとさらに直した）。mustNotFlag: true の3本: highlight は今サイトに出ている見どころ（間違いのない文。書いていないことがあっても要確認にしてはいけない）。scripts/ai-highlight-review.js がこの7本を一緒にチェックし、合否を出す",
   "sourceCommit": "efc69fd",
   "fixedCommit": "be41934",
-  "passCriteria": "mustFlag: true の2本（seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927）をどちらも「要確認」にできれば合格。mustFlag: false の2本は、手で直す前の文も間違いではないため、「問題なし」でも「要確認」でも合否に数えない",
+  "passCriteria": "mustFlag: true の2本（seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927）をどちらも「要確認」にでき、さらに mustNotFlag: true の3本（slowking-deck・n-zoroark-ex-deck・mabusoruex-deck-0928。今サイトに出ている文）をすべて「問題なし」にできれば合格。mustFlag: false の2本は、手で直す前の文も間違いではないため、「問題なし」でも「要確認」でも合否に数えない",
   "cases": [
     {
       "slug": "seek-inspiration-deck-0929",
@@ -33,6 +33,24 @@
       "fixed": "ケンタロスは「むれでねらう」で、場にいる名前に「ケンタロス」とつくポケモンの数ぶんコインを投げ、オモテの数×50ダメージを、バトル場かベンチの相手1匹に与える。パルデア ケンタロスの「いかりのとっしん」は、危ない廃墟でダメカンがのった仲間の数だけ威力が伸びる。",
       "problem": "「相手1匹に」→「バトル場かベンチの相手1匹に」（ダメージを与える相手の場所）",
       "note": "手で直す前の文も間違いではない。公式テキストの「むれでねらう」は「相手のポケモンを1匹選び」で、場所の指定がなくても意味は同じ（直した文は表現をはっきりさせただけ）"
+    },
+    {
+      "slug": "slowking-deck",
+      "mustNotFlag": true,
+      "highlight": "ヤドキングは「ひらめきチャレンジ」で山札の一番上をトラッシュし、それがルールを持たないポケモンなら、そのワザを借りて使える。「暗号マニアの解読」と「夜のアカデミー」で山札の上を整え、狙ったポケモンのワザを引き出すことを狙う。",
+      "note": "数字や「おたがいに」効くこと（夜のアカデミー）を書いていないだけで、書いてあることは公式テキストと合っている"
+    },
+    {
+      "slug": "n-zoroark-ex-deck",
+      "mustNotFlag": true,
+      "highlight": "Nのゾロアークexは、ワザ「ナイトジョーカー」でベンチにいるNのゼクロムやNのレシラムなどのワザを借りて戦い、特性「とりひき」で手札を1枚トラッシュして山札を2枚引く。「Nのポイントアップ」でトラッシュの基本エネルギーをベンチのNのポケモン（主にNのゾロアークex）につけて補う。",
+      "note": "「とりひき」の「自分の番に1回」を書いていないだけで、書いてあることは公式テキストと合っている"
+    },
+    {
+      "slug": "mabusoruex-deck-0928",
+      "mustNotFlag": true,
+      "highlight": "メガアブソルexは、ワザ「デスピリオド」で相手のバトルポケモンにダメカンが6個のっていれば、HPに関係なくきぜつさせる。ダメカンは特性「アドレナブレイン」や「バッドアッパー」で積み、ボスの指令で狙う相手を呼び出して仕留める。",
+      "note": "「6個なら」→「6個のっていれば」は意味が同じ。「アドレナブレイン」「バッドアッパー」は公式テキストを渡していない（確認できず）ため、要確認にはしない"
     }
   ]
 }

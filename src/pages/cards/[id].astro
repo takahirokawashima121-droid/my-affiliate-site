@@ -17,7 +17,7 @@ import ToretokuNotice from '../../components/ToretokuNotice.astro';
 import { cardSearchKeyword, nameWithRarity } from '../../utils/cardFormat';
 import { moshimoClickUrl } from '../../utils/moshimo';
 import { SITE, STANDARD_REGULATIONS } from '../../consts';
-import { getCards, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, productJsonLd, type Card } from '../../utils/cards';
+import { getCards, buybackLink, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, isStandardLegal, isStandardExempt, hasRarityMark, sameNameVariants, cheapestVariantIds, productJsonLd, type Card } from '../../utils/cards';
 
 export const getStaticPaths = (async () => {
   const cards = await getCards();
@@ -51,7 +51,9 @@ interface Props {
 
 const { card, related, variants, substitutes, cheapestIds } = Astro.props;
 const isCheapest = (c: Card) => cheapestIds.includes(c.id);
-const { name, rarity, cardNumber, expansionCode, imageUrl, saleInStock, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
+const { name, rarity, cardNumber, expansionCode, imageUrl, saleInStock, saleShop, saleUrl, buybackPrice, updatedAt } = card.data;
+// 買取ボタンの遷移先（カードごとの買取リンクを src/config/affiliate.ts で止めている間は古本市場（ふるいち）の宅配買取）
+const buyback = buybackLink(card);
 const label = cardLabel(card); // 例: ナンジャモ SAR [SV2D 096/071]
 const model = cardModel(card); // 例: SV2D 096/071
 const updatedText = formatDateTime(updatedAt);
@@ -80,8 +82,8 @@ const affiliateLinkProps = {
 
 const title = `【ポケカ】${label}の販売最安値・買取相場比較`;
 const saleSummary = best ? `${label}の販売最安値は${formatYen(best.price)}（${best.shop}）` : `${label}は楽天市場・Yahoo!ショッピングでは現在在庫なし。`;
-const buybackSummary = buybackShown ? `買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。` : `買取価格は${buybackShop}での査定をご確認ください。`;
-const description = `${saleSummary}${best ? '、' : ''}${buybackSummary}${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
+const buybackSummary = buybackShown ? `買取目安は${formatYen(buybackPrice)}（販売価格をもとに当サイトが計算）。` : '買取価格はお店の査定でご確認ください。';
+const description = `${saleSummary}${best ? '、' : ''}${buybackSummary}${updatedText}時点の楽天市場・Yahoo!ショッピングの販売価格を比較し、買取査定の申込先もまとめています。`;
 
 // 構造化データ（Product ＋ AggregateOffer）。画像・在庫がないカードは出さない（null）
 const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(), description) ?? undefined;
@@ -202,17 +204,17 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
             </ul>
           </div>
           <div class="flex flex-col rounded-2xl border-2 border-emerald-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-bold text-emerald-600">買取最高値</p>
+            <p class="text-sm font-bold text-emerald-600">買取目安</p>
             {buybackShown ? (
               <p class="mt-1 text-3xl font-extrabold tabular-nums text-emerald-600 sm:text-4xl">{formatYen(buybackPrice)}</p>
             ) : (
               <p class="mt-1 text-2xl font-extrabold text-slate-600 sm:text-3xl">要査定</p>
             )}
-            <p class="mt-1 text-sm text-slate-600">ショップ：<span class="font-semibold text-slate-900">{buybackShop}</span></p>
+            <p class="mt-1 text-xs leading-relaxed text-slate-600">{SITE.buybackEstimateNote}</p>
             {!buybackShown && <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">販売相場がないため買取目安を表示していません。買取価格はショップの査定でご確認ください。</p>}
             {buybackUnverified && <p class="mt-2 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">相場確認中：最新の買取価格はショップでご確認ください</p>}
             <div class="mt-4">
-              <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} size="lg" item={label} label={buybackShown ? undefined : 'シングル買取査定'} />
+              <AffiliateButton kind="buyback" href={buyback.url} shop={buyback.shop} size="lg" item={label} />
             </div>
           </div>
         </div>
@@ -307,7 +309,7 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
 
       <DecksUsingCard card={card} />
 
-      <!-- 価格比較・買取最高値の欄とは別の場所に小さく置く（ほかのショップと並べない） -->
+      <!-- 価格比較・買取目安の欄とは別の場所に小さく置く（ほかのショップと並べない） -->
       <ToretokuNotice variant="card" item={label} />
 
       <a href="/" class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline">← 相場一覧（トップページ）に戻る</a>

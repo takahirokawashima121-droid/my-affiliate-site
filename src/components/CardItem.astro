@@ -3,8 +3,9 @@ import CardImage from './CardImage.astro';
 import AffiliateButton from './AffiliateButton.astro';
 import CardTags from './CardTags.astro';
 import { SHOPS } from '../config/affiliate';
+import { SITE } from '../consts';
 import { nameWithRarity } from '../utils/cardFormat';
-import { cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, type Card } from '../utils/cards';
+import { buybackLink, cardBuybackLink, cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, type Card } from '../utils/cards';
 
 interface Props {
   card: Card;
@@ -14,7 +15,10 @@ interface Props {
 }
 
 const { card, eager = false, cheapest = false } = Astro.props;
-const { name, rarity, cardNumber, expansionCode, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
+const { name, rarity, cardNumber, expansionCode, buybackPrice, updatedAt } = card.data;
+// 買取ボタンの遷移先（カードごとの買取リンクを止めている間は古本市場（ふるいち）の宅配買取）
+const buyback = buybackLink(card);
+const single = cardBuybackLink(card);
 const gap = priceGap(card);
 // 楽天・Yahoo! の2大モールのうち安い方を「販売最安値」として表示する
 const offers = mallOffers(card);
@@ -76,13 +80,14 @@ const model = cardModel(card);
       </dd>
     </div>
     <div class="px-3 py-3">
-      <dt class="text-[11px] font-medium text-slate-600">買取最高値</dt>
+      <dt class="text-[11px] font-medium text-slate-600">買取目安</dt>
       {buybackShown ? (
         <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-emerald-600 sm:text-2xl">{formatYen(buybackPrice)}</dd>
       ) : (
         <dd class="mt-1.5 text-base font-bold text-slate-600 sm:text-lg">要査定</dd>
       )}
-      <dd class="truncate text-[11px] text-slate-600">{buybackShop}{buybackUnverified && <span class="ml-1 rounded bg-amber-100 px-1 text-amber-800">相場確認中</span>}</dd>
+      <dd class="text-[10px] leading-snug text-slate-600">{SITE.buybackEstimateNote}</dd>
+      {buybackUnverified && <dd class="mt-0.5 text-[11px]"><span class="rounded bg-amber-100 px-1 text-amber-800">相場確認中</span></dd>}
     </div>
   </dl>
 
@@ -91,14 +96,19 @@ const model = cardModel(card);
     {best ? (
       <Fragment>
         <AffiliateButton kind="sale" href={best.url} shop={best.shop} item={cardLabel(card)} />
-        <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} />
+        <AffiliateButton kind="buyback" href={buyback.url} shop={buyback.shop} item={cardLabel(card)} />
       </Fragment>
-    ) : (
+    ) : single ? (
       <Fragment>
         {/* 在庫なし：購入の代わりに買取査定を前面に出す */}
         <AffiliateButton kind="bulk" href={SHOPS.furuichi.url} shop={SHOPS.furuichi.name} item={cardLabel(card)} />
-        <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} label="シングル買取査定" />
+        <AffiliateButton kind="buyback" href={single.url} shop={single.shop} item={cardLabel(card)} label="シングル買取査定" />
       </Fragment>
+    ) : (
+      <div class="col-span-2">
+        {/* 在庫なし：購入の代わりに買取査定を前面に出す */}
+        <AffiliateButton kind="buyback" href={buyback.url} shop={buyback.shop} item={cardLabel(card)} />
+      </div>
     )}
   </div>
 </article>

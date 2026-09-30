@@ -20,6 +20,7 @@ import { cardDisplayName, cardSearchKeyword } from '../src/utils/cardFormat.ts';
 import { moshimoClickUrl, moshimoImpressionUrl } from '../src/utils/moshimo.ts';
 import { normalize } from './update-prices.js';
 import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../src/consts.ts';
+import { SHOPS, isShopEnabled } from '../src/config/affiliate.ts';
 
 /** 現行スタンダードで使えるか（マークが H・I・J 等、または公式の例外リストのカード）。サイトはスタンダード専用 */
 const isStandardLegal = (s) => STANDARD_REGULATIONS.includes(s.regulationMark) || STANDARD_EXEMPT_NAMES.includes(s.name);
@@ -34,12 +35,11 @@ const RAKUTEN_ORIGIN_URL = 'https://my-affiliate-site-phi.vercel.app/';
 const EXCLUDE = /オリパ|くじ|PSA|BGS|ARS|鑑定|BOX|未開封|英語|韓国|中国/;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// 既存カードと同じ買取提携先（カーナベル）
-const BUYBACK = {
-  buybackShop: 'カーナベル',
-  buybackUrl: 'https://px.a8.net/svt/ejp?a8mat=4BCKBZ+9OALO2+49YI+656YQ',
-  buybackImpressionUrl: 'https://www17.a8.net/0.gif?a8mat=4BCKBZ+9OALO2+49YI+656YQ',
-};
+// カードごとの買取提携先（カーナベル）。src/config/affiliate.ts の SHOPS.kanabell.enabled が true のときだけ書き込む
+// （false の間は買取リンクなしで登録し、画面では古本市場（ふるいち）の宅配買取に案内する）
+const BUYBACK = isShopEnabled('kanabell')
+  ? { buybackShop: SHOPS.kanabell.name, buybackUrl: SHOPS.kanabell.url, buybackImpressionUrl: SHOPS.kanabell.impressionUrl }
+  : {};
 
 function parseArgs(argv) {
   const get = (name) => argv.find((a) => a.startsWith(`--${name}=`))?.split('=')[1];

@@ -191,6 +191,8 @@ const jsonLd = {
 
     <XShareBox posts={xPosts} />
 
-    <AffiliatePixels cards={deckCards} shops={['furuichi']} />
+    {/* このページにリンクがあるのはふるいち（上の「3.」）とトレトク（ToretokuNotice の中で計測画像も出す）だけ。
+        楽天・Yahoo!・カードごとの買取リンクはカードページにあり、ここには出さないため計測画像も読み込まない */}
+    <AffiliatePixels cards={[]} shops={['furuichi']} />
   </div>
 </BaseLayout>

@@ -1,5 +1,5 @@
 ---
-// 「最安値で購入する」「最高値で買い取ってもらう」ボタン（別タブで開く）
+// 「最安値で購入する」「〇〇で査定を申し込む」ボタン（別タブで開く）
 import { BUYBACK_PRIMARY, BUYBACK_SECONDARY, SALE_PRIMARY } from '../utils/buttonStyles';
 
 interface Props {
@@ -20,10 +20,13 @@ const styles = {
   // 購入：ファイアレッド
   sale: { label: '最安値で購入する', color: SALE_PRIMARY, led: 'bg-white/90' },
   // 買取：リーフグリーン
-  buyback: { label: '最高値で買い取ってもらう', color: BUYBACK_PRIMARY, led: 'bg-emerald-200' },
-  // まとめて送る宅配買取（ふるいち）。在庫なしのカードでシングル買取ボタンと並ぶため、白地 + 緑枠で区別する
+  // 文言は事実だけにする（買取額は各ショップの査定で決まるため、「最高値」「高価」などは使わない）
+  buyback: { label: `${shop}で査定を申し込む`, color: BUYBACK_PRIMARY, led: 'bg-emerald-200' },
+  // まとめて送る宅配買取（ふるいち）。カードごとの買取リンクがあるとき、在庫なしのカードでシングル買取ボタンと並ぶため、白地 + 緑枠で区別する
   bulk: { label: 'まとめて買取査定', color: BUYBACK_SECONDARY, led: 'bg-emerald-500' },
 }[kind];
+// 店名がボタンの文言に入っているときは、下の行で店名を繰り返さない
+const shopLine = kind === 'buyback' && label === undefined ? '新しいタブで開く ↗' : `${shop}へ ↗`;
 ---
 
 <a
@@ -44,6 +47,6 @@ const styles = {
   <!-- 遷移先：計器のランプ + 店舗名 -->
   <span class:list={['flex items-center gap-1.5 font-mono font-medium tracking-wide opacity-90', size === 'lg' ? 'text-xs' : 'text-[10px]']}>
     <span class:list={['h-1.5 w-1.5 shrink-0 rounded-full', styles.led]} aria-hidden="true"></span>
-    {shop}へ ↗
+    {shopLine}
   </span>
 </a>

@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { cardDisplayName, modelCode } from './cardFormat';
 import { STANDARD_EXEMPT_NAMES, STANDARD_REGULATIONS } from '../consts';
+import { SHOPS, isShopNameEnabled } from '../config/affiliate';
 
 export type Card = CollectionEntry<'cards'>;
 
@@ -86,6 +87,25 @@ export function productJsonLd(card: Card, pageUrl: string, description: string):
       url: pageUrl,
     },
   };
+}
+
+/** 買取の提携リンク（遷移先・計測画像） */
+export type BuybackLink = { shop: string; url: string; impressionUrl?: string; network?: 'a8' | 'moshimo' };
+
+/**
+ * カードごとの買取提携リンク（cards.json の buybackShop・buybackUrl）。
+ * 未設定、または src/config/affiliate.ts の SHOPS で止めている提携先（enabled: false）なら null
+ */
+export function cardBuybackLink(card: Card): BuybackLink | null {
+  const { buybackShop, buybackUrl, buybackImpressionUrl } = card.data;
+  if (!buybackShop || !buybackUrl || !isShopNameEnabled(buybackShop)) return null;
+  return { shop: buybackShop, url: buybackUrl, impressionUrl: buybackImpressionUrl, network: buybackUrl.includes('a8.net') ? 'a8' : undefined };
+}
+
+/** 買取ボタンの遷移先：カードごとの提携リンク。使えないときは古本市場（ふるいち）の宅配買取 */
+export function buybackLink(card: Card): BuybackLink {
+  const { name, url, impressionUrl, network } = SHOPS.furuichi;
+  return cardBuybackLink(card) ?? { shop: name, url, impressionUrl, network };
 }
 
 /** 販売在庫があるか（楽天・Yahoo! のどちらかに在庫のある出品がある） */

@@ -11,25 +11,25 @@ const city = (source, extra = {}) => ({
   inferred: true,
   renamedByRule: false,
   ...extra,
-  source: { eventLabel: 'シティリーグ', date: '9/27', rank: '優勝', venue: '青馬堂矢向店（神奈川）', nameSource: null, sourceInferred: false, ...article, position: 3, ...source },
+  source: { eventLabel: 'シティリーグ', date: '9/27', rank: '優勝', venue: '青馬堂矢向店（神奈川）', nameSource: null, sourceInferred: false, ...article, venueNo: 5, ...source },
 });
 
-test('シティリーグ: 日付・大会・順位・店舗（都道府県）・推定・URL・元記事の何番目かを並べる', () => {
+test('シティリーグ: 日付・大会・順位・店舗（都道府県）・推定・URL・元記事の何会場目かを並べる', () => {
   assert.equal(
     generatedItem(city({})),
     [
       '- 【9/27 シティリーグ 優勝】青馬堂矢向店（神奈川）<br>',
       '  **ドラパルトex**（⚠ 推定）<br>',
       '  `/columns/dragapult-ex-deck-0927/`<br>',
-      '  元記事：[シティリーグ9/27【日】ベスト16デッキまとめ](https://pokecabook.com/archives/335123) の上から3番目',
+      '  元記事：[シティリーグ9/27【日】ベスト16デッキまとめ](https://pokecabook.com/archives/335123) の5会場目',
     ].join('\n'),
   );
 });
 
 test('取れなかった項目は空欄にせず「取得できず」と書く', () => {
-  const lines = generatedItem(city({ date: null, rank: null, venue: null, position: null })).split('\n');
+  const lines = generatedItem(city({ date: null, rank: null, venue: null, venueNo: null })).split('\n');
   assert.equal(lines[0], '- 【日付取得できず シティリーグ 順位取得できず】開催店舗・都道府県: 取得できず<br>');
-  assert.match(lines[3], /の何番目か取得できず$/);
+  assert.match(lines[3], /の何会場目か取得できず$/);
   // 会場名に都道府県がない
   assert.match(generatedItem(city({ venue: 'カードショップ某' })), /】カードショップ某（都道府県: 取得できず）<br>/);
   // 同じ会場が2回ある「GIRAFULLなんば店（大阪）-1」は都道府県あり

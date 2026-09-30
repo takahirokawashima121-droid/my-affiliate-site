@@ -326,7 +326,7 @@ async function main() {
     ({ slug: d.slug, fallback: d.slugFallback, approx: d.slugApprox } = makeSlug(d.archetype, d.list, d.date, taken, d.variant, d.nameRule?.has[0]));
     taken.add(d.slug);
     console.log(
-      `  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}${d.venue ? ` ${d.venue}` : ''} ${d.rank ?? '順位不明'}${d.position ? `・元記事の上から${d.position}番目` : ''}${d.nameRule ? `・言い換えルール（元の名前: ${d.sourceName}）` : d.inferred ? '・デッキ名は推定' : d.nameSource === 'bullet' ? '・デッキ名は●小見出し' : ''}${d.ruleUncertain ? `・⚠「${d.ruleUncertain}」に当てはまるか要確認` : ''}）→ /columns/${d.slug}/${d.slugFallback ? '（⚠ 英語名が不明のためローマ字）' : d.slugApprox ? '（⚠ デッキ名を英語にできないため主役ポケモンの英語名）' : ''}`,
+      `  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}${d.venue ? ` ${d.venue}` : ''} ${d.rank ?? '順位不明'}${d.venueNo ? `・元記事の${d.venueNo}会場目` : ''}${d.nameRule ? `・言い換えルール（元の名前: ${d.sourceName}）` : d.inferred ? '・デッキ名は推定' : d.nameSource === 'bullet' ? '・デッキ名は●小見出し' : ''}${d.ruleUncertain ? `・⚠「${d.ruleUncertain}」に当てはまるか要確認` : ''}）→ /columns/${d.slug}/${d.slugFallback ? '（⚠ 英語名が不明のためローマ字）' : d.slugApprox ? '（⚠ デッキ名を英語にできないため主役ポケモンの英語名）' : ''}`,
     );
   }
   if (opts.dryRun) return console.log('\n（dry-run: カード追加・記事生成・処理済みの記録は行いません）');
@@ -406,7 +406,7 @@ async function main() {
         sourceInferred: Boolean(d.sourceInferred),
         articleTitle: d.article.title,
         articleLink: d.article.link,
-        position: d.position,
+        venueNo: d.venueNo,
       },
     });
     console.log(`  ✓ src/pages/columns/${d.slug}.astro`);
@@ -486,7 +486,7 @@ async function main() {
     ...fresh.map((it) => `- 元記事: [${it.title}](${it.link})`),
     '',
     `### 生成した記事（${generated.length}本）`,
-    '（「上から何番目」は、元記事の中のデッキコード付きの画像を上から数えた順番です。シティリーグは記事にしない TOP4〜TOP16 も数えるため数が大きくなります。元記事を店舗名でページ内検索すると早く見つかります）',
+    '（「〇会場目」は、元記事の会場の見出しを上から数えた順番です。結果の画像がない会場も数えます。ジムバトルは店舗名が載っていないため、デッキ1つを1会場として上から数えています）',
     '',
     ...(generated.length ? generated.map((c) => `${generatedItem(c)}\n  - 見どころ: ${c.highlight}`) : ['- なし']),
     '',

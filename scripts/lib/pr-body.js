@@ -1,5 +1,5 @@
 // 自動生成の Pull Request 本文（scripts/auto-deck-updater.js が書き出す）の「生成した記事」の1本分を作る。
-// 大会の日付・開催店舗と都道府県・順位・元記事の何番目のデッキか・デッキ名の取り方を並べ、元記事と見比べやすくする。
+// 大会の日付・開催店舗と都道府県・順位・元記事の何会場目か・デッキ名の取り方を並べ、元記事と見比べやすくする。
 // 取れなかった項目は空欄にせず「取得できず」と書く（テストは scripts/test/pr-body.test.js）
 
 export const UNKNOWN = '取得できず';
@@ -22,7 +22,7 @@ export function nameSourceText(c) {
  * - 【9/27 シティリーグ 優勝】青馬堂矢向店（神奈川）
  *   ドラパルトex（⚠ 推定）
  *   /columns/dragapult-ex-deck-0927/
- *   元記事：[シティリーグ9/27ベスト16デッキまとめ](…) の上から3番目
+ *   元記事：[シティリーグ9/27ベスト16デッキまとめ](…) の5会場目
  */
 export function generatedItem(c) {
   const s = c.source;
@@ -30,7 +30,7 @@ export function generatedItem(c) {
     `【${s.date ?? `日付${UNKNOWN}`} ${s.eventLabel} ${s.rank ?? `順位${UNKNOWN}`}】${venueText(s.venue)}`,
     `**${c.deckName}**（${nameSourceText(c)}）${c.ruleUncertain ? `・⚠「${c.ruleUncertain}」に当てはまるか要確認` : ''}`,
     `\`/columns/${c.slug}/\``,
-    `元記事：[${s.articleTitle}](${s.articleLink}) の${s.position ? `上から${s.position}番目` : `何番目か${UNKNOWN}`}`,
+    `元記事：[${s.articleTitle}](${s.articleLink}) の${s.venueNo ? `${s.venueNo}会場目` : `何会場目か${UNKNOWN}`}`,
   ];
   return `- ${lines.join('<br>\n  ')}`;
 }

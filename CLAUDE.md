@@ -23,7 +23,7 @@
   - `scripts/lib/deck-name-rules.js` … デッキ名の言い換え表（`DECK_NAME_RULES`。ポケカブックの名前より優先）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
   - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
-  - `scripts/lib/pr-body.js` … 自動生成の PR 本文の「生成した記事」の1本分（大会の日付・開催店舗と都道府県・順位・元記事の上から何番目のデッキか・デッキ名が●付き小見出しか推定か）。取れなかった項目は「取得できず」と書く
+  - `scripts/lib/pr-body.js` … 自動生成の PR 本文の「生成した記事」の1本分（大会の日付・開催店舗と都道府県・順位・元記事の何会場目か・デッキ名が●付き小見出しか推定か）。取れなかった項目は「取得できず」と書く
   - `scripts/cache/processed-decks.json` … 処理済みの記事・デッキ
   - `public/og-default.png` … 個別の画像がないページの OG 画像（1200×630）。元は `scripts/assets/og-default.html` で、`node scripts/render-og-image.js` で作り直す（手順は README の「OG画像」）
   - `public/generate-assets.html` … X のアイコン・プロフィールのヘッダー（1500×500）・サイト紹介バナー（1200×675）の描画と保存（デザインはサイト・OG画像に合わせた白基調）。`node scripts/render-x-assets.js` でフォントを確認してから PNG に書き出せる（手順は README の「X（旧Twitter）用の画像」）

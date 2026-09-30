@@ -119,25 +119,28 @@ function rankScore(c: DeckColumn): number {
   return top ? Number(top[1]) : Number.MAX_SAFE_INTEGER;
 }
 
-/** 大会の種類の並び順（同じ日付・同じ成績なら シティリーグ → ジムバトル → それ以外） */
-const EVENT_TYPE_ORDER: Record<EventType | 'other', number> = { city: 0, gym: 1, other: 2 };
+/** 大会の種類の並び順（同じ日付・同じ成績なら シティリーグ → ジムバトル） */
+const EVENT_TYPE_ORDER: Record<EventType, number> = { city: 0, gym: 1 };
 
 /**
  * デッキ記事の並び順（コラム一覧・トップページの特集で共通）
- * 開催日が新しい順 → 成績の高い順 → シティリーグ → ジムバトル → 公開日が新しい順 → deck-columns.json の掲載順。
+ * - 大会の記事（シティリーグ・ジムバトル）：開催日が新しい順 → 成績の高い順 → シティリーグ → ジムバトル → 公開日が新しい順 → deck-columns.json の掲載順
+ * - 環境まとめの記事（大会の種類がないもの）：大会の記事のあと、一覧の最後にまとめて、公開日が新しい順 → deck-columns.json の掲載順
  * 開催日は YYYY-MM-DD で比べるため、12月 → 1月のように年をまたいでも正しく並ぶ（eventDate() が年を補う）
  */
 export function sortColumnsByEvent<T extends DeckColumn>(columns: readonly T[]): T[] {
   return columns
-    .map((c, order) => ({ c, order, date: eventDate(c) }))
-    .sort(
-      (a, b) =>
+    .map((c, order) => ({ c, order, type: eventTypeOf(c), date: eventDate(c) }))
+    .sort((a, b) => {
+      if (!a.type || !b.type) return Number(!a.type) - Number(!b.type) || b.c.pubDate.localeCompare(a.c.pubDate) || a.order - b.order;
+      return (
         b.date.localeCompare(a.date) ||
         rankScore(a.c) - rankScore(b.c) ||
-        EVENT_TYPE_ORDER[eventTypeOf(a.c) ?? 'other'] - EVENT_TYPE_ORDER[eventTypeOf(b.c) ?? 'other'] ||
+        EVENT_TYPE_ORDER[a.type] - EVENT_TYPE_ORDER[b.type] ||
         b.c.pubDate.localeCompare(a.c.pubDate) ||
-        a.order - b.order,
-    )
+        a.order - b.order
+      );
+    })
     .map(({ c }) => c);
 }
 

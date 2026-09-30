@@ -180,10 +180,20 @@ test('PR の本文: 変更前・変更後の表、書き直せなかった記事
   assert.match(body, /対象外: 1本（`m-deck`）/);
 });
 
-/** チェック役の答え（JSON の文）。reasons があれば「誤り」の点、なければ「問題なし」の点だけ */
-const answer = (reasons = []) =>
+/** チェック役に渡した文（prompt）の公式テキストから、「誤り」の根拠として引用する一文（最初の効果の文。なければカード名） */
+function quoteFrom(prompt) {
+  const cards = prompt.slice(prompt.indexOf('## 見どころに出てくるカードの公式テキスト'));
+  return cards.match(/^- .*?：([^。\n]+)/m)?.[1] ?? cards.match(/^### (\S+?)(?:（|$)/m)[1];
+}
+/** 「誤り」の理由（PR・ログに出る形。引用つき） */
+const quotedFor = (reason, prompt) => `${reason}（公式テキスト「${quoteFrom(prompt)}」）`;
+
+/** チェック役の答え（JSON の文）。reasons があれば「誤り」の点（prompt の公式テキストから引用）、なければ「問題なし」の点だけ */
+const answer = (reasons = [], prompt = '') =>
   JSON.stringify({
-    checks: reasons.length ? reasons.map((r) => ({ point: '', judgment: '誤り', reason: r })) : [{ point: '気になった点', judgment: '問題なし', reason: '合っている' }],
+    checks: reasons.length
+      ? reasons.map((r) => ({ point: '', judgment: '誤り', reason: r, quote: quoteFrom(prompt) }))
+      : [{ point: '気になった点', judgment: '問題なし', reason: '合っている', quote: '' }],
     notes: [],
   });
 
@@ -194,7 +204,7 @@ test('チェック役: 書き直せた文だけをチェックし、要確認な
     if (params.output_config?.format) {
       // チェック役: a は問題なし・b はずっと要確認（直しても）・c のチェックは壊れた答え
       if (prompt.startsWith(`## 見どころ\n${a.keyCards[0]}`)) return answer();
-      if (prompt.startsWith(`## 見どころ\n${b.keyCards[0]}`)) return answer(['条件が抜けている']);
+      if (prompt.startsWith(`## 見どころ\n${b.keyCards[0]}`)) return answer(['条件が抜けている'], prompt);
       return 'よくわかりません';
     }
     if (prompt.includes(`主役のカード: ${a.keyCards[0]}`)) return goodFor(a);
@@ -215,7 +225,7 @@ test('チェック役: 書き直せた文だけをチェックし、要確認な
   const lines = body.split('\n');
   assert.equal(lines[0], '> [!WARNING]');
   const top = body.slice(0, body.indexOf('## 🤖'));
-  assert.match(top, new RegExp(`${b.slug}.*⚠ 要確認：条件が抜けている・🙋 直せずに人に知らせた`));
+  assert.match(top, new RegExp(`${b.slug}.*⚠ 要確認：条件が抜けている（公式テキスト「[^|]*」）・🙋 直せずに人に知らせた`));
   assert.match(top, new RegExp(`${c.slug}.*⚠ チェックできず`));
   assert.ok(!top.includes(a.slug));
   assert.match(body, /チェック役: ✅ 1本・⚠ 2本/);
@@ -228,7 +238,8 @@ test('チェック役: 要確認から自分で直せた記事は ✅ で、「�
   const [a] = columns.filter((x) => x.pubDate === '2026-09-29');
   const fixedText = goodFor(a, 'を中心に');
   const client = fakeClient((params) => {
-    if (params.output_config?.format) return params.messages[0].content.includes(fixedText) ? answer() : answer(['対象が違う']);
+    const prompt = params.messages[0].content;
+    if (params.output_config?.format) return prompt.includes(fixedText) ? answer() : answer(['対象が違う'], prompt);
     return params.messages.length === 3 ? fixedText : goodFor(a);
   });
   const ai = createAiHighlighter({ client });
@@ -238,7 +249,7 @@ test('チェック役: 要確認から自分で直せた記事は ✅ で、「�
   assert.equal(r.fix.outcome, 'fixed');
   const body = rewritePrBody({ results: [r], manual: [], stats: ai.stats, audit: { banned: [], similar: [] }, limit: null, all: 1 });
   assert.ok(!body.startsWith('> [!WARNING]'));
-  assert.match(body, /✅ チェック済み<br>🔧 自分で直せた（最初の指摘：対象が違う）/);
+  assert.match(body, /✅ チェック済み<br>🔧 自分で直せた（最初の指摘：対象が違う（公式テキスト「[^|]*」））/);
 });
 
 // ---- 要確認の記事だけ直すモード ----
@@ -254,9 +265,9 @@ test('要確認の記事だけ直す: 問題なしは変えず、要確認は直
     const prompt = params.messages[0].content;
     if (params.output_config?.format) {
       if (prompt.includes(FIXED)) return answer();
-      if (prompt.includes(fixable.highlight)) return answer(['「」の条件が抜けている']);
-      if (prompt.includes(stubborn.highlight) || prompt.includes('を軸にして')) return answer(['対象が違う']);
-      if (prompt.includes(zoroark.highlight)) return answer(['借りたワザのエネルギー']);
+      if (prompt.includes(fixable.highlight)) return answer(['「」の条件が抜けている'], prompt);
+      if (prompt.includes(stubborn.highlight) || prompt.includes('を軸にして')) return answer(['対象が違う'], prompt);
+      if (prompt.includes(zoroark.highlight)) return answer(['借りたワザのエネルギー'], prompt);
       return answer();
     }
     // 直す呼び出し（前の文と「誤り」の理由を渡している）
@@ -293,13 +304,13 @@ test('要確認の記事だけ直す: 問題なしは変えず、要確認は直
   const body = fixFlaggedPrBody({ results, stats: ai.stats, audit: { banned: [], similar: [] }, limit: 3, all: targets.length });
   const top = body.slice(0, body.indexOf('## 🔧'));
   assert.match(top, /^> \[!WARNING\]/);
-  assert.match(top, new RegExp(`${stubborn.slug}.*🙋 直せずに人に知らせた・⚠ 要確認：対象が違う`));
-  assert.match(top, new RegExp(`${zoroark.slug}.*手で直した記事（直していません）・⚠ 要確認：借りたワザのエネルギー`));
+  assert.match(top, new RegExp(`${stubborn.slug}.*🙋 直せずに人に知らせた・⚠ 要確認：対象が違う（公式テキスト「[^|]*」）`));
+  assert.match(top, new RegExp(`${zoroark.slug}.*手で直した記事（直していません）・⚠ 要確認：借りたワザのエネルギー（公式テキスト「[^|]*」）`));
   assert.ok(!top.includes(fixable.slug));
   assert.ok(!top.includes(ok.slug));
   assert.match(body, /\| 記事 \| 結果 \| 変更前 \| 変更後 \| 理由（チェック役の「誤り」） \|/);
-  assert.match(body, new RegExp(`${fixable.slug}.*\\| 🔧 自分で直せた \\| .* \\| ${FIXED} \\| 「」の条件が抜けている \\|`));
-  assert.match(body, new RegExp(`${stubborn.slug}.*\\| 🙋 直せずに人に知らせた \\| .* \\| （変えていない）<br>直した案：.*\\| 対象が違う<br>直した案への指摘：対象が違う \\|`));
+  assert.match(body, new RegExp(`${fixable.slug}.*\\| 🔧 自分で直せた \\| .* \\| ${FIXED} \\| 「」の条件が抜けている（公式テキスト「[^|]*」） \\|`));
+  assert.match(body, new RegExp(`${stubborn.slug}.*\\| 🙋 直せずに人に知らせた \\| .* \\| （変えていない）<br>直した案：.*\\| 対象が違う（公式テキスト「[^|]*」）<br>直した案への指摘：対象が違う（公式テキスト「[^|]*」） \\|`));
   assert.match(body, new RegExp(`${zoroark.slug}.*\\| 🙋 手で直した記事のため直さず知らせた \\|`));
   assert.ok(!body.includes(`/columns/${ok.slug}/`));
   assert.match(body, /✅ 問題なし（変えていない）: 2本/);

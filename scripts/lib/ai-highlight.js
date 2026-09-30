@@ -216,6 +216,8 @@ const REVIEW_SYSTEM = `あなたはポケモンカードのデッキ紹介記事
 
 答え方:
 - 気になった点を1つずつ checks に書く。point に見どころのどの部分か、judgment に「誤り」（1〜5 に当たる）か「問題なし」（当たらない・上の「要確認にしない」もの）、reason に理由（「誤り」なら、どのカードの・どの部分が・公式テキストではどうなっているかを短く）
+- 「誤り」にするときは、quote に根拠になる公式テキストの一文を、渡した公式テキストから一字一句そのまま引用する（言い換え・要約・自分の知識は不可）。引用できる一文がないなら「誤り」にしない。「問題なし」のときは quote は空でよい
+- 理由を書いてみて「誤りではない」「問題なし」と思ったら、judgment は「問題なし」にする
 - 気になった点がなければ checks は空にする
 - 「要確認」かどうかはプログラムが checks から決める（「誤り」が1つでもあれば要確認）。確かめて問題がなかった点は、必ず「問題なし」にする
 - 公式テキストが渡されていないカードのことは checks に入れず、notes に書く${rulesSection(GAME_RULES)}`;
@@ -232,8 +234,9 @@ const REVIEW_SCHEMA = {
           point: { type: 'string' },
           judgment: { type: 'string', enum: ['誤り', '問題なし'] },
           reason: { type: 'string' },
+          quote: { type: 'string' },
         },
-        required: ['point', 'judgment', 'reason'],
+        required: ['point', 'judgment', 'reason', 'quote'],
         additionalProperties: false,
       },
     },
@@ -254,10 +257,10 @@ export function mentionedCards(text, profiles, main) {
  * チェック役に渡す文（見どころと、そこに出てくるカードの公式テキストだけ）
  * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object> }} input
  */
-export function buildReviewPrompt({ text, main, recipe = [], profiles }) {
-  const categoryOf = (n) => recipe.find((e) => e.name === n)?.category;
-  const cards = mentionedCards(text, profiles, main).map((n) => cardBlock(n, profiles.get(n), categoryOf(n)));
-  const missing = unverifiableNames(text, cards.join('\n'));
+export function buildReviewPrompt(input) {
+  const cards = reviewCards(input);
+  const missing = unverifiableNames(input.text, cards.join('\n'));
+  const { text } = input;
   return [
     '## 見どころ',
     text,
@@ -267,6 +270,38 @@ export function buildReviewPrompt({ text, main, recipe = [], profiles }) {
     ...(missing.length ? ['', '## 公式テキストが渡されていない名前（確認できず。要確認にはせず notes に書く）', ...missing.map((n) => `- ${n}`)] : []),
   ].join('\n');
 }
+
+/** チェック役に渡すカードの公式テキスト（見どころに出てくるカードの分。1枚1つの文字列） */
+function reviewCards({ text, main, recipe = [], profiles }) {
+  const categoryOf = (n) => recipe.find((e) => e.name === n)?.category;
+  return mentionedCards(text, profiles, main).map((n) => cardBlock(n, profiles.get(n), categoryOf(n)));
+}
+
+/** チェック役に渡した公式テキスト（「誤り」の引用がこの中にあるかを確かめる） */
+export const reviewCardText = (input) => reviewCards(input).join('\n');
+
+/** 引用の比べ方: 全角半角・空白・かぎかっこ・句読点の違いは見ない */
+const quoteKey = (s) => nfkc(s).replace(/[\s「」『』。、，．,.]/g, '');
+
+/** 引用がこの長さ（比べ方をそろえた文字数）より短いときは、根拠の一文とみなさない */
+const QUOTE_MIN = 4;
+
+/**
+ * 「誤り」の引用が、渡した公式テキストにあるか。「…」で省略した引用は、区切ったそれぞれが公式テキストにあればよい
+ * @returns {boolean}
+ */
+export function quoteFound(quote, cardText) {
+  const parts = nfkc(quote)
+    .split(/…|\.\.\.|‥/)
+    .map(quoteKey)
+    .filter(Boolean);
+  const all = parts.join('');
+  const known = quoteKey(cardText);
+  return all.length >= QUOTE_MIN && parts.every((p) => known.includes(p));
+}
+
+/** 「誤り」なのに理由に「誤りではない」「問題なし」と書いてあるもの（誤りとして数えない） */
+const NOT_WRONG = /誤りではな|誤りでな|誤りとは言えな|問題な[しい]|問題はな/;
 
 /** 見どころの「」の名前のうち、渡す公式テキストのどこにも出てこないもの */
 export function unverifiableNames(text, cardText) {
@@ -278,23 +313,36 @@ export function unverifiableNames(text, cardText) {
 /**
  * チェック役の答え（JSON の文）を読む。形が違えば例外
  * 判定はプログラムで決める: checks に「誤り」が1つでもあれば要確認（ok: false）、なければ問題なし。
- * reasons は「誤り」の点だけ（「問題なし」の点は PR・ログに出さない）。
+ * reasons は「誤り」の点だけ（「問題なし」の点は PR・ログに出さない）。「どの部分：理由（公式テキスト「引用」）」の形。
+ * 次の「誤り」は、誤りとして数えない（ignored に理由をつけて返す。ログにだけ出す）:
+ * - 根拠の公式テキストの引用（quote）がない
+ * - 引用が、チェック役に渡した公式テキスト（cardText）に見つからない（cardText を渡したときだけ確かめる）
+ * - 理由に「誤りではない」「問題なし」などと書いてある
  * notes（公式テキストが渡されていないカードなど、確認できなかったことの参考）は、あるときだけ返す。notes は「要確認」の理由にしない
- * @returns {{ ok: boolean, reasons: string[], notes?: string[] }}
+ * @param raw チェック役の答え（JSON の文）
+ * @param {{ cardText?: string }} [options] cardText はチェック役に渡した公式テキスト（reviewCardText）
+ * @returns {{ ok: boolean, reasons: string[], notes?: string[], ignored?: string[] }}
  */
-export function parseReview(raw) {
+export function parseReview(raw, { cardText } = {}) {
   const json = JSON.parse(String(raw ?? '').replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, ''));
   const checks = json?.checks;
   if (!Array.isArray(checks) || !checks.every((c) => c && ['誤り', '問題なし'].includes(c.judgment))) {
     throw new Error(`チェック役の答えの形が違う: ${String(raw).slice(0, 100)}`);
   }
   const clean = (s) => String(s ?? '').trim();
-  const reasons = checks
-    .filter((c) => c.judgment === '誤り')
-    .map((c) => [clean(c.point), clean(c.reason)].filter(Boolean).join('：') || '理由の記載なし');
+  const reasons = [];
+  const ignored = [];
+  for (const c of checks.filter((x) => x.judgment === '誤り')) {
+    const label = [clean(c.point), clean(c.reason)].filter(Boolean).join('：') || '理由の記載なし';
+    const quote = clean(c.quote);
+    if (!quote) ignored.push(`${label}（根拠の公式テキストの引用がない）`);
+    else if (cardText !== undefined && !quoteFound(quote, cardText)) ignored.push(`${label}（引用「${quote}」が公式テキストに見つからない）`);
+    else if (NOT_WRONG.test(clean(c.reason))) ignored.push(`${label}（理由に「誤りではない」「問題なし」と書いてある）`);
+    else reasons.push(`${label}（公式テキスト「${quote}」）`);
+  }
   const notes = (Array.isArray(json.notes) ? json.notes : []).map(clean).filter(Boolean);
-  const withNotes = (r) => (notes.length ? { ...r, notes } : r);
-  return withNotes(reasons.length ? { ok: false, reasons } : { ok: true, reasons: [] });
+  const extra = { ...(notes.length ? { notes } : {}), ...(ignored.length ? { ignored } : {}) };
+  return reasons.length ? { ok: false, reasons, ...extra } : { ok: true, reasons: [], ...extra };
 }
 
 /** チェック役の結果の表示（PR・ログ用）。review は { status: 'ok' | 'warn' | 'error', reasons: string[], notes?: string[] } */
@@ -405,9 +453,11 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
       stats.reviewCalls++;
       if (response.stop_reason === 'refusal') return { status: 'error', reasons: ['AI が応答を断った（refusal）'] };
       if (response.stop_reason === 'max_tokens') return { status: 'error', reasons: [`応答が長さの上限（max_tokens ${config.maxTokens}）で切れた`] };
-      const { ok, reasons, notes } = parseReview(textOf(response));
+      const { ok, reasons, notes, ignored } = parseReview(textOf(response), { cardText: reviewCardText(input) });
       const result = { status: ok ? 'ok' : 'warn', reasons, ...(notes ? { notes } : {}) };
       log(`    チェック役: ${reviewLabel(result)}`);
+      // 誤りとして数えなかった「誤り」（引用がない・引用が公式テキストにない・理由が「問題なし」）はログにだけ出す
+      if (ignored) log(`    （誤りとして数えなかった点: ${ignored.join(' / ')}）`);
       return result;
     } catch (error) {
       if (error instanceof LimitError) return { status: 'error', reasons: [error.message], limit: true };

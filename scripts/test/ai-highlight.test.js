@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { AI_HIGHLIGHT_CONFIG, GAME_RULES, buildPrompt, buildReviewPrompt, createAiHighlighter, estimateCost, fixLabel, mentionedCards, parseGameRules, parseReview, reviewAiHighlight, reviewLabel, unverifiableNames, usageLines } from '../lib/ai-highlight.js';
+import { AI_HIGHLIGHT_CONFIG, GAME_RULES, buildPrompt, buildReviewPrompt, createAiHighlighter, estimateCost, fixLabel, mentionedCards, parseGameRules, parseReview, quoteFound, reviewAiHighlight, reviewLabel, unverifiableNames, usageLines } from '../lib/ai-highlight.js';
 import { effectsFromPage } from '../rewrite-highlights.js';
 import { testCaseMark, testCaseResult } from '../ai-highlight-review.js';
 
@@ -156,10 +156,18 @@ test('料金の目安はモデルの料金表から計算し、表にないモ�
 // ---- チェック役（review） ----
 
 const reviewCases = JSON.parse(read('scripts/test/fixtures/ai-highlight-review-cases.json'));
-/** チェック役の答え（JSON の文）。要確認なら reasons を「誤り」の点として、問題なしなら「問題なし」の点を1つだけ返す */
-const verdict = (v, reasons = [], notes = []) => ({
+/** 「誤り」の根拠として引用する公式テキスト（メガサメハダーex のワザの名前。チェック役に渡す公式テキストにある） */
+const QUOTE = 'ハングリージョー';
+/** PR・ログに出る「誤り」の理由（引用つき） */
+const quoted = (reason, quote = QUOTE) => `${reason}（公式テキスト「${quote}」）`;
+
+/** チェック役の答え（JSON の文）。要確認なら reasons を「誤り」の点（quote を引用）として、問題なしなら「問題なし」の点を1つだけ返す */
+const verdict = (v, reasons = [], notes = [], quote = QUOTE) => ({
   text: JSON.stringify({
-    checks: v === '要確認' ? reasons.map((r) => ({ point: '', judgment: '誤り', reason: r })) : [{ point: '気になった点', judgment: '問題なし', reason: '公式テキストと合っている' }],
+    checks:
+      v === '要確認'
+        ? reasons.map((r) => ({ point: '', judgment: '誤り', reason: r, quote }))
+        : [{ point: '気になった点', judgment: '問題なし', reason: '公式テキストと合っている', quote: '' }],
     notes,
   }),
 });
@@ -189,10 +197,10 @@ test('チェック役に渡すのは、見どころと、そこに出てくる�
 });
 
 test('チェック役: 「要確認」と理由・「問題なし」を JSON で受け取り、上限の回数に数える', async () => {
-  const client = fakeClient([verdict('要確認', ['「Nのポイントアップ」でつける先は Nのゾロアークex']), verdict('問題なし')]);
+  const client = fakeClient([verdict('要確認', ['「Nのポイントアップ」でつける先は Nのゾロアークex'], [], 'ナイトジョーカー'), verdict('問題なし')]);
   const ai = createAiHighlighter({ client });
   const warn = await ai.review(reviewInput('n-zoroark-ex-deck'));
-  assert.deepEqual(warn, { status: 'warn', reasons: ['「Nのポイントアップ」でつける先は Nのゾロアークex'] });
+  assert.deepEqual(warn, { status: 'warn', reasons: [quoted('「Nのポイントアップ」でつける先は Nのゾロアークex', 'ナイトジョーカー')] });
   assert.deepEqual(await ai.review(reviewInput(SLUG)), { status: 'ok', reasons: [] });
   // 答えの形（structured outputs）と、見どころを書くのとは別の指示
   assert.equal(client.calls[0].output_config.format.type, 'json_schema');
@@ -202,7 +210,7 @@ test('チェック役: 「要確認」と理由・「問題なし」を JSON で
   assert.equal(client.calls[0].model, AI_HIGHLIGHT_CONFIG.model);
   assert.equal(ai.stats.calls, 2);
   assert.equal(ai.stats.reviewCalls, 2);
-  assert.equal(reviewLabel(warn), '⚠ 要確認：「Nのポイントアップ」でつける先は Nのゾロアークex');
+  assert.equal(reviewLabel(warn), '⚠ 要確認：「Nのポイントアップ」でつける先は Nのゾロアークex（公式テキスト「ナイトジョーカー」）');
   assert.equal(reviewLabel({ status: 'ok', reasons: [] }), '✅ チェック済み');
 });
 
@@ -256,19 +264,59 @@ test('チェック役: notes（確認できず）は参考として出すだけ�
 
 test('チェック役: 答えの JSON の読み方（判定は「誤り」が1つでもあるかでプログラムが決める）', () => {
   const answer = (checks, notes = []) => JSON.stringify({ checks, notes });
-  const wrong = (point, reason) => ({ point, judgment: '誤り', reason });
-  const fine = (point, reason) => ({ point, judgment: '問題なし', reason });
-  assert.deepEqual(parseReview(answer([wrong(' 「250ダメージ」 ', ' 公式テキストでは 220 ')])), { ok: false, reasons: ['「250ダメージ」：公式テキストでは 220'] });
+  const wrong = (point, reason, quote = '220ダメージ') => ({ point, judgment: '誤り', reason, quote });
+  const fine = (point, reason) => ({ point, judgment: '問題なし', reason, quote: '' });
+  assert.deepEqual(parseReview(answer([wrong(' 「250ダメージ」 ', ' 公式テキストでは 220 ')])), { ok: false, reasons: ['「250ダメージ」：公式テキストでは 220（公式テキスト「220ダメージ」）'] });
   assert.deepEqual(parseReview('```json\n{"checks":[],"notes":[]}\n```'), { ok: true, reasons: [] });
-  assert.deepEqual(parseReview(answer([wrong('', '')])), { ok: false, reasons: ['理由の記載なし'] });
+  assert.deepEqual(parseReview(answer([wrong('', '')])), { ok: false, reasons: ['理由の記載なし（公式テキスト「220ダメージ」）'] });
   // 「理由には問題なしと書いてあるのに要確認」は起きない: 「問題なし」の点しかなければ問題なし
   assert.deepEqual(parseReview(answer([fine('「選んだワザのエネルギーは要らない」', 'ルールのとおりで正しい'), fine('「とりひき」', '回数の制限の省略')])), { ok: true, reasons: [] });
   // PR・ログに出す理由は「誤り」の点だけ
-  assert.deepEqual(parseReview(answer([fine('A', '合っている'), wrong('B', '対象が違う'), fine('C', '省略')])), { ok: false, reasons: ['B：対象が違う'] });
-  assert.throws(() => parseReview(answer([{ point: 'x', judgment: 'たぶん', reason: '' }])));
+  assert.deepEqual(parseReview(answer([fine('A', '合っている'), wrong('B', '対象が違う'), fine('C', '省略')])), { ok: false, reasons: ['B：対象が違う（公式テキスト「220ダメージ」）'] });
+  assert.throws(() => parseReview(answer([{ point: 'x', judgment: 'たぶん', reason: '', quote: '' }])));
   // 前の形（verdict / reasons）は受け付けない
   assert.throws(() => parseReview('{"verdict":"要確認","reasons":["x"]}'));
   assert.deepEqual(parseReview(answer([], [' 確認できず ', ''])), { ok: true, reasons: [], notes: ['確認できず'] });
+});
+
+test('チェック役: 引用がない・引用が公式テキストにない・理由が「誤りではない」の「誤り」は、誤りとして数えない', () => {
+  const answer = (...checks) => JSON.stringify({ checks, notes: [] });
+  const wrong = (point, reason, quote) => ({ point, judgment: '誤り', reason, quote });
+  const cardText = '### Nのゾロアークex（ポケモン・たね・HP280）\n- ワザ「ナイトジョーカー」［無無］：自分のベンチの「Nのポケモン」が持つワザを1つ選び、このワザとして使う。';
+  const noQuote = parseReview(answer(wrong('A', '対象が違う', '')), { cardText });
+  assert.deepEqual(noQuote.reasons, []);
+  assert.equal(noQuote.ok, true);
+  assert.deepEqual(noQuote.ignored, ['A：対象が違う（根拠の公式テキストの引用がない）']);
+  const notFound = parseReview(answer(wrong('B', 'エネルギーが要る', '借りたワザのエネルギーも必要とする')), { cardText });
+  assert.equal(notFound.ok, true);
+  assert.match(notFound.ignored[0], /引用「借りたワザのエネルギーも必要とする」が公式テキストに見つからない/);
+  const notWrong = parseReview(answer(wrong('C', 'ルールのとおりなので誤りではない', 'このワザとして使う')), { cardText });
+  assert.equal(notWrong.ok, true);
+  assert.match(notWrong.ignored[0], /理由に「誤りではない」「問題なし」と書いてある/);
+  assert.equal(parseReview(answer(wrong('C', '結果は問題なし', 'このワザとして使う')), { cardText }).ok, true);
+  // 引用が公式テキストにあれば誤り（全角半角・空白・かぎかっこ・句読点の違い・「…」の省略は見ない）
+  const found = parseReview(answer(wrong('D', 'ベンチではなくバトル場と書いている', '自分のベンチの「Nのポケモン」が持つワザを1つ選び…このワザとして使う。')), { cardText });
+  assert.equal(found.ok, false);
+  assert.deepEqual(found.reasons, ['D：ベンチではなくバトル場と書いている（公式テキスト「自分のベンチの「Nのポケモン」が持つワザを1つ選び…このワザとして使う。」）']);
+  assert.equal(found.ignored, undefined);
+  // 数えなかった「誤り」と数えた「誤り」がまじっても、数えた分だけで決める
+  const mixed = parseReview(answer(wrong('E', '違う', ''), wrong('F', '数字が違う', 'ナイトジョーカー')), { cardText });
+  assert.deepEqual(mixed.reasons, ['F：数字が違う（公式テキスト「ナイトジョーカー」）']);
+  assert.equal(mixed.ignored.length, 1);
+  // 短すぎる引用（語だけ）は根拠にしない
+  assert.equal(quoteFound('ワザ', cardText), false);
+  assert.equal(quoteFound('ベンチの Ｎのポケモン が持つワザ', cardText), true);
+});
+
+test('チェック役: 引用が渡した公式テキストにない「誤り」は要確認にしない（ログにだけ出す）', async () => {
+  const logs = [];
+  const client = fakeClient([verdict('要確認', ['借りたワザのエネルギーが要る'], [], '借りたワザのエネルギーも必要')]);
+  const r = await createAiHighlighter({ client, log: (m) => logs.push(m) }).review(reviewInput(SLUG, GOOD));
+  assert.deepEqual(r, { status: 'ok', reasons: [] });
+  assert.ok(logs.some((m) => /誤りとして数えなかった点: .*公式テキストに見つからない/.test(m)));
+  // 答えの形: 「誤り」の根拠の引用（quote）を必ず答えさせる
+  assert.deepEqual(client.calls[0].output_config.format.schema.properties.checks.items.required, ['point', 'judgment', 'reason', 'quote']);
+  assert.match(client.calls[0].system, /一字一句そのまま引用/);
 });
 
 // ---- ポケカの基本ルールのメモ（scripts/lib/game-rules.md） ----
@@ -302,20 +350,20 @@ test('要確認なら「誤り」の理由を渡して直させ、もう一度�
   assert.equal(r.review.status, 'ok');
   assert.equal(r.fix.outcome, 'fixed');
   assert.equal(r.fix.before, GOOD);
-  assert.deepEqual(r.fix.firstReview.reasons, ['「ハングリージョー」の条件が違う']);
+  assert.deepEqual(r.fix.firstReview.reasons, [quoted('「ハングリージョー」の条件が違う')]);
   // 直す呼び出し: 書く役の指示・元のデータ・前の文・「誤り」の理由を渡す
   const fixCall = client.calls[1];
   assert.equal(fixCall.output_config.format, undefined);
   assert.match(fixCall.system, /主役のカードと、それを支えるカード1枚まで/);
   assert.equal(fixCall.messages[0].content, buildPrompt(input()));
   assert.equal(fixCall.messages[1].content, GOOD);
-  assert.match(fixCall.messages[2].content, /「誤り」と指摘しました[\s\S]*- 「ハングリージョー」の条件が違う/);
+  assert.match(fixCall.messages[2].content, /「誤り」と指摘しました[\s\S]*- 「ハングリージョー」の条件が違う（公式テキスト「ハングリージョー」）/);
   // 2回目のチェックは直した文
   assert.ok(client.calls[2].messages[0].content.startsWith(`## 見どころ\n${FIXED}`));
   assert.equal(ai.stats.calls, 3);
   assert.equal(ai.stats.reviewCalls, 2);
   assert.equal(ai.stats.fixCalls, 1);
-  assert.equal(fixLabel(r.fix), '🔧 自分で直せた（最初の指摘：「ハングリージョー」の条件が違う）');
+  assert.equal(fixLabel(r.fix), '🔧 自分で直せた（最初の指摘：「ハングリージョー」の条件が違う（公式テキスト「ハングリージョー」））');
   assert.match(usageLines(ai.stats).join('\n'), /うちチェック役 2回・直し 1回/);
 });
 
@@ -325,11 +373,11 @@ test('直してもまだ要確認なら「直せずに人に知らせた」（�
   const r = await ai.checkAndFix(input(), GOOD);
   assert.equal(client.calls.length, 3);
   assert.equal(r.text, FIXED);
-  assert.deepEqual(r.review, { status: 'warn', reasons: ['誤り2'] });
+  assert.deepEqual(r.review, { status: 'warn', reasons: [quoted('誤り2')] });
   assert.equal(r.fix.outcome, 'unfixed');
   assert.equal(r.fix.after, FIXED);
   assert.equal(fixLabel(r.fix), '🙋 直せずに人に知らせた');
-  assert.equal(reviewLabel(r.review), '⚠ 要確認：誤り2');
+  assert.equal(reviewLabel(r.review), `⚠ 要確認：${quoted('誤り2')}`);
 });
 
 test('直した文が点検に通らない・直す呼び出しが上限のときは、元の文のまま「直せずに人に知らせた」', async () => {
@@ -359,8 +407,8 @@ test('問題なし・チェックできずなら直さない', async () => {
   assert.equal(fixLabel(null), '');
 });
 
-test('テスト用の8本: 手で直す前の文（mustFlag）と、今サイトに出ている文（mustNotFlag）', () => {
-  assert.equal(reviewCases.cases.length, 8);
+test('テスト用の9本: 手で直す前の文（mustFlag）と、今サイトに出ている文（mustNotFlag）', () => {
+  assert.equal(reviewCases.cases.length, 9);
   for (const k of reviewCases.cases) {
     const column = columns.find((c) => c.slug === k.slug);
     assert.ok(column, k.slug);
@@ -383,13 +431,17 @@ test('テスト用の8本: 手で直す前の文（mustFlag）と、今サイト
   );
   assert.deepEqual(
     reviewCases.cases.filter((k) => k.mustNotFlag).map((k) => k.slug).sort(),
-    ['mabusoruex-deck-0928', 'n-zoroark-ex-deck', 'n-zoroark-ex-deck-0927', 'slowking-deck'],
+    ['mabusoruex-deck-0928', 'mega-lopunny-ex-deck-0927', 'n-zoroark-ex-deck', 'n-zoroark-ex-deck-0927', 'slowking-deck'],
   );
   // n-zoroark-ex-deck-0927: 「選んだワザのエネルギーは要らない」はルールのとおりで正しい（scripts/lib/game-rules.md）
-  assert.match(reviewCases.cases.find((k) => k.slug === 'n-zoroark-ex-deck-0927').highlight, /選んだワザのエネルギーは要らない/);
+  const zoroark = reviewCases.cases.find((k) => k.slug === 'n-zoroark-ex-deck-0927').highlight;
+  assert.match(zoroark, /選んだワザのエネルギーは要らない/);
+  assert.match(zoroark, /エネルギーが足りなければ、NのポイントアップでトラッシュからベンチのNのゾロアークexに補う/);
+  // mega-lopunny-ex-deck-0927: 「はしゃぐ」でミミロルがベンチと入れ替わり、ベンチのメガミミロップexが前に出るので正しい
+  assert.match(reviewCases.cases.find((k) => k.slug === 'mega-lopunny-ex-deck-0927').highlight, /ミミロルの「はしゃぐ」やポケモンいれかえで前に出て攻める/);
 });
 
-test('テスト用の8本の合否: mustFlag の2本を「要確認」に、mustNotFlag の4本を「問題なし」にできれば合格（mustFlag: false は数えない）', () => {
+test('テスト用の9本の合否: mustFlag の2本を「要確認」に、mustNotFlag の5本を「問題なし」にできれば合格（mustFlag: false は数えない）', () => {
   const must = { mustFlag: true };
   const free = { mustFlag: false };
   const clean = { mustNotFlag: true };

@@ -1,8 +1,8 @@
 {
-  "_comment": "チェック役（scripts/lib/ai-highlight.js の review）を試すための見どころ。mustFlag の4本: highlight はまとめ書き直し（commit efc69fd）で AI が書き、人が手で直す前の文、fixed は今の記事の文（commit be41934 で手で直した文。n-zoroark-ex-deck はそのあとさらに直した）。mustNotFlag: true の4本: highlight は今サイトに出ている見どころ（間違いのない文。書いていないことがあっても要確認にしてはいけない）。scripts/ai-highlight-review.js がこの8本を一緒にチェックし、合否を出す",
+  "_comment": "チェック役（scripts/lib/ai-highlight.js の review）を試すための見どころ。mustFlag の4本: highlight はまとめ書き直し（commit efc69fd）で AI が書き、人が手で直す前の文、fixed は今の記事の文（commit be41934 で手で直した文。n-zoroark-ex-deck はそのあとさらに直した）。mustNotFlag: true の5本: highlight は今サイトに出ている見どころ（間違いのない文。書いていないことがあっても要確認にしてはいけない）。scripts/ai-highlight-review.js がこの9本を一緒にチェックし、合否を出す",
   "sourceCommit": "efc69fd",
   "fixedCommit": "be41934",
-  "passCriteria": "mustFlag: true の2本（seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927）をどちらも「要確認」にでき、さらに mustNotFlag: true の4本（slowking-deck・n-zoroark-ex-deck・mabusoruex-deck-0928・n-zoroark-ex-deck-0927。今サイトに出ている文）をすべて「問題なし」にできれば合格。mustFlag: false の2本は、手で直す前の文も間違いではないため、「問題なし」でも「要確認」でも合否に数えない",
+  "passCriteria": "mustFlag: true の2本（seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927）をどちらも「要確認」にでき、さらに mustNotFlag: true の5本（slowking-deck・n-zoroark-ex-deck・mabusoruex-deck-0928・n-zoroark-ex-deck-0927・mega-lopunny-ex-deck-0927。今サイトに出ている文）をすべて「問題なし」にできれば合格。mustFlag: false の2本は、手で直す前の文も間違いではないため、「問題なし」でも「要確認」でも合否に数えない",
   "cases": [
     {
       "slug": "seek-inspiration-deck-0929",
@@ -55,8 +55,14 @@
     {
       "slug": "n-zoroark-ex-deck-0927",
       "mustNotFlag": true,
-      "highlight": "Nのゾロアークexの「ナイトジョーカー」は、ベンチにいる「Nのポケモン」のワザを1つ選んでそのまま使えるワザ。選んだワザのエネルギーは要らないので、Nのゼクロムをベンチに置けば悪エネルギー2個で「ランページサンダー」の250ダメージを出せる。エネルギーが足りなければNのポイントアップでトラッシュから補う",
+      "highlight": "Nのゾロアークexの「ナイトジョーカー」は、ベンチにいる「Nのポケモン」のワザを1つ選んでそのまま使えるワザ。選んだワザのエネルギーは要らないので、Nのゼクロムをベンチに置けば悪エネルギー2個で「ランページサンダー」の250ダメージを出せる。エネルギーが足りなければ、NのポイントアップでトラッシュからベンチのNのゾロアークexに補う",
       "note": "「選んだワザのエネルギーは要らない」はルールのとおりで正しい（ほかのポケモンのワザを、このワザとして使う効果は、このワザ自体のエネルギーだけで使える。scripts/lib/game-rules.md）。公式テキストに書かれていないだけで、要確認にしてはいけない"
+    },
+    {
+      "slug": "mega-lopunny-ex-deck-0927",
+      "mustNotFlag": true,
+      "highlight": "メガミミロップexは、ベンチから出た番の「しっぷうづき」で60に170を加えたダメージを出せるため、ミミロルの「はしゃぐ」やポケモンいれかえで前に出て攻める。「スパイクホッパー」は相手にかかった効果を無視して160を与え、ミツルの思いやりでHPを全回復して立て直せる。",
+      "note": "「ミミロルの「はしゃぐ」やポケモンいれかえで前に出て攻める」は正しい。「はしゃぐ」でミミロルがベンチのポケモンと入れ替わり、ベンチのメガミミロップexが前（バトル場）に出る"
     }
   ]
 }

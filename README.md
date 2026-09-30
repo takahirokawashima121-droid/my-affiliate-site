@@ -26,6 +26,7 @@
 | `npm run rewrite-highlights` | 決まった文（「〇〇を採用した〇〇デッキ。主力カードの効果と最安値をまとめて確認」など）のままの見どころ（highlight）を、記事ページに載っている公式のカードテキストから書き直す（`--dry-run` で確認のみ。具体的な見どころは変えない） |
 | `npm run check-highlights` | 見どころの点検だけ（決まった文・同じ日の記事同士の書き出しの似かよい。結果は `.cache/highlight-check.md`） |
 | `npm run ai-highlight-test -- --slug=スラッグ` | 公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて表示（ファイルは変えない。`ANTHROPIC_API_KEY` が必要） |
+| `npm run ai-highlight-rewrite` | 公開済みの記事の見どころを Claude API でまとめて書き直す（`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。ふだんは Actions の「AI highlight rewrite (manual)」から実行して PR にする） |
 | `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・デッキ名の通称ルール・見どころの自動生成（`scripts/lib/highlight.js`）・AI の見どころの点検と切り替え（`scripts/lib/ai-highlight.js`。API は呼ばない）・自動生成の PR 本文（`scripts/lib/pr-body.js`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
 
 ## 最初にやること
@@ -158,7 +159,7 @@ npm run auto-decks                                         # 新着の優勝デ�
 
 ### 見どころを Claude API で書く
 
-自動生成する新しい記事の見どころ（`deck-columns.json` の `highlight`。一覧・トップの特集・X投稿文に使う）は、Claude API で書きます（`scripts/lib/ai-highlight.js`）。公開済みの記事の見どころや、立ち回り・説明文・X投稿文は AI では書きません。
+自動生成する新しい記事の見どころ（`deck-columns.json` の `highlight`。一覧・トップの特集・X投稿文に使う）は、Claude API で書きます（`scripts/lib/ai-highlight.js`）。立ち回り・説明文・X投稿文は AI では書きません。公開済みの記事の見どころは、手動のまとめ書き直し（下の「まとめ書き直し」）でだけ AI で書き直します。
 
 - AI に渡すのは、デッキ名・60枚のレシピ・採用カードの公式テキストだけです。主役のカードから書き始め、渡した情報にないこと（効果・ダメージ・枚数・環境の話など）や誇張（最強・必勝・絶対など）を書かず、説明文を貼らずに自然な日本語で、今と同じくらいの長さ（170字以内）で書くよう指示します
 - 書いた文は、決まった文（`BANNED_PHRASES`）・同じ日の記事の書き出しの似かよい（`scripts/lib/highlight.js`）に加え、主役からの書き出し・長さ・誇張・データにない「」の名前や数字・公式テキストの文の貼り付けを点検し、引っかかったら1回だけ書き直させます
@@ -169,6 +170,10 @@ npm run auto-decks                                         # 新着の優勝デ�
 **モデルの変え方**: `scripts/lib/ai-highlight.js` の `AI_HIGHLIGHT_CONFIG` の `model` を書き換えます（今は `claude-sonnet-5-5`）。料金の目安は同じファイルの `PRICES` に載っているモデルだけ出ます（載っていないモデルは「不明」になるので、使うなら追記します）。`claude-haiku-4-5` など effort に対応していないモデルにするときは `effort` を `null` にします。呼び出し回数の上限は `maxCallsPerRun` です。
 
 **試し方**: GitHub の Actions タブ →「AI highlight test (manual)」→「Run workflow」で記事の slug（例: `mega-sharpedo-ex-deck-0927`）を入れて実行すると、その記事の見どころを AI で書き、今の見どころと並べてログに出します（AI に渡した内容・点検の結果・使用量も出ます）。ファイルは変えず、PR も作りません。ローカルでは `npm run ai-highlight-test -- --slug=スラッグ` です。
+
+**まとめ書き直し**: Actions タブ →「AI highlight rewrite (manual)」→「Run workflow」で、公開済みのデッキ記事の見どころを自動生成と同じ方法（同じ指示・同じ点検・1回だけ書き直し）で AI に書き直させ、`auto/ai-highlight-rewrite` ブランチの PR にします（main には直接入れません）。入力欄に数字を入れるとその本数だけ試せます（空欄ならすべて）。点検に通らなかった記事は今の見どころのまま残し、PR に変更前・変更後の表・書き直せなかった理由・使用量とおおよその料金を出します。1回の実行で API を呼ぶ上限は120回です（この作業だけ）。
+
+**手で直した見どころを守る**: `deck-columns.json` の記事の `highlightBy` が `"manual"` の見どころは、自動生成でもまとめ書き直しでも上書きしません。見どころを手で直したら `"highlightBy": "manual"` を付けてください（AI が書いた見どころには `"ai"` が自動で付きます。くわしくは CLAUDE.md）。
 
 PR に「マーク未対応の弾」と表示されたカードは、`scripts/lib/official.js` の `SET_MARKS` に弾とレギュレーションマーク（カード画像の左下）を追記すると、次回から登録されます。
 

@@ -24,7 +24,8 @@
   - `scripts/lib/deck-name-rules.js` … デッキ名の通称ルール（`DECK_NAME_RULES`。ポケカブックの名前より優先）。特性で判定するルール用の特性の一覧は `scripts/lib/card-abilities.json`（自動生成のときに公式のカードテキストから追記される）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
   - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
-  - `scripts/lib/ai-highlight.js` … 自動生成の見どころを Claude API で書く（設定は `AI_HIGHLIGHT_CONFIG`。くわしくは「6. 記事・紹介文の品質基準」）
+  - `scripts/lib/ai-highlight.js` … 自動生成の見どころを Claude API で書く（設定は `AI_HIGHLIGHT_CONFIG`。くわしくは「6. 記事・紹介文の品質基準」）。API のエラーの理由の文（`apiErrorDetail`。キーの文字は伏せる）もここ
+  - `scripts/lib/highlight-rewrite.js` … 公開済みの記事の見どころの AI でのまとめ書き直し（対象の選び方・同じ日の記事との点検・`deck-columns.json` への反映・PR 本文）。実行は `scripts/ai-highlight-rewrite.js`
   - `scripts/lib/pr-body.js` … 自動生成の PR 本文の「生成した記事」の1本分（大会の日付・開催店舗と都道府県・順位・元記事の何会場目か・デッキ名が●付き小見出しか推定か）。取れなかった項目は「取得できず」と書く
   - `scripts/cache/processed-decks.json` … 処理済みの記事・デッキ
   - `public/og-default.png` … 個別の画像がないページの OG 画像（1200×630）。元は `scripts/assets/og-default.html` で、`node scripts/render-og-image.js` で作り直す（手順は README の「OG画像」）
@@ -37,9 +38,10 @@
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
-  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/ai-highlight.js` の AI の見どころの点検と従来の方法への切り替え（API は呼ばない）、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別のテスト。どれかを変更したら必ず実行する）
+  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/ai-highlight.js` の AI の見どころの点検と従来の方法への切り替え（API は呼ばない）、`scripts/lib/highlight-rewrite.js` のまとめ書き直し（`highlightBy: "manual"` を上書きしないこと・API のエラーの理由。API は呼ばない）、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別のテスト。どれかを変更したら必ず実行する）
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run ai-highlight-test -- --slug=スラッグ`（公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて出す。ファイルは変えない。`ANTHROPIC_API_KEY` が必要。GitHub Actions の「AI highlight test (manual)」からも実行できる）
+  - `npm run ai-highlight-rewrite`（公開済みの記事の見どころを Claude API でまとめて書き直す。`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。ふだんは GitHub Actions の「AI highlight rewrite (manual)」から実行し、結果を `auto/ai-highlight-rewrite` ブランチの PR にする。main には直接入れない）
   - `npm run apply-name-rules`（デッキ名の付け足しを外し、通称ルールを既存の記事に当てはめる。`--dry-run` あり。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
@@ -124,7 +126,7 @@
 - カードの効果・HP・ダメージは、公式テキスト（取得済みデータ）に基づいて書く。推測で書かない
 - 生成後、同じ一覧に並ぶ記事同士で書き出しや構成が重複していないか確認する
 - 見どころ（`highlight`）は `scripts/lib/highlight.js` が、主役の特性・ワザ（名前・ダメージ・効果）と、主役と組み合わせて使うカードの効果を、公式のカードテキストの文のまま組み立てる。`BANNED_PHRASES` の決まった文や、同じ日の記事と書き出しがそっくりなもの（カード名・「」の中・数字を伏せた骨組みで比較）は、自動生成の PR の「紹介文の確認すべき点」に出る。X投稿文は見どころを文の区切りで詰めて使う
-- **見どころの AI 化**（`scripts/lib/ai-highlight.js`。自動生成の新しい記事だけ。公開済みの記事の見どころ・立ち回り・説明文・X投稿文は AI で書かない）
+- **見どころの AI 化**（`scripts/lib/ai-highlight.js`。自動生成の新しい記事と、手動で実行するまとめ書き直しだけ。立ち回り・説明文・X投稿文は AI で書かない）
   - 自動生成では、まず従来の方法（`scripts/lib/highlight.js`）で見どころを作り、そのあと Claude API に書かせる
   - AI に渡すのは、デッキ名・60枚のレシピ・採用カードの公式テキスト（`recipeProfiles` の内容）だけ。渡したものに書かれていないこと（効果・ダメージ・枚数・環境の話など）を書かない・主役のカード（`keyCards` の先頭）から書き始める・説明文を貼らず自然な日本語にする・長さは従来と同じくらい（`HIGHLIGHT_MAX` 以内）・誇張（最強・必勝・絶対など）を使わない、をプロンプトで指示する
   - AI の文は `reviewAiHighlight` で点検する（`BANNED_PHRASES`・同じ日の記事の書き出し・主役からの書き出し・長さ・誇張・データにない「」の名前や数字・公式テキストの長い文の貼り付け）。引っかかったら理由を伝えて**1回だけ**書き直させる
@@ -132,6 +134,25 @@
   - PR の「生成した記事」の各記事に「見どころ（AIで作成）」「見どころ（従来の方法・理由）」を出し、「Claude API（見どころ）の使用量」にモデル・呼んだ回数・トークン数・おおよその料金（ドル）を出す
   - **モデルの変え方**: `scripts/lib/ai-highlight.js` の `AI_HIGHLIGHT_CONFIG.model` だけを書き換える（今は `claude-sonnet-5-5`）。料金の目安は同じファイルの `PRICES` にあるモデルだけ出る（ないモデルは「不明」。追記すれば出る）。effort に対応していないモデル（`claude-haiku-4-5` など）にするときは `effort` を `null` にする。変えたら「AI highlight test (manual)」で数本試してから PR にする
   - 1回の実行（`npm run auto-decks` / `npm run auto-city` それぞれ）で API を呼ぶ回数の上限は `AI_HIGHLIGHT_CONFIG.maxCallsPerRun`（10回）
+  - API のエラーのときは、API が返した理由の文（残高不足など）をログと PR 本文に出す（`apiErrorDetail`）。**キーの文字は出さない**（`sk-ant-…` と渡したキーは伏せる）
+- **見どころを書いたのは誰かの印**（`deck-columns.json` の各記事の `highlightBy`。`highlight` のすぐ後ろに置く）
+  - `"ai"` … Claude API が書いた見どころ。自動生成・まとめ書き直しで AI の文を使ったときに自動で付く
+  - `"manual"` … 人が手で直した見どころ。**自動生成でも、まとめ書き直し（`npm run ai-highlight-rewrite`・`npm run rewrite-highlights`）でも上書きしない**
+  - なし … 従来の方法（`scripts/lib/highlight.js`）などで作った見どころ。まとめ書き直しの対象になる
+  - **見どころを手で直したら、必ず `"highlightBy": "manual"` にする**（付けないと、次のまとめ書き直しで AI の文に置き換わる）。例:
+    ```json
+    "highlight": "ドラパルトexの「ファントムダイブ」…",
+    "highlightBy": "manual",
+    ```
+  - AI の見どころに戻してよいときは `highlightBy` の行を消す（次のまとめ書き直しで書き直される）
+  - 今 `"manual"` の記事: 9/27 シティリーグの4本（`dragapult-ex-deck-0927`・`mega-kangaskhan-ex-deck-0927`・`n-zoroark-ex-deck-0927`・`mega-sharpedo-ex-deck-0927`）
+- **公開済みの記事の見どころのまとめ書き直し**（Actions の「AI highlight rewrite (manual)」= `.github/workflows/ai-highlight-rewrite.yml` → `scripts/ai-highlight-rewrite.js`。手動実行のみ）
+  - 対象は、公開済みのデッキ記事のうち `highlightBy` が `"manual"` でないもの（公開日が新しい順）。入力欄「試しに何本だけ」に数字を入れるとその本数だけ（空欄ならすべて）
+  - 書き方は自動生成と同じ（同じ指示・同じ点検・1回だけの書き直し。AI に渡すのはデッキ名・60枚のレシピ・採用カードの公式テキストだけ）
+  - 点検に通らなかった・API のエラーの記事は、今の見どころのまま残す
+  - 同じ日の記事と書き出しが似ないよう、比べる相手には「書き直した記事は新しい文・それ以外は今の文」を渡す（書き直した文どうしでも点検する）
+  - 1回の実行で API を呼ぶ回数の上限は `REWRITE_MAX_CALLS`（120回。この作業だけ。通常の自動生成は10回のまま）。残高不足・キーの問題のエラーが出たとき、ほかのエラーが3回続いたときは、残りの記事は呼ばずにやめる
+  - 結果は `auto/ai-highlight-rewrite` ブランチの PR にする（main に直接入れない）。PR の本文に、記事ごとの変更前・変更後の見どころ（表）、書き直せなかった記事と理由、使った量とおおよその料金、書き直し後の点検を出す
 - 解説が生成できなかった記事は TODO のまま残し、PR で報告する（中身のない文で埋めない）
 
 ## 7. デザインのルール（ホワイトラボ）

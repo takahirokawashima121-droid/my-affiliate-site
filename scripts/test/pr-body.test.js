@@ -5,8 +5,8 @@ import { test } from 'node:test';
 import { generatedItem, highlightMethod } from '../lib/pr-body.js';
 
 test('見どころをどちらの方法で書いたか（AIで作成・従来の方法と理由）', () => {
-  assert.equal(highlightMethod({ highlightBy: { ai: true } }), 'AIで作成');
-  assert.equal(highlightMethod({ highlightBy: { ai: false, reason: 'ANTHROPIC_API_KEY が設定されていない' } }), '従来の方法・ANTHROPIC_API_KEY が設定されていない');
+  assert.equal(highlightMethod({ highlightResult: { ai: true } }), 'AIで作成');
+  assert.equal(highlightMethod({ highlightResult: { ai: false, reason: 'ANTHROPIC_API_KEY が設定されていない' } }), '従来の方法・ANTHROPIC_API_KEY が設定されていない');
   assert.equal(highlightMethod({}), '従来の方法');
 });
 

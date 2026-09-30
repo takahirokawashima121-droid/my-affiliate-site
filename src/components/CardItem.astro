@@ -2,7 +2,7 @@
 import CardImage from './CardImage.astro';
 import AffiliateButton from './AffiliateButton.astro';
 import CardTags from './CardTags.astro';
-import { SHOPS } from '../config/affiliate';
+import { SITE } from '../consts';
 import { nameWithRarity } from '../utils/cardFormat';
 import { cardLabel, cardModel, cardPath, priceGap, showsBuybackPrice, mallOffers, bestOffer, formatDateTime, formatYen, type Card } from '../utils/cards';
 
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const { card, eager = false, cheapest = false } = Astro.props;
-const { name, rarity, cardNumber, expansionCode, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
+const { name, rarity, cardNumber, expansionCode, buybackPrice, updatedAt } = card.data;
 const gap = priceGap(card);
 // 楽天・Yahoo! の2大モールのうち安い方を「販売最安値」として表示する
 const offers = mallOffers(card);
@@ -76,29 +76,23 @@ const model = cardModel(card);
       </dd>
     </div>
     <div class="px-3 py-3">
-      <dt class="text-[11px] font-medium text-slate-600">買取最高値</dt>
+      <dt class="text-[11px] font-medium text-slate-600">買取目安</dt>
       {buybackShown ? (
         <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-emerald-600 sm:text-2xl">{formatYen(buybackPrice)}</dd>
       ) : (
         <dd class="mt-1.5 text-base font-bold text-slate-600 sm:text-lg">要査定</dd>
       )}
-      <dd class="truncate text-[11px] text-slate-600">{buybackShop}{buybackUnverified && <span class="ml-1 rounded bg-amber-100 px-1 text-amber-800">相場確認中</span>}</dd>
+      <dd class="text-[10px] leading-snug text-slate-600">{SITE.buybackEstimateNote}</dd>
+      {buybackUnverified && <dd class="mt-0.5 text-[11px]"><span class="rounded bg-amber-100 px-1 text-amber-800">相場確認中</span></dd>}
     </div>
   </dl>
 
-  <!-- アフィリエイト導線 -->
-  <div class="mt-auto grid grid-cols-2 gap-2 p-3">
+  <!-- アフィリエイト導線（購入のみ。買取目安はお店と切り離して数字と説明だけを出し、買取査定の申込はカードページの「買取査定に出す」に置く） -->
+  <div class="mt-auto p-3">
     {best ? (
-      <Fragment>
-        <AffiliateButton kind="sale" href={best.url} shop={best.shop} item={cardLabel(card)} />
-        <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} />
-      </Fragment>
+      <AffiliateButton href={best.url} shop={best.shop} item={cardLabel(card)} />
     ) : (
-      <Fragment>
-        {/* 在庫なし：購入の代わりに買取査定を前面に出す */}
-        <AffiliateButton kind="bulk" href={SHOPS.furuichi.url} shop={SHOPS.furuichi.name} item={cardLabel(card)} />
-        <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} item={cardLabel(card)} label="シングル買取査定" />
-      </Fragment>
+      <AffiliateButton href={card.data.saleUrl} shop="楽天市場" item={cardLabel(card)} label="楽天市場で探す" type="sale_search" />
     )}
   </div>
 </article>

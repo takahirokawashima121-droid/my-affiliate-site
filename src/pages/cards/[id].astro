@@ -5,7 +5,6 @@ import Breadcrumbs from '../../components/Breadcrumbs.astro';
 import CardImage from '../../components/CardImage.astro';
 import CardItem from '../../components/CardItem.astro';
 import CardTags from '../../components/CardTags.astro';
-import AffiliateButton from '../../components/AffiliateButton.astro';
 import { SALE_PRIMARY } from '../../utils/buttonStyles';
 import AffiliatePixels from '../../components/AffiliatePixels.astro';
 import MallSearchButtons from '../../components/MallSearchButtons.astro';
@@ -51,11 +50,11 @@ interface Props {
 
 const { card, related, variants, substitutes, cheapestIds } = Astro.props;
 const isCheapest = (c: Card) => cheapestIds.includes(c.id);
-const { name, rarity, cardNumber, expansionCode, imageUrl, saleInStock, saleShop, saleUrl, buybackPrice, buybackShop, buybackUrl, updatedAt } = card.data;
+const { name, rarity, cardNumber, expansionCode, imageUrl, saleInStock, saleShop, saleUrl, buybackPrice, updatedAt } = card.data;
 const label = cardLabel(card); // 例: ナンジャモ SAR [SV2D 096/071]
 const model = cardModel(card); // 例: SV2D 096/071
 const updatedText = formatDateTime(updatedAt);
-const gap = priceGap(card); // 逆ザヤ（買取 ≧ 販売）の場合は差額・買取率を出さない
+const gap = priceGap(card); // 逆ザヤ（買取目安 ≧ 販売）の場合は差を出さない
 // 楽天市場・Yahoo!ショッピングの2大モール比較（best = 安い方。どちらも在庫なしなら null）
 const offers = mallOffers(card);
 const best = bestOffer(card);
@@ -80,8 +79,8 @@ const affiliateLinkProps = {
 
 const title = `【ポケカ】${label}の販売最安値・買取相場比較`;
 const saleSummary = best ? `${label}の販売最安値は${formatYen(best.price)}（${best.shop}）` : `${label}は楽天市場・Yahoo!ショッピングでは現在在庫なし。`;
-const buybackSummary = buybackShown ? `買取最高値は${formatYen(buybackPrice)}（${buybackShop}）。` : `買取価格は${buybackShop}での査定をご確認ください。`;
-const description = `${saleSummary}${best ? '、' : ''}${buybackSummary}${updatedText}時点のポケモンカード相場を比較し、一番安く買えるお店・一番高く売れるお店がわかります。`;
+const buybackSummary = buybackShown ? `買取目安は${formatYen(buybackPrice)}（販売価格をもとに当サイトが計算）。` : '買取価格はお店の査定でご確認ください。';
+const description = `${saleSummary}${best ? '、' : ''}${buybackSummary}${updatedText}時点の楽天市場・Yahoo!ショッピングの販売価格を比較し、買取査定の申込先もまとめています。`;
 
 // 構造化データ（Product ＋ AggregateOffer）。画像・在庫がないカードは出さない（null）
 const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(), description) ?? undefined;
@@ -144,12 +143,7 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
 
       <!-- 価格比較ボックス -->
       <section aria-labelledby="price-compare" class="mt-8">
-        <h2 id="price-compare" class="mb-3 text-lg font-bold text-slate-900">販売・買取価格の比較</h2>
-        {!inStock && (
-          <div class="mb-4">
-            <BuybackOptions card={card} heading="このカードを買取査定に出す" />
-          </div>
-        )}
+        <h2 id="price-compare" class="mb-3 text-lg font-bold text-slate-900">販売価格の比較と買取目安</h2>
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="flex flex-col rounded-2xl border-2 border-rose-300 bg-white p-5 shadow-sm">
             <p class="text-sm font-bold text-rose-600">販売最安値 <span class="text-xs font-medium text-slate-600">（楽天市場・Yahoo!ショッピング比較）</span></p>
@@ -201,38 +195,35 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
               ))}
             </ul>
           </div>
+          <!-- 買取目安：お店と切り離して、目安の数字と説明だけを出す（買取査定の申込は「買取査定に出す」の欄だけ） -->
           <div class="flex flex-col rounded-2xl border-2 border-emerald-200 bg-white p-5 shadow-sm">
-            <p class="text-sm font-bold text-emerald-600">買取最高値</p>
+            <p class="text-sm font-bold text-emerald-600">買取目安</p>
             {buybackShown ? (
               <p class="mt-1 text-3xl font-extrabold tabular-nums text-emerald-600 sm:text-4xl">{formatYen(buybackPrice)}</p>
             ) : (
               <p class="mt-1 text-2xl font-extrabold text-slate-600 sm:text-3xl">要査定</p>
             )}
-            <p class="mt-1 text-sm text-slate-600">ショップ：<span class="font-semibold text-slate-900">{buybackShop}</span></p>
+            <p class="mt-1 text-xs leading-relaxed text-slate-600">{SITE.buybackEstimateNote}</p>
             {!buybackShown && <p class="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs text-slate-600">販売相場がないため買取目安を表示していません。買取価格はショップの査定でご確認ください。</p>}
             {buybackUnverified && <p class="mt-2 rounded-lg bg-amber-50 px-2 py-1 text-xs text-amber-800">相場確認中：最新の買取価格はショップでご確認ください</p>}
-            <div class="mt-4">
-              <AffiliateButton kind="buyback" href={buybackUrl} shop={buybackShop} size="lg" item={label} label={buybackShown ? undefined : 'シングル買取査定'} />
-            </div>
           </div>
         </div>
-
-        {inStock && (
-          <div class="mt-6">
-            <BuybackOptions card={card} />
-          </div>
-        )}
 
         <MallSearchButtons keyword={cardSearchKeyword(card.data)} shopKeyword={compareKeyword(card.data)} />
         <CompareShopLinks keyword={compareKeyword(card.data)} />
 
+        <!-- 買取査定の申込先（在庫あり・在庫なしとも、ショップ比較の下のこの位置に1つだけ） -->
+        <div class="mt-6">
+          <BuybackOptions card={card} />
+        </div>
+
         <p class="mt-4 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-700">
           {gap.valid ? (
-            <Fragment>販売価格と買取価格の差額は <strong class="tabular-nums">{formatYen(gap.spread)}</strong>（買取率 約<strong class="tabular-nums">{gap.rate}%</strong>）です。</Fragment>
+            <Fragment>販売最安値と買取目安の差は <strong class="tabular-nums">{formatYen(gap.spread)}</strong> です。</Fragment>
           ) : inStock ? (
-            <Fragment>販売価格と買取価格の差額・買取率は<strong>相場確認中</strong>です。</Fragment>
+            <Fragment>販売最安値と買取目安の差は<strong>相場確認中</strong>です。</Fragment>
           ) : (
-            <Fragment>楽天市場・Yahoo!ショッピングに在庫がないため、差額・買取率は表示していません。</Fragment>
+            <Fragment>楽天市場・Yahoo!ショッピングに在庫がないため、販売最安値と買取目安の差は表示していません。</Fragment>
           )}
         </p>
 
@@ -307,7 +298,7 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
 
       <DecksUsingCard card={card} />
 
-      <!-- 価格比較・買取最高値の欄とは別の場所に小さく置く（ほかのショップと並べない） -->
+      <!-- 価格比較・買取目安の欄とは別の場所に小さく置く（ほかのショップと並べない） -->
       <ToretokuNotice variant="card" item={label} />
 
       <a href="/" class="mt-8 inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:underline">← 相場一覧（トップページ）に戻る</a>

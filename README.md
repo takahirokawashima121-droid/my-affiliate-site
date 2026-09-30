@@ -51,7 +51,7 @@
 | `substituteIds` | 予算を抑えたい人向けの代用・関連カードの `id`（任意）。現行スタンダードで使えるカードを指定する |
 | `imageUrl` | 画像URL（`public/` 配下のパスも可。空なら仮画像を表示） |
 | `salePrice` / `saleShop` / `saleUrl` | 販売最安値（円）/ ショップ名 / アフィリエイトURL |
-| `buybackPrice` / `buybackShop` / `buybackUrl` | 買取最高値（円）/ ショップ名 / アフィリエイトURL |
+| `buybackPrice` / `buybackShop` / `buybackUrl` | 買取目安（円。販売最安値から計算）/ ショップ名 / アフィリエイトURL（ショップ名・URL は省略可。表示は `src/config/affiliate.ts` の `SHOPS` の `enabled` で切り替え） |
 | `updatedAt` | 更新日時（例: `2026-09-26T10:00:00+09:00`）。「新着順」の並び替えに使用 |
 
 画面上の表記は「ナンジャモ SAR [SV2D 096/071]」、楽天API・モール検索のキーワードは「ナンジャモ SAR 096/071 ポケカ」の形式で自動生成されます（`src/utils/cardFormat.ts`）。

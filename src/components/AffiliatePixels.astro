@@ -5,6 +5,7 @@ import { SHOPS, type ShopKey } from '../config/affiliate';
 import { moshimoImpressionUrl } from '../utils/moshimo';
 
 interface Props {
+  /** 販売のボタン（CardItem など）を表示しているカード。カードごとの買取リンクの計測画像は BuybackOptions の中で読み込む */
   cards: Card[];
   /** ページ内に表示しているサイト共通の提携先（src/config/affiliate.ts） */
   shops?: ShopKey[];
@@ -13,7 +14,7 @@ interface Props {
 const { cards, shops = [] } = Astro.props;
 const urls = [
   ...new Set(
-    [...cards.flatMap((c) => [c.data.saleImpressionUrl, c.data.buybackImpressionUrl]), ...shops.map((key) => SHOPS[key].impressionUrl),
+    [...cards.flatMap((c) => [c.data.saleImpressionUrl]), ...shops.map((key) => SHOPS[key].impressionUrl),
       // Yahoo!ショッピングの商品リンク（もしも経由）を表示しているカードがあれば計測画像も読み込む
       ...(cards.some((c) => c.data.yahooUrl) ? [moshimoImpressionUrl('yahoo')] : [])].filter(
       (u) => u !== undefined,

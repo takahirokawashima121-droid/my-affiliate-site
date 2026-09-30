@@ -1,5 +1,6 @@
-// 同じデッキ名（主軸）のレシピどうしを比べ、「〇〇採用型」のように区別できるカードを選ぶ
-// scripts/auto-deck-updater.js から使う（同名デッキの記事タイトル・デッキ名の命名）
+// 同じデッキ名（主軸）のレシピどうしを比べ、区別できるカードを選ぶ
+// scripts/auto-deck-updater.js から使う（同名デッキの記事の URL の区別。例: dragapult-ex-deck-0927-moltres）
+// デッキ名・タイトルには「（〇〇採用型）」のような付け足しをしない（2026/09 にやめた）。baseDeckName は古い記事の付け足しを外すのに使う
 
 /** どのデッキにも入る汎用カード（区別の手がかりにしない） */
 export const STAPLES = new Set([
@@ -17,7 +18,7 @@ const isAceSpec = (e) => Boolean(e.aceSpec) || /ACE SPEC/.test(e.note ?? '');
  * 区別の手がかりになるものを選ぶ。優先順:
  *   1. ポケモンex（汎用 ex をのぞく）  2. ACE SPEC  3. そのほかのポケモン（進化ライン・システムポケモン）  4. トレーナーズ・特殊エネルギー
  * 同じ優先度なら枚数の多い順・レシピの並び順。どれもなければ、共通カードのうち枚数の差がいちばん大きいカードを使う。
- * 返り値: { card: カード名, text: 「ノココッチex採用」「ボスの指令4枚」のような型名の中身 }
+ * 返り値: { card: カード名, text: 「ノココッチex採用」「ボスの指令4枚」のような違いの説明 }
  */
 export function variantLabel(recipe, others) {
   const othersNames = new Set(others.flatMap((r) => r.map((e) => norm(e.name))));
@@ -45,3 +46,13 @@ export function variantLabel(recipe, others) {
 
 /** 「メガゲッコウガex（ノココッチex採用型）」→「メガゲッコウガex」（型名・旧形式の「（構築2）」を外す） */
 export const baseDeckName = (deckName) => deckName.replace(/（[^（）]*(型|構築\d+)）$/, '');
+
+/**
+ * 記事の大会の日（「M/D」）。同じ日・同じ名前の記事を探すのに使う。
+ * シティリーグは eventDate（YYYY-MM-DD）、ジムバトルは result の先頭（「9/26 ジムバトル優勝」）、どちらもなければ null
+ */
+export function columnDay(c) {
+  const iso = c.eventDate?.match(/^\d{4}-(\d{2})-(\d{2})$/);
+  if (iso) return `${Number(iso[1])}/${Number(iso[2])}`;
+  return c.result?.match(/^(\d{1,2}\/\d{1,2})\s/)?.[1] ?? null;
+}

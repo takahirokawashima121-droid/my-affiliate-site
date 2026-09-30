@@ -21,11 +21,11 @@
 | `npm run import-decks -- --deck=スラッグ:公式デッキコード` | 公式デッキを取り込む |
 | `npm run auto-decks` / `npm run auto-city` | ジムバトル / シティリーグの新着デッキから記事を自動生成（`--dry-run`） |
 | `npm run backfill-plans` | 既存記事に立ち回り（序盤・中盤・終盤）を追記（`--dry-run` `--force`） |
-| `npm run apply-name-rules` | デッキ名の言い換えルール（`scripts/lib/deck-name-rules.js`）を既存の記事に当てはめる（`--dry-run` で確認のみ。URL は変えない） |
+| `npm run apply-name-rules` | 既存の記事のデッキ名から付け足し（「（〇〇採用型）」など）を外し、通称ルール（`scripts/lib/deck-name-rules.js`）を当てはめる（`--dry-run` で確認のみ。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない） |
 | `npm run check-deck-names` | 公開済み記事のデッキ名をポケカブックの●付き小見出しと照合（記事は書き換えない。結果は `.cache/deck-name-check.md`） |
 | `npm run rewrite-highlights` | 決まった文（「〇〇を採用した〇〇デッキ。主力カードの効果と最安値をまとめて確認」など）のままの見どころ（highlight）を、記事ページに載っている公式のカードテキストから書き直す（`--dry-run` で確認のみ。具体的な見どころは変えない） |
 | `npm run check-highlights` | 見どころの点検だけ（決まった文・同じ日の記事同士の書き出しの似かよい。結果は `.cache/highlight-check.md`） |
-| `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・デッキ名の言い換えルール・見どころの自動生成（`scripts/lib/highlight.js`）・自動生成の PR 本文（`scripts/lib/pr-body.js`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
+| `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・デッキ名の通称ルール・見どころの自動生成（`scripts/lib/highlight.js`）・自動生成の PR 本文（`scripts/lib/pr-body.js`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
 
 ## 最初にやること
 
@@ -149,8 +149,8 @@ npm run auto-decks                                         # 新着の優勝デ�
 - 立ち回り（序盤・中盤・終盤）を、60枚の構成と公式のカードテキストから自動生成して `deck-columns.json` の `gamePlan`（`early` / `mid` / `end`）に保存（`scripts/lib/game-plan.js`。表示は `src/components/GamePlan.astro`）
 - デッキ名は**ポケカブックのまとめ記事の●付き小見出し**（例: 「●スッカラカン」「●ボムファイアロー」）を正とします。●はテーマの装飾で表示されていて HTML の文字には含まれないため、日付の見出し（h2）の下の小見出し（h3〜h6。実際の記事では `<h4>スッカラカン</h4>`）を●付き小見出しとして読みます。日付の見出し（h2 の「9/28【月】ジムバトル優勝」など）はデッキ名として使いません。●付き小見出しが取れなかったデッキだけ、レシピから推定し、PR に「推定」と明記します。日付・大会名がデッキ名に残った場合は生成を止めます
 - 記事の URL（slug）はデッキ名の英語表記から作ります（例: `tauros-deck-0928`・`bomb-talonflame-deck-0928`・`mega-lopunny-ex-deck-0927`）。ポケモン名は `scripts/lib/pokemon-names-en.json`（PokeAPI の日本語名・英語名対応表）、ポケモン名でない呼び名（スッカラカン・ボムなど）は `scripts/lib/english-name.js` の `DECK_WORDS` で英語にします。英語にできない部分があるときは主役ポケモンの英語名を使い、それもなければローマ字にして、PR の確認項目に出します。ローマ字の読み仮名は使いません
-- デッキ名は言い換えルール（`scripts/lib/deck-name-rules.js` の言い換え表）に当てはまれば、ポケカブックの●付き小見出しの名前より優先します（例: ヤドキング採用 →「ひらめきチャレンジ」、カミッチュ採用でカミツオロチexなし →「おまつりおんど」）。ヤドキング1枚だけなど迷うものは名前を変えず、PR に一覧で出します
-- 同じデッキ名の記事がすでにある（または同じ回に複数ある）場合は、レシピを比べて一方にしか入っていないカード（ex → ACE SPEC → そのほかのポケモン → トレーナーズの順）から「メガゲッコウガex（ノココッチex採用型）」のように名付けます。型名のない既存の同名記事にも型名を付けます（`scripts/lib/deck-variant.js`）
+- デッキ名は通称ルール（`scripts/lib/deck-name-rules.js` の `DECK_NAME_RULES`）に当てはまれば、ポケカブックの●付き小見出しの名前より優先します（例: ヤドキング採用 →「ひらめきチャレンジ」、カミッチュ採用でカミツオロチexなし →「おまつりおんど」、ドラパルトexに特性「カースドボム」のカード →「ボムドラパ」、ドラパルトexにノココッチ →「ノココッチドラパ」）。ヤドキング1枚だけなど迷うもの、2つ以上のルールに当てはまるものは名前を変えず、PR に一覧で出します。通称の足し方は CLAUDE.md の「通称の足し方」を見てください
+- デッキ名には「（ノココッチex採用型）」のような付け足しをしません。同じ日・同じ大会の種類・同じ名前の記事ができたときは PR に一覧で出し、タイトルだけで区別します（`scripts/lib/title-place.js`）。シティリーグはタイトルの【】に都道府県（同じなら店舗名）を付け（例: 【9/26 シティリーグ優勝・千葉】）、店舗のデータがないジムバトルなどは、その記事にしかないカードからデッキ名のあとに「（〇〇採用型）」を付けます（サイトの全デッキ記事の半分以上に入っている定番カードは選ばない。ポケモン → サポート → グッズ・どうぐ・スタジアムの順、同じ種類なら入っているデッキ記事の数が少ない順 → 枚数の多い順。候補がなければ「（別構築）」）。選んだカードと、それが何本のデッキ記事に入っているかは PR に出します。付けた採用型は `deck-columns.json` の `titleLabel`（`titleLabelBy: "auto"`）に保存し、あとで付け直しません。手で書き換えるときは `titleLabel` を直して `titleLabelBy` を `"manual"` にします（手順は CLAUDE.md）。URL だけは、レシピを比べて一方にしか入っていないポケモンの英語名を付けて区別します（例: `dragapult-ex-deck-0927-moltres`。`scripts/lib/deck-variant.js`）
 - 処理済みの記事・デッキは `scripts/cache/processed-decks.json` に記録（まとめ記事は同じURLのまま毎日更新されるため、URL＋タイトルとデッキコードで判定）
 
 代替カード・カスタマイズ案は自動では書かないため、PR で各記事の `TODO` を追記してからマージしてください。立ち回りが未記載の既存記事には `npm run backfill-plans` で追記できます（手書きの「回し方」がある記事は対象外）。PR の作成には、リポジトリの Settings → Actions → General → Workflow permissions で「Allow GitHub Actions to create and approve pull requests」を有効にする必要があります。
@@ -163,7 +163,7 @@ PR に「マーク未対応の弾」と表示されたカードは、`scripts/li
 
 - 一覧には「今のデッキ名」「ポケカブックの名前」「判定（一致・不一致・確認できなかった）」「記事のURL」「元記事」「メモ」が入ります
 - 元記事は `scripts/cache/processed-decks.json` の記録から探し、記録にない記事はいまの RSS のまとめ記事からも探します。ジムバトルのまとめ記事は同じURLのまま毎日書き換えられるため、見つからないときは処理日の前後に Wayback Machine に保存された版も読みます
-- 型名（「（ノココッチex採用型）」など当サイトで付けた区別）を外すと一致する場合は「一致」とします
+- 以前に当サイトで付けていた付け足し（「（ノココッチex採用型）」など）を外すと一致する場合は「一致」とします
 - シティリーグのようにデッキ名が画像にしかない記事、元記事からデッキが消えている記事、手動で作成した記事（元記事の記録がない）は「確認できなかった」になります。元記事を人が見て確認してください
 
 ### ポケカブックの HTML の取得（GitHub Actions・手動、調査用）

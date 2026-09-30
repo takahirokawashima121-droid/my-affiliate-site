@@ -20,7 +20,7 @@ export function xWeightedLength(text: string): number {
 }
 
 export type SharePostInput = {
-  /** デッキ名（「メガゲッコウガex（ノココッチex採用型）」など） */
+  /** デッキ名（「メガゲッコウガex」「ボムドラパ」など。「（〇〇採用型）」のような付け足しはしない） */
   deckName: string;
   /** 大会・日付（「9/26 ジムバトル優勝」） */
   result: string;

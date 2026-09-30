@@ -10,6 +10,8 @@
 //   npm run ai-highlight-rewrite -- --tagline-only  ひとことだけ作る: 一覧のカードに出すひとこと（tagline。30〜40字）だけを書く。
 //                                                   見どころ（highlight・highlightBy）は変えない（manual の見どころもそのまま）。
 //                                                   taglineBy: 'manual' の記事は書かない。--limit・--dry-run と一緒に使える
+//   npm run ai-highlight-rewrite -- --tagline-only --tagline-missing
+//                                                   ひとことがまだない記事だけ作る（書けたひとことは変えない）
 //   GitHub Actions の「AI highlight rewrite (manual)」（.github/workflows/ai-highlight-rewrite.yml）から実行すると、結果を新しいブランチの PR にする
 //
 // 書き方は自動生成と同じ（scripts/lib/ai-highlight.js: 同じ指示・同じ点検・1回だけの書き直し。AI に渡すのはデッキ名・60枚のレシピ・
@@ -85,9 +87,15 @@ async function main() {
 
   const onlyFlagged = argv.includes('--only-flagged');
   const taglineOnly = argv.includes('--tagline-only');
+  const missingOnly = argv.includes('--tagline-missing');
   if (onlyFlagged && taglineOnly) throw new Error('--only-flagged と --tagline-only は一緒に使えません');
-  const { targets, manual, all } = (taglineOnly ? taglineTargets : rewriteTargets)(columns, { limit, today: todayJst() });
-  const modeName = taglineOnly ? 'ひとことだけ作る（見どころは変えない）' : onlyFlagged ? '要確認の記事だけ直す' : '見どころのまとめ書き直し';
+  if (missingOnly && !taglineOnly) throw new Error('--tagline-missing は --tagline-only と一緒に使います');
+  const { targets, manual, all, existing = 0 } = (taglineOnly ? taglineTargets : rewriteTargets)(columns, { limit, today: todayJst(), missingOnly });
+  const modeName = taglineOnly
+    ? `ひとことだけ作る（見どころは変えない${missingOnly ? `・ひとことがまだない記事だけ。ひとことがある${existing}本は変えない` : ''}）`
+    : onlyFlagged
+      ? '要確認の記事だけ直す'
+      : '見どころのまとめ書き直し';
   console.log(`■ ${modeName}（モデル: ${AI_HIGHLIGHT_CONFIG.model}・API を呼ぶ上限 ${REWRITE_MAX_CALLS}回）`);
   console.log(
     `  対象: ${targets.length}本${limit ? `（試しに${limit}本だけ・対象は全部で${all}本）` : ''}・手で直した印${taglineOnly ? '（taglineBy）' : ''}がある記事: ${manual.length}本${onlyFlagged ? '（チェックだけで直さない）' : '（対象外）'}`,
@@ -113,7 +121,7 @@ async function main() {
       ? await writeTaglines(options)
       : targets.map((c) => ({ slug: c.slug, deckName: c.deckName, pubDate: c.pubDate, highlight: c.highlight, before: c.tagline ?? null, after: null, reason: noKey, attempts: 0 }));
     const applied = applyTaglines(columns, results);
-    const body = taglinePrBody({ results, manual, stats: ai.stats, limit, all });
+    const body = taglinePrBody({ results, manual, stats: ai.stats, limit, all, missingOnly, existing });
     await finish({ body, columns, applied, dryRun, ai, what: 'ひとこと' });
     for (const r of results.filter((x) => !x.after)) console.log(`  ⚠ ひとことを書けなかった: ${r.slug}（${r.reason}）`);
     for (const r of results.filter((x) => x.review && x.review.status !== 'ok')) console.log(`  ⚠ ひとことが要確認・チェックできず: ${r.slug}（${r.review.reasons.join(' / ')}）`);

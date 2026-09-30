@@ -23,6 +23,7 @@ import {
   reviewAiHighlight,
   reviewLabel,
   reviewTagline,
+  taglineOf,
   taglineLength,
   unverifiableNames,
   usageLines,
@@ -57,7 +58,7 @@ function fakeClient(replies) {
         calls.push(structuredClone(params));
         const r = replies[calls.length - 1];
         if (r instanceof Error) throw r;
-        return { stop_reason: r.stop_reason ?? 'end_turn', content: [{ type: 'text', text: r.text ?? '' }], usage: { input_tokens: 1000, output_tokens: 500 } };
+        return { stop_reason: r.stop_reason ?? 'end_turn', content: r.text === undefined && r.stop_reason ? [] : [{ type: 'text', text: r.text ?? '' }], usage: { input_tokens: 1000, output_tokens: 500 } };
       },
     },
   };
@@ -506,7 +507,8 @@ test('ひとことを書く役に渡すのは、見どころと同じデータ�
   assert.match(prompt, /主役のカード: メガサメハダーex（ひとことに必ず名前を入れる）/);
   assert.match(prompt, /ワザ「ハングリージョー」/);
   assert.ok(prompt.includes(`## この記事の見どころ（参考）\n${GOOD}`));
-  assert.match(prompt, /全角30〜40字/);
+  assert.match(prompt, /30字以上・40字以内（40字を超えると使えません/);
+  assert.match(prompt, /tagline には完成したひとこと1本だけ/);
   const column = columns.find((c) => c.slug === SLUG);
   assert.ok(!prompt.includes(column.title));
 });
@@ -515,8 +517,9 @@ test('ひとことの点検: 30〜40字・主役の名前・データにない�
   const data = taglineInput();
   assert.deepEqual(reviewTagline(TAGLINE, data), []);
   const has = (text, re, d = data) => assert.ok(reviewTagline(text, d).some((p) => re.test(p)), `${text}\n→ ${reviewTagline(text, d).join(' / ')}`);
-  has(`${TAGLINE}、モモワロウexと組む`, /長すぎます（\d+字）。30〜40字に短く書き直して/);
-  has('メガサメハダーexで攻める', /短すぎます/);
+  // 長さをはみ出したら「今○字なので、あと○字」と具体的な数を伝える
+  assert.deepEqual(reviewTagline(`${TAGLINE}、モモワロウexと組む`, data), ['長すぎます（今49字）。あと9字以上削って、40字以内（35字くらい）にしてください']);
+  assert.deepEqual(reviewTagline('メガサメハダーexで攻める', data), ['短すぎます（今13字）。あと17字以上足して、30字以上にしてください']);
   has('モモワロウexの「しはいのくさり」で相手をどくにしながらベンチと入れ替えて戦う', /主役のカード「メガサメハダーex」の名前を入れて/);
   has(TAGLINE.replace('大きく', '270も'), /数字「270」/);
   has(TAGLINE.replace('「ハングリージョー」', '「ダークパワー」'), /「ダークパワー」は渡したカードテキストにない/);
@@ -531,28 +534,68 @@ test('ひとことの整え方: 文末の「。」と、全体を囲むかぎか
   assert.equal(cleanTagline(TAGLINE), TAGLINE);
 });
 
-test('ひとこと: 30〜40字をはみ出したら、理由を伝えてもう一度短く書き直させる（書き直しは1回まで）', async () => {
+test('ひとこと: 30〜40字をはみ出したら「今○字なので、あと○字削って」と伝えて書き直させる（書き直しは2回まで）', async () => {
   const long = `${TAGLINE}デッキで、モモワロウexと組んで戦う`;
-  const client = fakeClient([{ text: long }, { text: `${TAGLINE}。` }]);
+  const longer = `${TAGLINE}、モモワロウexと組む`;
+  const client = fakeClient([{ text: JSON.stringify({ tagline: long }) }, { text: JSON.stringify({ tagline: longer }) }, { text: JSON.stringify({ tagline: `${TAGLINE}。` }) }]);
   const ai = createAiHighlighter({ client });
   const r = await ai.writeTagline(taglineInput());
   assert.equal(r.text, TAGLINE);
-  assert.equal(r.attempts, 2);
-  assert.equal(client.calls.length, 2);
-  // ひとことの指示で呼ぶ（見どころの指示ではない）
+  assert.equal(r.attempts, 3);
+  assert.equal(client.calls.length, 3);
+  // ひとことの指示で呼ぶ（見どころの指示ではない）。40字以内を強く伝え、答えは JSON の tagline（完成したひとこと1本だけ）
   assert.match(client.calls[0].system, /ひとこと/);
-  assert.match(client.calls[0].system, /30〜40字/);
-  // 2回目: 前の応答と「短く書き直して」を渡す
-  assert.equal(client.calls[1].messages.length, 3);
-  assert.match(client.calls[1].messages[2].content, /ひとことの文だけをもう一度書いて/);
-  assert.match(client.calls[1].messages[2].content, /長すぎます（\d+字）。30〜40字に短く書き直して/);
+  assert.match(client.calls[0].system, /40字を1字でも超えると使えない/);
+  assert.match(client.calls[0].system, /字数は考えるときに数えて確かめ、答えには書かない/);
+  assert.deepEqual(client.calls[0].output_config.format.schema.required, ['tagline']);
+  // 書き直しは毎回1通のメッセージ（考えごとの混ざった前の応答を会話に戻さない）。前の答えと、何字削るかを渡す
+  for (const [i, prev] of [[1, long], [2, longer]]) {
+    assert.equal(client.calls[i].messages.length, 1);
+    const content = client.calls[i].messages[0].content;
+    assert.ok(content.startsWith(client.calls[0].messages[0].content));
+    assert.ok(content.includes(`## 前に書いたひとこと\n${prev}\n`));
+    assert.match(content, /次の点を直して、ひとことをもう一度書いてください/);
+    assert.match(content, new RegExp(`長すぎます（今${taglineLength(prev)}字）。あと${taglineLength(prev) - 40}字以上削って`));
+  }
 
-  // 書き直してもはみ出したら null（3回目は呼ばない。一覧は見どころを出す）
-  const client2 = fakeClient([{ text: long }, { text: long }, { text: TAGLINE }]);
+  // 2回書き直してもはみ出したら null（4回目は呼ばない。一覧は見どころを出す）
+  const client2 = fakeClient([{ text: long }, { text: long }, { text: long }, { text: TAGLINE }]);
   const r2 = await createAiHighlighter({ client: client2 }).writeTagline(taglineInput());
   assert.equal(r2.text, null);
-  assert.match(r2.reason, /書き直しても点検を通らなかった（長すぎます/);
-  assert.equal(client2.calls.length, 2);
+  assert.match(r2.reason, /2回書き直しても点検を通らなかった（長すぎます/);
+  assert.equal(client2.calls.length, 3);
+});
+
+test('ひとこと: 答えは JSON の tagline だけを使う。本文に字数の数え方などが混ざった答え・断られた答え・空の答えは書き直させる', async () => {
+  assert.equal(taglineOf(JSON.stringify({ tagline: TAGLINE })), TAGLINE);
+  assert.equal(taglineOf('```json\n{"tagline": "a"}\n```'), 'a');
+  // JSON でなければ答えのまま（点検で改行・長さに引っかかる）
+  const thinking = `${TAGLINE}\n\n字数確認：「ハングリージョー」(10)…42。長いので調整します。\n\n**${TAGLINE}**`;
+  assert.equal(taglineOf(thinking), thinking);
+  assert.ok(reviewTagline(cleanTagline(taglineOf(thinking)), taglineInput()).some((p) => /改行/.test(p)));
+
+  // 1回目: 考えごとが混ざった → 2回目: 断られた → 3回目: 書けた
+  const client = fakeClient([{ text: thinking }, { stop_reason: 'refusal', text: '' }, { text: JSON.stringify({ tagline: TAGLINE }) }]);
+  const r = await createAiHighlighter({ client }).writeTagline(taglineInput());
+  assert.equal(r.text, TAGLINE);
+  assert.equal(r.attempts, 3);
+  // 断られたあとは、前の答えを渡さずに書き直させる
+  assert.equal(client.calls[2].messages[0].content, client.calls[0].messages[0].content);
+
+  // 空の答えも書き直させる（3回とも空なら null）
+  const client2 = fakeClient([{ text: '' }, { text: JSON.stringify({ tagline: '' }) }, { stop_reason: 'refusal' }]);
+  const r2 = await createAiHighlighter({ client: client2 }).writeTagline(taglineInput());
+  assert.equal(r2.text, null);
+  assert.match(r2.reason, /2回書き直しても点検を通らなかった（AI が応答を断った（refusal））/);
+  assert.ok(client2.calls[1].messages[0].content.includes('## 前に書いたひとこと\n（空でした）\n'));
+  assert.match(client2.calls[1].messages[0].content, /- 文が空でした/);
+
+  // 見どころは今までどおり（断られたら書き直さない）
+  const client3 = fakeClient([{ stop_reason: 'refusal' }]);
+  const r3 = await createAiHighlighter({ client: client3 }).write(input());
+  assert.equal(r3.text, null);
+  assert.match(r3.reason, /AI が応答を断った/);
+  assert.equal(client3.calls.length, 1);
 });
 
 test('ひとこと: チェック役は見どころと同じ基準。誤りなら1回だけ直させ、それでもだめなら「直せずに人に知らせた」', async () => {
@@ -574,10 +617,14 @@ test('ひとこと: チェック役は見どころと同じ基準。誤りなら
   assert.match(client.calls[0].messages[0].content, /## ひとことに出てくるカードの公式テキスト/);
   assert.match(client.calls[0].system, /校閲者/);
   assert.match(client.calls[0].system, /「ひとこと」/);
-  // 直すときはひとことの指示で、「誤り」の理由を渡す
+  // 直すときはひとことの指示で、直す前の文と「誤り」の理由を1通のメッセージで渡す
   assert.match(client.calls[1].system, /ひとこと/);
-  assert.match(client.calls[1].messages[2].content, /このひとことを公式テキストと見比べたチェック役/);
-  assert.match(client.calls[1].messages[2].content, /条件が違う/);
+  assert.equal(client.calls[1].messages.length, 1);
+  assert.ok(client.calls[1].messages[0].content.includes(`## 直す前のひとこと
+${TAGLINE}
+`));
+  assert.match(client.calls[1].messages[0].content, /このひとことを公式テキストと見比べたチェック役/);
+  assert.match(client.calls[1].messages[0].content, /条件が違う/);
   assert.equal(ai.stats.reviewCalls, 2);
   assert.equal(ai.stats.fixCalls, 1);
 
@@ -589,10 +636,22 @@ test('ひとこと: チェック役は見どころと同じ基準。誤りなら
   assert.equal(client2.calls.length, 3);
   assert.match(fixLabel(again.fix), /🙋 直せずに人に知らせた/);
 
-  // 直した文が40字をはみ出したら使わない（元の文のまま人に知らせる）
-  const client3 = fakeClient([{ text: reviewJson([wrong]) }, { text: `${FIXED}、モモワロウexと組んで戦う` }]);
+  // 直した文が40字をはみ出したら、あと何字削るかを伝えてもう1回だけ書き直させる
+  const tooLong = `${FIXED}、モモワロウexと組んで戦う`;
+  const client4 = fakeClient([{ text: reviewJson([wrong]) }, { text: tooLong }, { text: FIXED }, { text: reviewJson() }]);
+  const ai4 = createAiHighlighter({ client: client4 });
+  const shortened = await ai4.checkAndFix(data, TAGLINE, { kind: 'tagline' });
+  assert.equal(shortened.text, FIXED);
+  assert.equal(shortened.fix.outcome, 'fixed');
+  assert.ok(client4.calls[2].messages[0].content.includes(`## 前に書いたひとこと\n${tooLong}\n`));
+  assert.ok(client4.calls[2].messages[0].content.includes(`長すぎます（今${taglineLength(tooLong)}字）。あと${taglineLength(tooLong) - 40}字以上削って`));
+  assert.equal(ai4.stats.fixCalls, 2);
+
+  // それでもはみ出したら使わない（元の文のまま人に知らせる）
+  const client3 = fakeClient([{ text: reviewJson([wrong]) }, { text: tooLong }, { text: tooLong }]);
   const long = await createAiHighlighter({ client: client3 }).checkAndFix(data, TAGLINE, { kind: 'tagline' });
   assert.equal(long.text, TAGLINE);
   assert.equal(long.fix.outcome, 'unfixed');
-  assert.match(long.fix.reason, /直した文が点検を通らなかった（長すぎます/);
+  assert.match(long.fix.reason, /^直した文が点検を通らなかった（長すぎます/);
+  assert.equal(client3.calls.length, 3);
 });

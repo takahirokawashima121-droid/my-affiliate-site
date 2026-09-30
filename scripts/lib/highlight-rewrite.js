@@ -325,23 +325,26 @@ export function fixFlaggedPrBody({ results, stats, audit, limit, all }) {
 /**
  * 「ひとことだけ作る」モードで書く記事を選ぶ（公開日が新しい順。同じ日は deck-columns.json の順）。
  * 見どころが手で直したもの（highlightBy: 'manual'）でも対象にする（見どころは変えず、ひとことだけ書く）。taglineBy: 'manual' の記事は対象外
+ * missingOnly（「ひとことがまだない記事だけ」。--tagline-missing）なら、ひとこと（tagline）がまだない記事だけを選ぶ（書けたひとことは変えない）
  * @param {object[]} columns deck-columns.json
- * @param {{ limit?: number | null, today: string }} options
- * @returns {{ targets: object[], manual: object[], all: number }}
+ * @param {{ limit?: number | null, today: string, missingOnly?: boolean }} options
+ * @returns {{ targets: object[], manual: object[], all: number, existing: number }} existing は missingOnly で外した、ひとことがある記事の本数
  */
-export function taglineTargets(columns, { limit = null, today }) {
+export function taglineTargets(columns, { limit = null, today, missingOnly = false }) {
   const published = columns.filter((c) => c.pubDate <= today);
   const manual = published.filter((c) => c.taglineBy === 'manual');
   const order = new Map(columns.map((c, i) => [c.slug, i]));
-  const candidates = published
-    .filter((c) => c.taglineBy !== 'manual')
+  const notManual = published.filter((c) => c.taglineBy !== 'manual');
+  const existing = missingOnly ? notManual.filter((c) => c.tagline).length : 0;
+  const candidates = notManual
+    .filter((c) => !missingOnly || !c.tagline)
     .sort((a, b) => b.pubDate.localeCompare(a.pubDate) || order.get(a.slug) - order.get(b.slug));
-  return { targets: limit ? candidates.slice(0, limit) : candidates, manual, all: candidates.length };
+  return { targets: limit ? candidates.slice(0, limit) : candidates, manual, all: candidates.length, existing };
 }
 
 /**
  * ひとことを書く（deck-columns.json はここでは変えない。applyTaglines で反映する）。見どころは渡すだけで変えない
- * - 点検（長さ 30〜40字を含む）に通らなければ理由を伝えて1回だけ書き直させる（ai.writeTagline）
+ * - 点検（長さ 30〜40字を含む）に通らなければ理由（「今○字なので、あと○字削って」など）を伝えて2回まで書き直させる（ai.writeTagline）
  * - 書けた文はチェック役にかけ、要確認なら「誤り」の理由を渡して1回だけ直させ、もう一度チェックする（⚠ でも文は使い、PR で知らせる）
  * - 書けなかった記事は今のひとことのまま（なければ一覧は見どころを出す）
  * @param {{ columns: object[], targets: object[], namesOf: Function, materialsOf: Function, ai: { writeTagline: Function, checkAndFix: Function, stats: object }, log?: Function }} options
@@ -436,9 +439,10 @@ export function applyTaglines(columns, results) {
 
 /**
  * 「ひとことだけ作る」モードの PR の本文（Markdown）
- * @param {{ results: object[], manual: object[], stats: object, limit: number | null, all: number }} r
+ * @param {{ results: object[], manual: object[], stats: object, limit: number | null, all: number, missingOnly?: boolean, existing?: number }} r
+ *   missingOnly: 「ひとことがまだない記事だけ」で作ったとき（existing はそのために外した、ひとことがある記事の本数）
  */
-export function taglinePrBody({ results, manual, stats, limit, all }) {
+export function taglinePrBody({ results, manual, stats, limit, all, missingOnly = false, existing = 0 }) {
   const written = results.filter((r) => r.after && r.after !== r.before);
   const same = results.filter((r) => r.after && r.after === r.before);
   const failed = results.filter((r) => !r.after);
@@ -455,11 +459,14 @@ export function taglinePrBody({ results, manual, stats, limit, all }) {
       : []),
     '## 💬 公開済みデッキ記事の一覧のカードに出す「ひとこと」を Claude API で作成',
     '',
-    `Actions の「AI highlight rewrite (manual)」の「ひとことだけ作る」（\`scripts/ai-highlight-rewrite.js --tagline-only\`）で作りました。ひとことは全角${TAGLINE_MIN}〜${TAGLINE_MAX}字で、はみ出したら AI に短く書き直させています。チェック役・1回だけの直しは見どころと同じ基準です。`,
+    missingOnly
+      ? `Actions の「AI highlight rewrite (manual)」の「ひとことがまだない記事だけ作る」（\`scripts/ai-highlight-rewrite.js --tagline-only --tagline-missing\`）で作りました。ひとことは全角${TAGLINE_MIN}〜${TAGLINE_MAX}字で、はみ出したら「あと○字削って」と伝えて2回まで書き直させています。チェック役・1回だけの直しは見どころと同じ基準です。`
+      : `Actions の「AI highlight rewrite (manual)」の「ひとことだけ作る」（\`scripts/ai-highlight-rewrite.js --tagline-only\`）で作りました。ひとことは全角${TAGLINE_MIN}〜${TAGLINE_MAX}字で、はみ出したら「あと○字削って」と伝えて2回まで書き直させています。チェック役・1回だけの直しは見どころと同じ基準です。`,
     '',
     '- **見どころ（`highlight`・`highlightBy`）は変えていません**（手で直した見どころもそのまま）。変えたのは `tagline` と `taglineBy`（`"ai"`）だけです',
     '- 一覧のカード（トップの特集・デッキ解説の一覧）は、ひとことがあればひとことを、なければ今までどおり見どころを出します',
-    `- 対象: 公開済みのデッキ記事のうち、手で直した印（\`taglineBy: "manual"\`）のない ${all}本${limit ? `のうち、公開日が新しい順に **${results.length}本（試しに${limit}本だけ）**` : ''}`,
+    ...(missingOnly ? [`- **ひとことがまだない記事だけ**を対象にしました（ひとことがある ${existing}本は変えていません）`] : []),
+    `- 対象: 公開済みのデッキ記事のうち、手で直した印（\`taglineBy: "manual"\`）のない${missingOnly ? '、ひとことがまだない' : ''} ${all}本${limit ? `のうち、公開日が新しい順に **${results.length}本（試しに${limit}本だけ）**` : ''}`,
     `- 書いた: **${written.length}本**${written.some((r) => r.review) ? `（チェック役: ✅ ${written.filter((r) => r.review?.status === 'ok').length}本・⚠ ${flagged.length}本）` : ''}`,
     ...(written.some((r) => r.fix) ? [`- 要確認になって AI に直させた: 🔧 自分で直せた ${written.filter((r) => r.fix?.outcome === 'fixed').length}本・🙋 直せずに人に知らせた ${written.filter((r) => r.fix?.outcome === 'unfixed').length}本`] : []),
     `- 書けなかった: ${failed.length}本（今のまま。ひとことがなければ一覧は見どころを出す）${same.length ? `・AI の文が今と同じ: ${same.length}本` : ''}`,

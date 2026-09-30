@@ -13,7 +13,8 @@
 // - 書き換えるのは deck-columns.json の deckName・title・description・highlight と、ページ（src/pages/columns/{slug}.astro）のデッキ名の表記。
 //   付け足しつきの名前（「ドラパルトex（ヨノワール採用型）」）は、ほかの記事のページ・紹介文・コラム（src/content/blog）に出てきても置き換える。
 //   「〇〇デッキ」の形は、その記事自身のページ・紹介文だけで置き換える（カード名と同じデッキ名の「ヤドキング」などを、カード名としての表記まで変えないため）
-// - 同じ日・同じ名前の記事は、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する（scripts/lib/title-place.js）。店舗のデータがない記事は一覧に出す
+// - 同じ日・同じ大会の種類・同じ名前の記事は、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する。店舗のデータがない記事（ジムバトルなど）は、
+//   レシピの違いからタイトルのデッキ名のあとに「（〇〇採用型）」を付ける（scripts/lib/title-place.js。デッキ名そのものには付けない）
 // - X投稿文は deckName と highlight から作るため、ここで直した名前がそのまま使われる
 // URL（slug）は変えない（公開済みの記事の URL を保つため）。URL を変える場合は astro.config.mjs の redirects に旧URL → 新URL を追加する
 
@@ -22,7 +23,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { baseDeckName } from './lib/deck-variant.js';
-import { placeTitles } from './lib/title-place.js';
+import { memberNote, placeTitles } from './lib/title-place.js';
 import { matchDeckNameRule } from './lib/deck-name-rules.js';
 
 const ROOT = new URL('../', import.meta.url);
@@ -77,7 +78,7 @@ async function main() {
     const x = changes.find((ch) => ch.c === c);
     return x ? { ...c, deckName: x.after.deckName, title: renameOwnText(c.title, x.before, x.after) } : c;
   });
-  const place = placeTitles(projected);
+  const place = placeTitles(projected, recipeOf);
 
   const url = (c) => `\`/columns/${c.slug}/\``;
   const report = [
@@ -86,13 +87,13 @@ async function main() {
     '',
     `### 同じ日・同じ名前の記事（${place.groups.length}組）`,
     ...(place.groups.length
-      ? place.groups.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map(({ c, tag }) => `${url(c)}${tag ? `（${tag}）` : ''}`).join('・')}`)
+      ? place.groups.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map((t) => `${url(t.c)}（${memberNote(t)}）`).join('・')}`)
       : ['- なし']),
     '',
-    `### タイトルに開催地を付けた記事（${place.titles.size}件）`,
+    `### タイトルを変えた記事（開催地・採用型を付けた／外した）（${place.titles.size}件）`,
     ...(place.titles.size ? [...place.titles].map(([slug, title]) => `- \`/columns/${slug}/\` → ${title}`) : ['- なし']),
     '',
-    `### ⚠ 店舗のデータがなく、タイトルで区別できない記事（${place.unresolved.length}組）`,
+    `### ⚠ タイトルで区別できない記事（店舗のデータもレシピもない）（${place.unresolved.length}組）`,
     ...(place.unresolved.length ? place.unresolved.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map(url).join('・')}`) : ['- なし']),
     '',
     `### 通称ルールに当てはまった記事（${ruled.length}件）`,

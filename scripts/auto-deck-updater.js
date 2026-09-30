@@ -40,7 +40,7 @@ import { cardEffects, deckCards, norm, romaji } from './lib/official.js';
 import { CITY_RANKS, FEEDS, articleDecks, cityArticleDecks, feedItems, isDeckName } from './lib/pokecabook.js';
 import { importDecks } from './import-official-decks.js';
 import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
-import { placeTitles } from './lib/title-place.js';
+import { memberNote, placeTitles } from './lib/title-place.js';
 import { deckEnglishName, englishName } from './lib/english-name.js';
 import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
@@ -445,9 +445,10 @@ async function main() {
     const g = generated.find((x) => x.slug === column.slug);
     if (g) g.highlight = column.highlight;
   }
-  // 同じ日・同じ名前の記事ができたら、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する（scripts/lib/title-place.js）。
+  // 同じ日・同じ大会の種類・同じ名前の記事ができたら、タイトルの【】に都道府県（同じなら店舗名）を付けて区別する。
+  // 店舗のデータがない記事（ジムバトルなど）は、レシピの違いからタイトルに「（〇〇採用型）」を付ける（scripts/lib/title-place.js。デッキ名には付けない）。
   // 今回の記事を含むグループだけを直す（同じグループの既存の記事のタイトルも変わることがある。URL は変えない）
-  const place = placeTitles(columns);
+  const place = placeTitles(columns, (c) => recipes[c.deckKey]?.cards ?? recipes[c.slug]?.cards ?? null);
   const generatedSlugSet = new Set(generated.map((g) => g.slug));
   const touches = (g) => g.columns.some(({ c }) => generatedSlugSet.has(c.slug));
   const sameNameDay = place.groups.filter(touches);
@@ -553,15 +554,15 @@ async function main() {
       : []),
     ...(sameNameDay.length
       ? [
-          '### 同じ日・同じ名前の記事（デッキ名に付け足しをしないため、タイトルの【】に都道府県・店舗名を付けて区別しました）',
-          ...sameNameDay.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map(({ c, tag }) => `\`/columns/${c.slug}/\`${tag ? `（${tag}）` : ''}`).join('・')}`),
+          '### 同じ日・同じ名前の記事（デッキ名に付け足しをしないため、タイトルに都道府県・店舗名、店舗のデータがなければ「（〇〇採用型）」を付けて区別しました）',
+          ...sameNameDay.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map((t) => `\`/columns/${t.c.slug}/\`（${memberNote(t)}）`).join('・')}`),
           ...retitled.map((r) => `  - \`/columns/${r.slug}/\`${r.existing ? '（既存の記事）' : ''}: ${r.before} → **${r.after}**`),
           '',
         ]
       : []),
     ...(unresolvedTitles.length
       ? [
-          '### ⚠ 店舗のデータがなく、タイトルで区別できない記事（ジムバトルなど。タイトルが同じになっています）',
+          '### ⚠ タイトルで区別できない記事（店舗のデータもレシピもない。タイトルが同じになっています）',
           ...unresolvedTitles.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map((c) => `\`/columns/${c.slug}/\``).join('・')}`),
           '',
         ]

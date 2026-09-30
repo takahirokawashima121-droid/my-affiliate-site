@@ -41,7 +41,7 @@
   - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/ai-highlight.js` の AI の見どころの点検と従来の方法への切り替え（API は呼ばない）、`scripts/lib/highlight-rewrite.js` のまとめ書き直し（`highlightBy: "manual"` を上書きしないこと・API のエラーの理由。API は呼ばない）、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別のテスト。どれかを変更したら必ず実行する）
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run ai-highlight-test -- --slug=スラッグ`（公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて出す。ファイルは変えない。`ANTHROPIC_API_KEY` が必要。GitHub Actions の「AI highlight test (manual)」からも実行できる）
-  - `npm run ai-highlight-review`（公開済みの記事の見どころをチェック役の AI にかけて結果を出す。`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の4本（`scripts/test/fixtures/ai-highlight-review-cases.json`。手で直す前の文）も一緒にチェックし、`mustFlag: true` の2本（`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`）をどちらも「要確認」にできれば合格と出す。ファイルは変えない。GitHub Actions の「AI highlight review (manual)」からも実行できる）
+  - `npm run ai-highlight-review`（公開済みの記事の見どころをチェック役の AI にかけて結果を出す。`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の7本（`scripts/test/fixtures/ai-highlight-review-cases.json`）も一緒にチェックし、`mustFlag: true` の2本（手で直す前の文＝`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`）をどちらも「要確認」にでき、`mustNotFlag: true` の3本（今サイトに出ている文＝`slowking-deck`・`n-zoroark-ex-deck`・`mabusoruex-deck-0928`）をすべて「問題なし」にできれば合格と出す。ファイルは変えない。GitHub Actions の「AI highlight review (manual)」からも実行できる）
   - `npm run ai-highlight-rewrite`（公開済みの記事の見どころを Claude API でまとめて書き直す。`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。ふだんは GitHub Actions の「AI highlight rewrite (manual)」から実行し、結果を `auto/ai-highlight-rewrite` ブランチの PR にする。main には直接入れない）
   - `npm run apply-name-rules`（デッキ名の付け足しを外し、通称ルールを既存の記事に当てはめる。`--dry-run` あり。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
@@ -132,7 +132,9 @@
   - AI に渡すのは、デッキ名・60枚のレシピ・採用カードの公式テキスト（`recipeProfiles` の内容）だけ。渡したものに書かれていないこと（効果・ダメージ・枚数・環境の話など）を書かない・主役のカード（`keyCards` の先頭）から書き始める・説明文を貼らず自然な日本語にする・書くカードは主役とそれを支えるカード1枚まで・長さは従来と同じくらい（`HIGHLIGHT_MAX` 以内）・誇張（最強・必勝・絶対など）を使わない、をプロンプトで指示する
   - AI の文は `reviewAiHighlight` で点検する（`BANNED_PHRASES`・同じ日の記事の書き出し・主役からの書き出し・長さ・誇張・データにない「」の名前や数字・公式テキストの長い文の貼り付け）。引っかかったら理由を伝えて**1回だけ**書き直させる
   - それでも通らない・API のエラー・`ANTHROPIC_API_KEY` がない・呼び出し回数の上限に達したときは、従来の方法の見どころを使う。**AI の失敗で記事の自動生成を止めない**
-  - **チェック役**（`createAiHighlighter` の `review`）: 点検を通った AI の文を、別の呼び出しで、見どころと「そこに名前が出てくるカードの公式テキスト」だけを渡して見比べさせる。見るのは、効果の条件の抜け・変化、公式テキストにないこと、数字のずれ、どのカードの効果かの取り違えだけ。答えは JSON（`{"verdict": "問題なし" | "要確認", "reasons": [...]}`。structured outputs）
+  - **チェック役**（`createAiHighlighter` の `review`）: 点検を通った AI の文を、別の呼び出しで、見どころと「そこに名前が出てくるカードの公式テキスト」だけを渡して見比べさせる。見どころは短い紹介文なので、「書いていないこと」ではなく「書いてあることが間違っていないか」だけを見る。答えは JSON（`{"verdict": "問題なし" | "要確認", "reasons": [...], "notes": [...]}`。structured outputs）
+    - 要確認にするもの: 公式テキストとの食い違い（「山札にもどす」を「回収する」など）・どのカードの効果か／効果の対象の取り違え・書いてある数字の違い・対象を限定する条件が抜けて文が間違いになる（「ルールを持たないポケモンなら」→「ポケモンなら」など）・ルール上できない組み合わせ（ふしぎなアメで飛ばした1進化の特性を使うなど）
+    - 要確認にしないもの: 数字・枚数・ダメージの省略、「自分の番に1回」などの回数制限の省略、デメリット・代償の省略、ゲームの基本ルールの省略、スタジアムが「おたがいに」効くことの省略、意味が変わらない言い換え、公式テキストが渡されていないカード（チェック役に渡す文に「確認できず」の名前として並べ、答えの `notes` に参考として書かせる。「✅ チェック済み（参考・確認できず：…）」と出る）
     - PR（自動生成・まとめ書き直し）の記事ごとに「✅ チェック済み」「⚠ 要確認：理由」「⚠ チェックできず」を出し、⚠ の記事は PR の本文のいちばん上にまとめる
     - ⚠ でも AI の文は使う（直すかどうかは人が決める）。チェック役のエラー・上限でも文は使い「⚠ チェックできず」にする
     - チェック役の呼び出しも、1回の実行の上限回数に数える

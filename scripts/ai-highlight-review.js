@@ -5,9 +5,10 @@
 //   npm run ai-highlight-review -- --slug=n-zoroark-ex-deck   1本だけ
 //   GitHub Actions の「AI highlight review (manual)」（.github/workflows/ai-highlight-review.yml）からも実行できる
 //
-// どちらの場合も、テスト用の4本（scripts/test/fixtures/ai-highlight-review-cases.json。まとめ書き直しで AI が書き、人が手で直す前の文）を
-// 一緒にチェックし、合否を最後に出す（合格の基準: mustFlag: true の2本＝seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927 をどちらも「要確認」にできること。
-// n-zoroark-ex-deck・tauros-deck-0928 は手で直す前の文も間違いではないため、合否に数えない）。
+// どちらの場合も、テスト用の7本（scripts/test/fixtures/ai-highlight-review-cases.json）を一緒にチェックし、合否を最後に出す。
+// 合格の基準: mustFlag: true の2本（まとめ書き直しで AI が書き、人が手で直す前の文＝seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927）を
+// どちらも「要確認」にでき、mustNotFlag: true の3本（今サイトに出ている文＝slowking-deck・n-zoroark-ex-deck・mabusoruex-deck-0928）をすべて「問題なし」にできること。
+// mustFlag: false の2本（n-zoroark-ex-deck・tauros-deck-0928 の手で直す前の文）は、直す前の文も間違いではないため、合否に数えない。
 // チェック役に渡すのは、見どころと、そこに出てくるカードの公式テキスト（公式サイトのカード詳細。.cache/ にあれば再取得しない）だけ。
 // 1回の実行で API を呼ぶ回数の上限は REWRITE_MAX_CALLS（250回）。ANTHROPIC_API_KEY が必要（ない・エラーのときは終了コード 1）
 
@@ -32,15 +33,19 @@ export function parseSlug(argv) {
 /** テスト用の1本の結果の表示。mustFlag: false（手で直す前の文も間違いではない）は「問題なし」でも見逃しにしない */
 export function testCaseMark(testCase, review) {
   if (review.status === 'error') return '－ チェックできず';
+  if (testCase.mustNotFlag) return review.status === 'ok' ? '◯ 問題なしにできた' : '✕ 厳しすぎ（要確認）';
   if (!testCase.mustFlag) return review.status === 'warn' ? '・ 要確認（直す前の文も間違いではない）' : '・ 問題なし（直す前の文も間違いではない）';
   return review.status === 'warn' ? '◯ 要確認にできた' : '✕ 見逃した（問題なし）';
 }
 
-/** 合否: mustFlag: true の記事をすべて「要確認」にできれば合格 */
+/** 合否: mustFlag: true の記事をすべて「要確認」にでき、mustNotFlag: true の記事をすべて「問題なし」にできれば合格 */
 export function testCaseResult(items) {
   const required = items.filter((i) => i.testCase.mustFlag);
   const flagged = required.filter((i) => i.review.status === 'warn').length;
-  return { pass: required.length > 0 && flagged === required.length, flagged, required: required.length };
+  const clean = items.filter((i) => i.testCase.mustNotFlag);
+  const passed = clean.filter((i) => i.review.status === 'ok').length;
+  const pass = required.length > 0 && flagged === required.length && passed === clean.length;
+  return { pass, flagged, required: required.length, passed, clean: clean.length };
 }
 
 async function main() {
@@ -54,11 +59,11 @@ async function main() {
   const published = columns.filter((c) => c.pubDate <= todayJst());
   const targets = slug ? published.filter((c) => c.slug === slug) : published;
   if (slug && !targets.length) throw new Error(`slug「${slug}」の公開済みの記事が src/data/deck-columns.json にありません`);
-  // テスト用の4本（手で直す前の文。カードは今の記事のレシピを使う）
+  // テスト用の7本（手で直す前の文・今サイトに出ている文。カードは今の記事のレシピを使う）
   const cases = fixture.cases.map((k) => ({ ...columns.find((c) => c.slug === k.slug), highlight: k.highlight, testCase: k }));
 
   console.log(`■ 見どころのチェック（モデル: ${AI_HIGHLIGHT_CONFIG.model}・API を呼ぶ上限 ${REWRITE_MAX_CALLS}回）`);
-  console.log(`  公開済みの記事: ${targets.length}本${slug ? `（${slug}）` : ''}・テスト用（手で直す前の文）: ${cases.length}本`);
+  console.log(`  公開済みの記事: ${targets.length}本${slug ? `（${slug}）` : ''}・テスト用: ${cases.length}本`);
   const ai = createAiHighlighter({ config: { ...AI_HIGHLIGHT_CONFIG, maxCallsPerRun: REWRITE_MAX_CALLS }, log: (msg) => console.log(msg) });
   if (!ai.stats.enabled) {
     console.log('\n⚠ ANTHROPIC_API_KEY が設定されていないため、チェックできません');
@@ -69,7 +74,7 @@ async function main() {
   const results = [];
   let stopped = null;
   for (const column of [...targets, ...cases]) {
-    const tag = column.testCase ? '【テスト用・手で直す前】' : '';
+    const tag = column.testCase ? (column.testCase.mustNotFlag ? '【テスト用・要確認にしてはいけない】' : '【テスト用・手で直す前】') : '';
     console.log(`\n- ${tag}${column.slug}（${column.pubDate}${column.highlightBy ? `・${column.testCase ? 'ai' : column.highlightBy}` : ''}）`);
     console.log(`  見どころ: ${column.highlight}`);
     const recipe = recipes[column.deckKey]?.cards ?? [];
@@ -97,17 +102,19 @@ async function main() {
   console.log(`  ✅ 問題なし ${count(real, 'ok')}本・⚠ 要確認 ${count(real, 'warn')}本・⚠ チェックできず ${count(real, 'error')}本`);
   for (const r of real.filter((x) => x.review.status !== 'ok')) console.log(`  - ${r.column.slug}: ${reviewLabel(r.review)}`);
 
-  console.log(`\n■ テスト用の4本（手で直す前の文。合格の基準: ${fixture.passCriteria}）`);
+  console.log(`\n■ テスト用の${cases.length}本（合格の基準: ${fixture.passCriteria}）`);
   const tests = results.filter((r) => r.column.testCase);
   for (const r of tests) {
     const mark = testCaseMark(r.column.testCase, r.review);
-    console.log(`  ${mark}: ${r.column.slug}${r.column.testCase.mustFlag ? '' : '（合否に数えない）'}`);
-    console.log(`      人が直した点: ${r.column.testCase.problem}`);
+    const counted = r.column.testCase.mustFlag || r.column.testCase.mustNotFlag;
+    console.log(`  ${mark}: ${r.column.slug}${counted ? '' : '（合否に数えない）'}`);
+    if (r.column.testCase.problem) console.log(`      人が直した点: ${r.column.testCase.problem}`);
     if (r.column.testCase.note) console.log(`      注意: ${r.column.testCase.note}`);
     if (r.review.reasons.length) console.log(`      チェック役の理由: ${r.review.reasons.join(' / ')}`);
+    if (r.review.notes?.length) console.log(`      チェック役の参考（確認できず）: ${r.review.notes.join(' / ')}`);
   }
-  const { pass, flagged, required } = testCaseResult(tests.map((r) => ({ testCase: r.column.testCase, review: r.review })));
-  console.log(`  → ${pass ? '✅ 合格' : '❌ 不合格'}（要確認にすべき${required}本のうち ${flagged}本を要確認にできた）`);
+  const { pass, flagged, required, passed, clean } = testCaseResult(tests.map((r) => ({ testCase: r.column.testCase, review: r.review })));
+  console.log(`  → ${pass ? '✅ 合格' : '❌ 不合格'}（要確認にすべき${required}本のうち ${flagged}本を要確認にでき、要確認にしてはいけない${clean}本のうち ${passed}本を問題なしにできた）`);
 
   console.log(`\n■ Claude API の使用量\n${usageLines(ai.stats).join('\n')}`);
   console.log('\n（チェックのみのため、ファイルは変更していません）');

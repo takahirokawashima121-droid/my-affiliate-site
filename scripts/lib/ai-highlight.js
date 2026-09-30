@@ -7,7 +7,8 @@
 // - 書いた文は reviewAiHighlight で点検する（scripts/lib/highlight.js の決まった文・同じ日の記事の書き出しに加え、
 //   主役のカードからの書き出し・長さ・誇張・データにない「」の名前や数字）。引っかかったら理由を伝えて1回だけ書き直させる
 // - 点検を通った文は、別の呼び出し（チェック役。review）で、見どころに出てくるカードの公式テキストと見比べさせ、
-//   効果の条件の抜け・公式テキストにないこと・数字・どのカードの効果かの取り違えがないかを「問題なし / 要確認」で返させる（PR に出すだけで、文は使う）
+//   「書いていないこと」ではなく「書いてあることが間違っていないか」（公式テキストとの食い違い・対象の取り違え・数字・条件の抜けで文が誤りになる・
+//   ルール上できない組み合わせ）だけを「問題なし / 要確認」で返させる（PR に出すだけで、文は使う）。公式テキストがないカードは notes に参考として書かせる
 // - それでも通らないとき・API のエラー・キーがないとき・呼び出し回数の上限に達したときは null を返し、
 //   呼び出し側は従来の方法（scripts/lib/highlight.js）の見どころを使う。ここで例外を投げて記事の自動生成を止めることはしない
 
@@ -164,15 +165,25 @@ export function reviewAiHighlight(text, input) {
 }
 
 /** チェック役への指示 */
-const REVIEW_SYSTEM = `あなたはポケモンカードのデッキ紹介記事の校閲者です。ユーザーが渡す「見どころ」の文を、そこに出てくるカードの公式テキストと見比べ、次のずれだけを確認します。
-1. 効果の条件（「〇〇を持つポケモンなら」「〇〇が出ていれば」「ルールを持つポケモンをのぞく」「バトル場かベンチの」など）が抜けている・変わっている
-2. 公式テキストにないことが書いてある
-3. 数字（ダメージ・枚数・回数など）が公式テキストと合わない
-4. どのカードの効果かを取り違えている（例: エネルギーをつける先のポケモンが違う・別のカードの特性として書いている）
+const REVIEW_SYSTEM = `あなたはポケモンカードのデッキ紹介記事の校閲者です。「見どころ」は短い紹介文なので、効果のすべては書きません。見るのは「書いていないこと」ではなく「書いてあることが間違っていないか」だけです。ユーザーが渡す見どころを、そこに出てくるカードの公式テキストと見比べ、次のどれかに当たるときだけ「要確認」にします。
+1. 書いてある内容が、公式テキストと食い違っている（例: 「山札にもどす」カードを「回収する」と書いている）
+2. どのカードの効果か、効果の対象を取り違えている（例: 別のカードの特性として書いている・エネルギーをつける先が違う）
+3. 書いてある数字が、公式テキストの数字と違う
+4. 対象を限定する条件が抜けて、書いてある文が間違いになっている（例: 「ルールを持たないポケモンなら」を「ポケモンなら」と書く・「バトルポケモンが特性〇〇を持つなら」を「バトル場にいれば」と書く）
+5. カードの組み合わせとして、ルール上できないことを書いている（例: ふしぎなアメで1進化を飛ばしたのに、その1進化の特性を使えるように書いている）
 
-- 文の上手さ・言い回し・長さ・カードの選び方は評価しない。言い換えや要約は、意味が公式テキストと合っていれば問題なしとする
-- 渡した公式テキストだけを根拠にする。知っている知識で補わない
-- ずれが1つでもあれば「要確認」にし、reasons に1つずつ「どのカードの・どの部分が・公式テキストではどうなっているか」を短く書く。なければ「問題なし」で reasons は空にする`;
+次のものは「要確認」にしない（書いていないだけ・意味が変わらないものは問題なし）:
+- 数字・枚数・ダメージを書いていない
+- 「自分の番に1回」などの回数の制限を書いていない
+- 使ったあとのデメリットや代償（「きぜつする」「山札にもどす」「次の番ワザが使えない」など）を書いていない
+- 「最初の番は使えない」など、ゲームの基本ルールを書いていない
+- スタジアムが「おたがいに」効くことを書いていない
+- 意味が変わらない言い換え・要約・公式テキストから素直に言えること（例: 「6個なら」→「6個のっていれば」、「きぜつさせる」→「HPに関係なくきぜつさせる」）
+- 公式テキストが渡されていないカード・特性・ワザ（正しいか確かめられないだけなので、「要確認」にせず、notes に「〇〇は公式テキストがなく確認できず」と参考として書く）
+
+- 文の上手さ・言い回し・長さ・カードの選び方は評価しない
+- 書いてあることの正誤は、渡した公式テキストだけを根拠にする（知っている知識でカードの効果を補わない）。5. だけは、進化などのゲームの基本ルールも使ってよい
+- 1〜5 に当たるものが1つでもあれば「要確認」にし、reasons に1つずつ「どのカードの・どの部分が・公式テキストではどうなっているか」を短く書く。なければ「問題なし」で reasons は空にする（notes だけがあっても「問題なし」）`;
 
 /** チェック役の答えの形（structured outputs） */
 const REVIEW_SCHEMA = {
@@ -180,8 +191,9 @@ const REVIEW_SCHEMA = {
   properties: {
     verdict: { type: 'string', enum: ['問題なし', '要確認'] },
     reasons: { type: 'array', items: { type: 'string' } },
+    notes: { type: 'array', items: { type: 'string' } },
   },
-  required: ['verdict', 'reasons'],
+  required: ['verdict', 'reasons', 'notes'],
   additionalProperties: false,
 };
 
@@ -199,25 +211,44 @@ export function mentionedCards(text, profiles, main) {
 export function buildReviewPrompt({ text, main, recipe = [], profiles }) {
   const categoryOf = (n) => recipe.find((e) => e.name === n)?.category;
   const cards = mentionedCards(text, profiles, main).map((n) => cardBlock(n, profiles.get(n), categoryOf(n)));
-  return ['## 見どころ', text, '', '## 見どころに出てくるカードの公式テキスト', ...(cards.length ? cards : ['（該当するカードなし）'])].join('\n');
+  const missing = unverifiableNames(text, cards.join('\n'));
+  return [
+    '## 見どころ',
+    text,
+    '',
+    '## 見どころに出てくるカードの公式テキスト',
+    ...(cards.length ? cards : ['（該当するカードなし）']),
+    ...(missing.length ? ['', '## 公式テキストが渡されていない名前（確認できず。要確認にはせず notes に書く）', ...missing.map((n) => `- ${n}`)] : []),
+  ].join('\n');
+}
+
+/** 見どころの「」の名前のうち、渡す公式テキストのどこにも出てこないもの */
+export function unverifiableNames(text, cardText) {
+  const known = nfkc(cardText);
+  const names = [...nfkc(text).matchAll(/「([^「」]+)」/g)].map((m) => m[1]);
+  return [...new Set(names)].filter((n) => !known.includes(n));
 }
 
 /**
  * チェック役の答え（JSON の文）を読む。形が違えば例外
- * @returns {{ ok: boolean, reasons: string[] }}
+ * notes（公式テキストが渡されていないカードなど、確認できなかったことの参考）は、あるときだけ返す。notes は「要確認」の理由にしない
+ * @returns {{ ok: boolean, reasons: string[], notes?: string[] }}
  */
 export function parseReview(raw) {
   const json = JSON.parse(String(raw ?? '').replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, ''));
   if (!['問題なし', '要確認'].includes(json?.verdict) || !Array.isArray(json.reasons)) throw new Error(`チェック役の答えの形が違う: ${String(raw).slice(0, 100)}`);
-  const reasons = json.reasons.map((r) => String(r).trim()).filter(Boolean);
-  if (json.verdict === '要確認') return { ok: false, reasons: reasons.length ? reasons : ['理由の記載なし'] };
-  return { ok: true, reasons: [] };
+  const clean = (list) => (Array.isArray(list) ? list : []).map((r) => String(r).trim()).filter(Boolean);
+  const reasons = clean(json.reasons);
+  const notes = clean(json.notes);
+  const withNotes = (r) => (notes.length ? { ...r, notes } : r);
+  if (json.verdict === '要確認') return withNotes({ ok: false, reasons: reasons.length ? reasons : ['理由の記載なし'] });
+  return withNotes({ ok: true, reasons: [] });
 }
 
-/** チェック役の結果の表示（PR・ログ用）。review は { status: 'ok' | 'warn' | 'error', reasons: string[] } */
+/** チェック役の結果の表示（PR・ログ用）。review は { status: 'ok' | 'warn' | 'error', reasons: string[], notes?: string[] } */
 export function reviewLabel(review) {
   if (!review) return '';
-  if (review.status === 'ok') return '✅ チェック済み';
+  if (review.status === 'ok') return `✅ チェック済み${review.notes?.length ? `（参考・確認できず：${review.notes.join(' / ')}）` : ''}`;
   if (review.status === 'warn') return `⚠ 要確認：${review.reasons.join(' / ')}`;
   return `⚠ チェックできず${review.reasons?.length ? `（${review.reasons.join(' / ')}）` : ''}`;
 }
@@ -298,7 +329,7 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
   /**
    * チェック役: 見どころを、そこに出てくるカードの公式テキストと見比べる（1回だけ呼ぶ。例外は投げない）
    * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object> }} input
-   * @returns {Promise<{ status: 'ok' | 'warn' | 'error', reasons: string[], limit?: boolean, apiError?: boolean, fatal?: boolean }>}
+   * @returns {Promise<{ status: 'ok' | 'warn' | 'error', reasons: string[], notes?: string[], limit?: boolean, apiError?: boolean, fatal?: boolean }>}
    */
   async function review(input) {
     if (!api) return { status: 'error', reasons: ['ANTHROPIC_API_KEY が設定されていない'] };
@@ -310,8 +341,8 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
       stats.reviewCalls++;
       if (response.stop_reason === 'refusal') return { status: 'error', reasons: ['AI が応答を断った（refusal）'] };
       if (response.stop_reason === 'max_tokens') return { status: 'error', reasons: [`応答が長さの上限（max_tokens ${config.maxTokens}）で切れた`] };
-      const { ok, reasons } = parseReview(textOf(response));
-      const result = { status: ok ? 'ok' : 'warn', reasons };
+      const { ok, reasons, notes } = parseReview(textOf(response));
+      const result = { status: ok ? 'ok' : 'warn', reasons, ...(notes ? { notes } : {}) };
       log(`    チェック役: ${reviewLabel(result)}`);
       return result;
     } catch (error) {

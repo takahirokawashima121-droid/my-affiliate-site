@@ -14,7 +14,7 @@
 //   （選ばなかったデッキは処理済みにせず、次回以降に記事にする）。
 //   デッキ名は画像の前の●付き小見出しがあればそれを正とし、なければレシピから推定する（メガシンカ ex → 既存の記事のデッキ名 → ex の順）。
 //   推定したデッキ名は PR で確認・修正してからマージする。
-//   どちらの場合も、デッキ名の言い換えルール（scripts/lib/deck-name-rules.js。例: ヤドキング採用→「ひらめきチャレンジ」）に当てはまれば、ルールの名前を優先する。記事には eventType: 'city'・rank・eventName・venue・eventDate を付ける
+//   どちらの場合も、デッキ名の通称ルール（scripts/lib/deck-name-rules.js。例: ヤドキング採用→「ひらめきチャレンジ」）に当てはまれば、ルールの名前を優先する。記事には eventType: 'city'・rank・eventName・venue・eventDate を付ける
 //
 // 仕組み:
 // 1. RSS（https://pokecabook.com/archives/category/deck-recipe/feed）から「ジムバトル優勝デッキまとめ」の記事を取り出す。
@@ -26,7 +26,8 @@
 // 4. src/data/deck-columns.json に記事情報を追記し、src/pages/columns/{slug}.astro を生成する。
 //    本文は公式のカードテキストから作る「デッキの構成」「主力カードの効果」と、最安値つき60枚レシピ・代替案の枠。
 //    序盤・中盤・終盤の立ち回り（gamePlan）は60枚の構成と公式のカードテキストから自動生成する（scripts/lib/game-plan.js）。
-//    代替カード・カスタマイズ案は自動では書かないため、Pull Request で追記してから公開する
+//    代替カード・カスタマイズ案は自動では書かないため、Pull Request で追記してから公開する。
+//    デッキ名には「（〇〇採用型）」のような付け足しをしない（同じ日・同じ名前のデッキが並んでもそのまま。PR に一覧で出す）
 // 5. Pull Request の本文（.cache/auto-deck-pr.md）を書き出す（GitHub Actions の auto-deck-sync.yml が使う）
 //
 // マナー: ポケカブック・公式サイトへのリクエストは1.5秒以上あける（scripts/lib/official.js）
@@ -38,11 +39,11 @@ import { fileURLToPath } from 'node:url';
 import { cardEffects, deckCards, norm, romaji } from './lib/official.js';
 import { CITY_RANKS, FEEDS, articleDecks, cityArticleDecks, feedItems, isDeckName } from './lib/pokecabook.js';
 import { importDecks } from './import-official-decks.js';
-import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
+import { STAPLES, baseDeckName, columnDay, variantLabel } from './lib/deck-variant.js';
 import { deckEnglishName, englishName } from './lib/english-name.js';
 import { buildXPosts, rawBestPrice } from '../src/utils/shareText.ts';
 import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
-import { matchDeckNameRule } from './lib/deck-name-rules.js';
+import { CARD_ABILITIES_PATH, loadCardAbilities, matchDeckNameRule, needsAbilities, ruleMainCard } from './lib/deck-name-rules.js';
 import { auditHighlights, chooseHighlights, highlightCandidates } from './lib/highlight.js';
 import { generatedItem } from './lib/pr-body.js';
 
@@ -110,12 +111,33 @@ function inferArchetype(list, knownArchetypes) {
 }
 
 /**
- * デッキ名の言い換えルール（scripts/lib/deck-name-rules.js）を当てはめる。●付き小見出しの名前・推定した名前より優先する。
- * ルールのカードが少なく迷う場合（ヤドキング1枚だけなど）は名前を変えず、d.ruleUncertain に候補の名前を入れて PR で確認する
+ * 特性で判定する通称ルール（「ボムドラパ」= 特性「カースドボム」）のために、レシピのポケモンの特性を公式のカードテキストから調べ、
+ * abilities（カード名 → 特性の名前。scripts/lib/card-abilities.json の内容）に足す。足したら true を返す（呼び出し側でファイルに保存する）
  */
-function applyNameRule(d) {
-  const hit = matchDeckNameRule(d.list);
+async function learnAbilities(list, abilities) {
+  if (!needsAbilities(list)) return false;
+  let added = false;
+  for (const c of list.filter((e) => e.category === 'ポケモン' && !abilities[e.name])) {
+    const names = (await cardEffects(c.cardId)).filter((e) => e.kind === '特性' && e.name).map((e) => e.name);
+    if (names.length === 0) continue;
+    abilities[c.name] = names;
+    added = true;
+  }
+  return added;
+}
+
+/**
+ * デッキ名の通称ルール（scripts/lib/deck-name-rules.js）を当てはめる。●付き小見出しの名前・推定した名前より優先する。
+ * ルールのカードが少なく迷う場合（ヤドキング1枚だけなど）は名前を変えず、d.ruleUncertain に候補の名前を入れて PR で確認する。
+ * 違う名前の2つ以上のルールに当てはまる場合（「ボムドラパ」と「ノココッチドラパ」など）も名前を変えず、d.ruleConflict に入れて PR で確認する
+ */
+function applyNameRule(d, abilities) {
+  const hit = matchDeckNameRule(d.list, abilities);
   if (!hit) return;
+  if (hit.conflict) {
+    d.ruleConflict = hit.rules.map((r) => r.name);
+    return;
+  }
   if (hit.uncertain) {
     d.ruleUncertain = hit.name;
     return;
@@ -130,7 +152,7 @@ function applyNameRule(d) {
 
 /**
  * デッキ名の英語表記から slug を作る（例: tauros-deck-0928・bomb-talonflame-deck-0928・dipplin-festival-lead-deck-0927）。
- * 同名デッキと区別するカード（variant）がポケモンなら、その英語名も付ける（例: dragapult-ex-deck-0927-moltres）。
+ * 同名デッキと区別するカード（variant）がポケモンなら、URL にだけその英語名を付ける（例: dragapult-ex-deck-0927-moltres。デッキ名には付けない）。
  * デッキ名を英語にできないときは主役のポケモン（デッキ名と同じ名前・デッキ名に含まれる名前のポケモン）の英語名を使い approx: true、
  * それもないときだけ公式画像のローマ字を使い fallback: true を返す（どちらも PR で人が確認する）
  */
@@ -150,7 +172,7 @@ function makeSlug(archetype, list, date, taken, variant, mainName = archetype) {
 
 /**
  * 主力パーツ: デッキ名のポケモン、ex・メガシンカなどのポケモン（枚数の多い順）、汎用カード以外のトレーナーズの順。
- * archetype には、言い換えルールで名前を変えたデッキなら、ルールのカード名（「ひらめきチャレンジ」→「ヤドキング」）を渡す
+ * archetype には、通称ルールで名前を変えたデッキなら、ルールのカード名（「ひらめきチャレンジ」→「ヤドキング」）を渡す
  */
 function pickKeyCards(recipe, archetype) {
   const priced = recipe.filter((e) => e.cardId && !STAPLES.has(e.name));
@@ -294,6 +316,8 @@ async function main() {
     console.log(`\n■ 最新の開催日 ${candidates.find((d) => dateKey(d.date) === latest)?.date}から${CITY_WINDOW_DAYS}日以内：${CITY_RANKS.join('・')} ${pool.length}件（未処理）`);
   // 取り込めないデッキ（60枚でない・現行スタンダード外のカードを含む）は飛ばして次の候補で埋める
   const selected = [];
+  const abilities = loadCardAbilities(); // 特性の一覧（特性で判定する通称ルールに使う。公式から調べて足したら保存する）
+  let abilitiesAdded = false;
   const checkedIds = new Set(); // 今回確認したデッキ（記事にした・取り込めなかった）。シティリーグはこれだけを処理済みにする
   for (const d of pool) {
     if (selected.length >= opts.maxColumns) break;
@@ -302,7 +326,8 @@ async function main() {
       d.archetype = inferArchetype(d.list, knownArchetypes);
       d.inferred = true;
     }
-    applyNameRule(d);
+    if (await learnAbilities(d.list, abilities)) abilitiesAdded = true;
+    applyNameRule(d, abilities);
     if (opts.source === 'city' && selected.some((o) => norm(o.archetype) === norm(d.archetype))) continue;
     const check = await importDecks([{ slug: `check-${d.deckId}`, deckId: d.deckId }], { dryRun: true, skipInvalid: true });
     checkedIds.add(d.deckId);
@@ -314,50 +339,39 @@ async function main() {
   const asRecipe = (list) => list.map((c) => ({ name: c.name, qty: c.count, category: c.category, aceSpec: c.aceSpec }));
   const sameBase = (c, archetype) => norm(baseDeckName(c.deckName)) === norm(archetype);
   for (const d of selected) {
-    // 主軸名が同じ既存記事・同じ回のデッキがあれば、レシピの差分から「〇〇採用型」と名付ける（連番の「構築2」は使わない）
+    // 主軸名が同じ既存記事・同じ回のデッキがあれば、レシピの差分から区別できるカードを選び、URL にだけ使う（デッキ名には付けない）
     const peers = [
       ...columns.filter((c) => sameBase(c, d.archetype) && recipesBefore[c.deckKey]).map((c) => recipesBefore[c.deckKey].cards),
       ...selected.filter((o) => o !== d && norm(o.archetype) === norm(d.archetype)).map((o) => asRecipe(o.list)),
     ];
     d.variant = peers.length > 0 ? variantLabel(asRecipe(d.list), peers) : null;
-    // このデッキにしか入っていないカードがなく、枚数の違いでも区別できない（大きな差がない）ときは型名を付けない
     if (d.variant && !d.variant.card) d.variant = null;
     if (!isDeckName(d.archetype)) throw new Error(`デッキ名が日付・大会名になっています: 「${d.archetype}」（${d.deckId}）`);
-    ({ slug: d.slug, fallback: d.slugFallback, approx: d.slugApprox } = makeSlug(d.archetype, d.list, d.date, taken, d.variant, d.nameRule?.has[0]));
+    ({ slug: d.slug, fallback: d.slugFallback, approx: d.slugApprox } = makeSlug(d.archetype, d.list, d.date, taken, d.variant, d.nameRule ? ruleMainCard(d.nameRule) : d.archetype));
     taken.add(d.slug);
     console.log(
-      `  - ${d.archetype}${d.variant ? `（${d.variant.text}型）` : ''}（${d.date ?? '日付不明'}${d.venue ? ` ${d.venue}` : ''} ${d.rank ?? '順位不明'}${d.venueNo ? `・元記事の${d.venueNo}会場目` : ''}${d.nameRule ? `・言い換えルール（元の名前: ${d.sourceName}）` : d.inferred ? '・デッキ名は推定' : d.nameSource === 'bullet' ? '・デッキ名は●小見出し' : ''}${d.ruleUncertain ? `・⚠「${d.ruleUncertain}」に当てはまるか要確認` : ''}）→ /columns/${d.slug}/${d.slugFallback ? '（⚠ 英語名が不明のためローマ字）' : d.slugApprox ? '（⚠ デッキ名を英語にできないため主役ポケモンの英語名）' : ''}`,
+      `  - ${d.archetype}（${d.date ?? '日付不明'}${d.venue ? ` ${d.venue}` : ''} ${d.rank ?? '順位不明'}${d.venueNo ? `・元記事の${d.venueNo}会場目` : ''}${d.nameRule ? `・通称ルール（元の名前: ${d.sourceName}）` : d.inferred ? '・デッキ名は推定' : d.nameSource === 'bullet' ? '・デッキ名は●小見出し' : ''}${d.ruleUncertain ? `・⚠「${d.ruleUncertain}」に当てはまるか要確認` : ''}${d.ruleConflict ? `・⚠ 通称ルール「${d.ruleConflict.join('」「')}」の両方に当てはまるため要確認` : ''}）→ /columns/${d.slug}/${d.slugFallback ? '（⚠ 英語名が不明のためローマ字）' : d.slugApprox ? '（⚠ デッキ名を英語にできないため主役ポケモンの英語名）' : ''}`,
     );
   }
   if (opts.dryRun) return console.log('\n（dry-run: カード追加・記事生成・処理済みの記録は行いません）');
+  if (abilitiesAdded) await writeFile(CARD_ABILITIES_PATH, `${JSON.stringify(Object.fromEntries(Object.entries(abilities).sort(([a], [b]) => a.localeCompare(b, 'ja'))), null, 2)}\n`, 'utf8');
 
   // カードの取り込み（無効なデッキは飛ばす）
   const result = selected.length > 0 ? await importDecks(selected.map((d) => ({ slug: d.slug, deckId: d.deckId })), { skipInvalid: true }) : { decks: [], added: [], skipped: [] };
   const recipes = await readJson(DECKS_PATH, {});
   const cards = await readJson(CARDS_PATH, []);
   const generated = [];
-  const renamedColumns = []; // 同名デッキの追加で型名を付けた既存記事
   const highlightInputs = []; // 見どころの材料（同じ日の記事と書き出しが重ならないよう、全記事の生成後にまとめて選ぶ）
   for (const d of selected.filter((x) => result.decks.includes(x.slug))) {
     const recipe = recipes[d.slug].cards;
-    const keyCards = pickKeyCards(recipe, d.nameRule?.has[0] ?? d.archetype);
+    const keyCards = pickKeyCards(recipe, d.nameRule ? ruleMainCard(d.nameRule) : d.archetype);
     const profiles = await recipeProfiles(recipe); // 採用カードの公式テキスト（立ち回り・見どころに使う。キャッシュつき）
     const isCity = opts.source === 'city';
     const rank = d.rank ?? '優勝';
     const label = `${d.date ?? ''} ${isCity ? 'シティリーグ' : 'ジムバトル'}${rank}`.trim();
     const placed = { 優勝: '優勝した', 準優勝: '準優勝した', TOP4: 'TOP4に入賞した' }[rank] ?? '優勝した';
-    const deckName = d.variant ? `${d.archetype}（${d.variant.text}型）` : d.archetype;
-    // 型名のない既存の同名記事にも、新しいデッキとの差分から型名を付ける（一覧・タイトルで区別できるように）
-    for (const c of columns.filter((c) => c.deckName === d.archetype && recipes[c.deckKey])) {
-      const others = [recipe, ...columns.filter((o) => o !== c && sameBase(o, d.archetype) && recipes[o.deckKey]).map((o) => recipes[o.deckKey].cards)];
-      const label = variantLabel(recipes[c.deckKey].cards, others);
-      if (!label.card) continue; // 大きな差がない既存の記事には型名を付けない
-      const renamed = `${d.archetype}（${label.text}型）`;
-      c.title = c.title.replace(`${d.archetype}デッキレシピ`, `${renamed}デッキレシピ`);
-      c.deckName = renamed;
-      renamedColumns.push(c);
-      console.log(`  ↻ 既存の記事を改名: /columns/${c.slug}/ → ${renamed}`);
-    }
+    // デッキ名には「（〇〇採用型）」のような付け足しをしない（同じ名前のデッキが並んでもそのまま）
+    const deckName = d.archetype;
     const column = {
       slug: d.slug,
       deckKey: d.slug,
@@ -396,6 +410,7 @@ async function main() {
       sourceName: d.sourceName,
       renamedByRule: Boolean(d.nameRule),
       ruleUncertain: d.ruleUncertain,
+      ruleConflict: d.ruleConflict,
       // PR の「生成した記事」に出す大会の情報（取れなかった項目は「取得できず」と出す）
       source: {
         eventLabel: source.label,
@@ -471,12 +486,17 @@ async function main() {
   const approxColumns = generated.filter((c) => c.slugApprox);
   const ruleColumns = generated.filter((c) => c.renamedByRule);
   const uncertainColumns = generated.filter((c) => c.ruleUncertain);
+  const conflictColumns = generated.filter((c) => c.ruleConflict);
+  // 同じ日・同じ名前の記事（付け足しをしないため、一覧・トップで同じ名前が並ぶ。PR で確認する）
+  const sameNameDay = generated
+    .map((g) => ({ g, others: columns.filter((c) => c.slug !== g.slug && norm(c.deckName) === norm(g.deckName) && columnDay(g) && columnDay(c) === columnDay(g)) }))
+    .filter((x) => x.others.length > 0);
   const body = [
     `## 🏭 ポケカファクトリー｜新着${source.label}入賞デッキ記事の自動生成`,
     '',
     `RSS（${source.feed}）の新着記事から自動生成しました。`,
     '',
-    '> デッキ名はポケカブックのまとめ記事の●付き小見出しの名前を正としています（言い換えルール `scripts/lib/deck-name-rules.js` に当てはまるデッキは、ルールの名前を優先）。',
+    '> デッキ名はポケカブックのまとめ記事の●付き小見出しの名前を正としています（通称ルール `scripts/lib/deck-name-rules.js` に当てはまるデッキは、ルールの名前を優先）。「（〇〇採用型）」のような付け足しはしません。',
     ...(inferredColumns.length
       ? [
           `> ⚠ 次の記事は●付き小見出しのデッキ名が取れなかったため、**デッキ名をレシピから推定**しています: ${inferredColumns.map((c) => c.deckName).join('・')}。元記事（画像を含む）と見比べて、違っていれば deck-columns.json の deckName・title・slug とページを直してください。`,
@@ -500,16 +520,29 @@ async function main() {
         ]
       : []),
     ...(ruleColumns.length
-      ? ['### 言い換えルールでデッキ名を変えた記事', ...ruleColumns.map((c) => `- \`/columns/${c.slug}/\` ${c.sourceName ?? '—'} → **${c.deckName}**`), '']
+      ? ['### 通称ルールでデッキ名を変えた記事', ...ruleColumns.map((c) => `- \`/columns/${c.slug}/\` ${c.sourceName ?? '—'} → **${c.deckName}**`), '']
       : []),
     ...(uncertainColumns.length
       ? [
-          '### ⚠ 言い換えルールに当てはまるか迷う記事（デッキ名は変えていません）',
+          '### ⚠ 通称ルールに当てはまるか迷う記事（デッキ名は変えていません）',
           ...uncertainColumns.map((c) => `- \`/columns/${c.slug}/\` ${c.deckName}（「${c.ruleUncertain}」のカードが少ない）`),
           '',
         ]
       : []),
-    ...(renamedColumns.length ? ['### 型名を付けた既存の記事（同名デッキと区別するため）', ...renamedColumns.map((c) => `- \`/columns/${c.slug}/\` → ${c.deckName}（本文中の表記も必要に応じて更新）`), ''] : []),
+    ...(conflictColumns.length
+      ? [
+          '### ⚠ 2つ以上の通称ルールに当てはまる記事（デッキ名は変えていません。どちらの名前にするか決めてください）',
+          ...conflictColumns.map((c) => `- \`/columns/${c.slug}/\` ${c.deckName}（「${c.ruleConflict.join('」「')}」の両方に当てはまる）`),
+          '',
+        ]
+      : []),
+    ...(sameNameDay.length
+      ? [
+          '### 同じ日・同じ名前の記事（デッキ名に付け足しをしないため、一覧で同じ名前が並びます）',
+          ...sameNameDay.map(({ g, others }) => `- ${g.deckName}（${columnDay(g)}）: \`/columns/${g.slug}/\`・${others.map((c) => `\`/columns/${c.slug}/\``).join('・')}`),
+          '',
+        ]
+      : []),
     `### 追加したカード（${addedCards.length}枚）`,
     ...(addedCards.length ? addedCards.map((c) => `- ${c.name} ${c.rarity} [${c.expansionCode} ${c.cardNumber}] ${c.regulationMark ?? ''}`) : ['- なし']),
     '',
@@ -518,7 +551,8 @@ async function main() {
     '### マージ前に確認すること',
     ...(bannedHits.length || similarHits.length || todoHighlights.length ? ['- [ ] 「紹介文の確認すべき点」の見どころを書き直した'] : []),
     ...(inferredColumns.length ? ['- [ ] 推定したデッキ名が元記事のデッキ名と合っている'] : []),
-    ...(uncertainColumns.length ? ['- [ ] 言い換えルールに当てはまるか迷う記事のデッキ名を決めた'] : []),
+    ...(uncertainColumns.length ? ['- [ ] 通称ルールに当てはまるか迷う記事のデッキ名を決めた'] : []),
+    ...(conflictColumns.length ? ['- [ ] 2つ以上の通称ルールに当てはまる記事のデッキ名を決めた'] : []),
     ...(approxColumns.length ? [`- [ ] デッキ名を英語にできず主役ポケモンの英語名にした URL でよいか確認した（scripts/lib/english-name.js の DECK_WORDS に追記すると直訳になる）: ${approxColumns.map((c) => `\`${c.slug}\``).join('・')}`] : []),
     ...(romajiColumns.length ? [`- [ ] 英語名が分からずローマ字の slug になった記事の URL を英語表記に直した（scripts/lib/pokemon-names-en.json に追記）: ${romajiColumns.map((c) => `\`${c.slug}\``).join('・')}`] : []),
     '- [ ] 自動生成の立ち回り（序盤・中盤・終盤）をプレビューで読み、不自然な箇所があれば deck-columns.json の gamePlan を直した',

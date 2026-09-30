@@ -7,13 +7,13 @@ export const UNKNOWN = '取得できず';
 /** 「青馬堂矢向店（神奈川）」のように会場名の最後に都道府県があるか。なければ都道府県は取得できず */
 export const venueText = (venue) => (!venue ? `開催店舗・都道府県: ${UNKNOWN}` : /（[^（）]+）(?:-\d+)?$/.test(venue) ? venue : `${venue}（都道府県: ${UNKNOWN}）`);
 
-/** デッキ名をどこから取ったか（●付き小見出し・h2 の見出し・レシピから推定・言い換えルール） */
+/** デッキ名をどこから取ったか（●付き小見出し・h2 の見出し・レシピから推定・通称ルール） */
 export function nameSourceText(c) {
   const s = c.source;
-  // 言い換えルールで変えた名前は、元の名前（ルールを当てる前）の取り方を出す
+  // 通称ルールで変えた名前は、元の名前（ルールを当てる前）の取り方を出す
   const inferred = c.renamedByRule ? s.sourceInferred : c.inferred || !s.nameSource;
   const origin = inferred ? '⚠ 推定' : s.nameSource === 'bullet' ? '●付き小見出し' : '見出し';
-  return c.renamedByRule ? `言い換えルール・元の名前「${c.sourceName}」は${origin}` : origin;
+  return c.renamedByRule ? `通称ルール・元の名前「${c.sourceName}」は${origin}` : origin;
 }
 
 /**

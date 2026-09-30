@@ -83,12 +83,14 @@ export const DECK_WORDS = {
 };
 
 /**
- * デッキ名全体の英語表記（言い換えルール scripts/lib/deck-name-rules.js の名前など、語に分けずにそのまま訳すもの）。
- * 言い換えルールを追加したら、ここにも英語表記を追記する（海外で通じるデッキの呼び名。ひらめきチャレンジはワザの英語名）
+ * デッキ名全体の英語表記（通称ルール scripts/lib/deck-name-rules.js の名前など、語に分けずにそのまま訳すもの）。
+ * 通称ルールを追加したら、ここにも英語表記を追記する（海外で通じるデッキの呼び名。ひらめきチャレンジはワザの英語名）
  */
 export const DECK_NAMES = {
   ひらめきチャレンジ: 'seek-inspiration',
   おまつりおんど: 'dipplin-festival-lead',
+  ボムドラパ: 'bomb-dragapult',
+  ノココッチドラパ: 'dudunsparce-dragapult',
 };
 
 /**

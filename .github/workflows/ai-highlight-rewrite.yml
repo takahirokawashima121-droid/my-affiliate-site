@@ -84,14 +84,16 @@ jobs:
 
       # 書き直した記事があるときだけ PR を作る（deck-columns.json に差分がなければ作らない。同じブランチの PR があれば更新）
       # 「要確認の記事だけ直す」で直した記事が1本もないとき（manual の記事の要確認だけなど）は PR ができないので、実行結果の Summary を見る
+      # branch・title・commit-message の ${{ }} は全体を "" で囲む（title などの中の「content: 」の「: 」を YAML がキーと読み違え、
+      # ワークフローのファイル全体が読めなくなるため）
       - name: Create pull request
         if: hashFiles('.cache/ai-highlight-rewrite-pr.md') != ''
         uses: peter-evans/create-pull-request@v7
         with:
-          branch: ${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'auto/ai-highlight-fix' || 'auto/ai-highlight-rewrite' }}
+          branch: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'auto/ai-highlight-fix' || 'auto/ai-highlight-rewrite' }}"
           delete-branch: true
-          title: ${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'content: 公開済みデッキ記事の見どころのうち、要確認の記事だけを Claude API で直す' || 'content: 公開済みデッキ記事の見どころを Claude API で書き直し' }}
-          commit-message: ${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'content: 要確認の見どころを Claude API で直す' || 'content: 公開済みデッキ記事の見どころを Claude API で書き直す' }}
+          title: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'content: 公開済みデッキ記事の見どころのうち、要確認の記事だけを Claude API で直す' || 'content: 公開済みデッキ記事の見どころを Claude API で書き直し' }}"
+          commit-message: "${{ github.event.inputs.mode == '要確認の記事だけ直す' && 'content: 要確認の見どころを Claude API で直す' || 'content: 公開済みデッキ記事の見どころを Claude API で書き直す' }}"
           body-path: .cache/ai-highlight-rewrite-pr.md
           labels: auto-deck
           add-paths: |

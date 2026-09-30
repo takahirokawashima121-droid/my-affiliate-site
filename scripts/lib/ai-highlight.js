@@ -8,10 +8,14 @@
 //   主役のカードからの書き出し・長さ・誇張・データにない「」の名前や数字）。引っかかったら理由を伝えて1回だけ書き直させる
 // - 点検を通った文は、別の呼び出し（チェック役。review）で、見どころに出てくるカードの公式テキストと見比べさせ、
 //   「書いていないこと」ではなく「書いてあることが間違っていないか」（公式テキストとの食い違い・対象の取り違え・数字・条件の抜けで文が誤りになる・
-//   ルール上できない組み合わせ）だけを「問題なし / 要確認」で返させる（PR に出すだけで、文は使う）。公式テキストがないカードは notes に参考として書かせる
+//   ルール上できない組み合わせ）だけを見させる。気になった点を1つずつ「誤り / 問題なし」で JSON で答えさせ、「誤り」が1つでもあれば要確認、
+//   なければ問題なし、とプログラムで決める（parseReview）。公式テキストがないカードは notes に参考として書かせる
+// - 要確認なら、「誤り」の理由を書く役に渡して1回だけ直させ（fix）、もう一度チェックする（checkAndFix）。それでも要確認なら PR で人に知らせる
+// - 公式テキストには書かれていないが、ゲームのルールで決まっていること（scripts/lib/game-rules.md）は、書く役とチェック役の両方に渡す
 // - それでも通らないとき・API のエラー・キーがないとき・呼び出し回数の上限に達したときは null を返し、
 //   呼び出し側は従来の方法（scripts/lib/highlight.js）の見どころを使う。ここで例外を投げて記事の自動生成を止めることはしない
 
+import { readFileSync } from 'node:fs';
 import Anthropic from '@anthropic-ai/sdk';
 import { HIGHLIGHT_MAX, bannedPhrases, opening } from './highlight.js';
 
@@ -24,7 +28,7 @@ import { HIGHLIGHT_MAX, bannedPhrases, opening } from './highlight.js';
 export const AI_HIGHLIGHT_CONFIG = {
   model: 'claude-sonnet-5-5',
   effort: 'medium',
-  maxCallsPerRun: 20,
+  maxCallsPerRun: 40,
   maxTokens: 8000,
   timeoutMs: 120_000,
 };
@@ -56,6 +60,31 @@ const EXAGGERATION = /最強|必勝|絶対|無敵|圧倒的|最高|完璧|確実
 
 const nfkc = (s) => (s ?? '').normalize('NFKC');
 
+/**
+ * ポケカの基本ルールのメモ（scripts/lib/game-rules.md の「## ルール」の下の「- 」で始まる行）。
+ * 公式テキストには書かれていないが、ゲームのルールで決まっていること。書く役とチェック役の両方に渡す
+ */
+export function parseGameRules(markdown) {
+  const lines = String(markdown ?? '').split(/\r?\n/);
+  const start = lines.findIndex((l) => /^##\s*ルール$/.test(l.trim()));
+  if (start < 0) return [];
+  const rules = [];
+  for (const line of lines.slice(start + 1)) {
+    if (line.trim().startsWith('#')) break;
+    const m = line.match(/^\s*-\s+(.+?)\s*$/);
+    if (m) rules.push(m[1]);
+  }
+  return rules;
+}
+
+export const GAME_RULES = parseGameRules(readFileSync(new URL('./game-rules.md', import.meta.url), 'utf8'));
+
+/** プロンプトに入れるルールのメモの段落 */
+const rulesSection = (rules) =>
+  rules.length
+    ? `\n\nポケカの基本ルール（公式テキストには書かれていないが、ゲームのルールで決まっていること。正しいこととして扱う）:\n${rules.map((r) => `- ${r}`).join('\n')}`
+    : '';
+
 const SYSTEM = `あなたはポケモンカードの大会入賞デッキを紹介するサイトの編集者です。デッキ記事の「見どころ」を1段落で書きます。
 使ってよい情報は、ユーザーが渡す「デッキ名」「60枚のレシピ」「採用カードの公式テキスト」だけです。
 
@@ -69,7 +98,7 @@ const SYSTEM = `あなたはポケモンカードの大会入賞デッキを紹�
 - 長さは全角で${AI_HIGHLIGHT_MIN + 20}〜${HIGHLIGHT_MAX - 10}字くらい（${HIGHLIGHT_MAX}字を超えない）。改行しない。文末は「〜する」「〜できる」の形にする
 - 「最強」「必勝」「絶対」「無敵」のような誇張はしない
 - 「〇〇を採用した〇〇デッキ」「〜をまとめて確認」のような、名前を入れ替えるだけでどのデッキにも使える決まり文句は使わない
-- 前置き・見出し・箇条書き・説明は付けず、見どころの文だけを出力する`;
+- 前置き・見出し・箇条書き・説明は付けず、見どころの文だけを出力する${rulesSection(GAME_RULES)}`;
 
 /** カード1枚分の公式テキスト（プロンプト用） */
 function cardBlock(name, profile, category) {
@@ -182,18 +211,38 @@ const REVIEW_SYSTEM = `あなたはポケモンカードのデッキ紹介記事
 - 公式テキストが渡されていないカード・特性・ワザ（正しいか確かめられないだけなので、「要確認」にせず、notes に「〇〇は公式テキストがなく確認できず」と参考として書く）
 
 - 文の上手さ・言い回し・長さ・カードの選び方は評価しない
-- 書いてあることの正誤は、渡した公式テキストだけを根拠にする（知っている知識でカードの効果を補わない）。5. だけは、進化などのゲームの基本ルールも使ってよい
-- 1〜5 に当たるものが1つでもあれば「要確認」にし、reasons に1つずつ「どのカードの・どの部分が・公式テキストではどうなっているか」を短く書く。なければ「問題なし」で reasons は空にする（notes だけがあっても「問題なし」）`;
+- 書いてあることの正誤は、渡した公式テキストと、下の「ポケカの基本ルール」だけを根拠にする（知っている知識でカードの効果を補わない）。5. では、進化などのゲームの基本ルールも使ってよい
+- 「ポケカの基本ルール」に合っている書き方は、公式テキストに書かれていなくても「誤り」にしない
+
+答え方:
+- 気になった点を1つずつ checks に書く。point に見どころのどの部分か、judgment に「誤り」（1〜5 に当たる）か「問題なし」（当たらない・上の「要確認にしない」もの）、reason に理由（「誤り」なら、どのカードの・どの部分が・公式テキストではどうなっているかを短く）
+- 「誤り」にするときは、quote に根拠になる公式テキストの一文を、渡した公式テキストから一字一句そのまま引用する（言い換え・要約・自分の知識は不可）。引用できる一文がないなら「誤り」にしない。「問題なし」のときは quote は空でよい
+- 理由を書いてみて「誤りではない」「問題なし」と思ったら、judgment は「問題なし」にする
+- 気になった点がなければ checks は空にする
+- 「要確認」かどうかはプログラムが checks から決める（「誤り」が1つでもあれば要確認）。確かめて問題がなかった点は、必ず「問題なし」にする
+- 公式テキストが渡されていないカードのことは checks に入れず、notes に書く${rulesSection(GAME_RULES)}`;
 
 /** チェック役の答えの形（structured outputs） */
 const REVIEW_SCHEMA = {
   type: 'object',
   properties: {
-    verdict: { type: 'string', enum: ['問題なし', '要確認'] },
-    reasons: { type: 'array', items: { type: 'string' } },
+    checks: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          point: { type: 'string' },
+          judgment: { type: 'string', enum: ['誤り', '問題なし'] },
+          reason: { type: 'string' },
+          quote: { type: 'string' },
+        },
+        required: ['point', 'judgment', 'reason', 'quote'],
+        additionalProperties: false,
+      },
+    },
     notes: { type: 'array', items: { type: 'string' } },
   },
-  required: ['verdict', 'reasons', 'notes'],
+  required: ['checks', 'notes'],
   additionalProperties: false,
 };
 
@@ -208,10 +257,10 @@ export function mentionedCards(text, profiles, main) {
  * チェック役に渡す文（見どころと、そこに出てくるカードの公式テキストだけ）
  * @param {{ text: string, main: string, recipe?: object[], profiles: Map<string, object> }} input
  */
-export function buildReviewPrompt({ text, main, recipe = [], profiles }) {
-  const categoryOf = (n) => recipe.find((e) => e.name === n)?.category;
-  const cards = mentionedCards(text, profiles, main).map((n) => cardBlock(n, profiles.get(n), categoryOf(n)));
-  const missing = unverifiableNames(text, cards.join('\n'));
+export function buildReviewPrompt(input) {
+  const cards = reviewCards(input);
+  const missing = unverifiableNames(input.text, cards.join('\n'));
+  const { text } = input;
   return [
     '## 見どころ',
     text,
@@ -222,6 +271,38 @@ export function buildReviewPrompt({ text, main, recipe = [], profiles }) {
   ].join('\n');
 }
 
+/** チェック役に渡すカードの公式テキスト（見どころに出てくるカードの分。1枚1つの文字列） */
+function reviewCards({ text, main, recipe = [], profiles }) {
+  const categoryOf = (n) => recipe.find((e) => e.name === n)?.category;
+  return mentionedCards(text, profiles, main).map((n) => cardBlock(n, profiles.get(n), categoryOf(n)));
+}
+
+/** チェック役に渡した公式テキスト（「誤り」の引用がこの中にあるかを確かめる） */
+export const reviewCardText = (input) => reviewCards(input).join('\n');
+
+/** 引用の比べ方: 全角半角・空白・かぎかっこ・句読点の違いは見ない */
+const quoteKey = (s) => nfkc(s).replace(/[\s「」『』。、，．,.]/g, '');
+
+/** 引用がこの長さ（比べ方をそろえた文字数）より短いときは、根拠の一文とみなさない */
+const QUOTE_MIN = 4;
+
+/**
+ * 「誤り」の引用が、渡した公式テキストにあるか。「…」で省略した引用は、区切ったそれぞれが公式テキストにあればよい
+ * @returns {boolean}
+ */
+export function quoteFound(quote, cardText) {
+  const parts = nfkc(quote)
+    .split(/…|\.\.\.|‥/)
+    .map(quoteKey)
+    .filter(Boolean);
+  const all = parts.join('');
+  const known = quoteKey(cardText);
+  return all.length >= QUOTE_MIN && parts.every((p) => known.includes(p));
+}
+
+/** 「誤り」なのに理由に「誤りではない」「問題なし」と書いてあるもの（誤りとして数えない） */
+const NOT_WRONG = /誤りではな|誤りでな|誤りとは言えな|問題な[しい]|問題はな/;
+
 /** 見どころの「」の名前のうち、渡す公式テキストのどこにも出てこないもの */
 export function unverifiableNames(text, cardText) {
   const known = nfkc(cardText);
@@ -231,18 +312,37 @@ export function unverifiableNames(text, cardText) {
 
 /**
  * チェック役の答え（JSON の文）を読む。形が違えば例外
+ * 判定はプログラムで決める: checks に「誤り」が1つでもあれば要確認（ok: false）、なければ問題なし。
+ * reasons は「誤り」の点だけ（「問題なし」の点は PR・ログに出さない）。「どの部分：理由（公式テキスト「引用」）」の形。
+ * 次の「誤り」は、誤りとして数えない（ignored に理由をつけて返す。ログにだけ出す）:
+ * - 根拠の公式テキストの引用（quote）がない
+ * - 引用が、チェック役に渡した公式テキスト（cardText）に見つからない（cardText を渡したときだけ確かめる）
+ * - 理由に「誤りではない」「問題なし」などと書いてある
  * notes（公式テキストが渡されていないカードなど、確認できなかったことの参考）は、あるときだけ返す。notes は「要確認」の理由にしない
- * @returns {{ ok: boolean, reasons: string[], notes?: string[] }}
+ * @param raw チェック役の答え（JSON の文）
+ * @param {{ cardText?: string }} [options] cardText はチェック役に渡した公式テキスト（reviewCardText）
+ * @returns {{ ok: boolean, reasons: string[], notes?: string[], ignored?: string[] }}
  */
-export function parseReview(raw) {
+export function parseReview(raw, { cardText } = {}) {
   const json = JSON.parse(String(raw ?? '').replace(/^\s*```(?:json)?\s*|\s*```\s*$/g, ''));
-  if (!['問題なし', '要確認'].includes(json?.verdict) || !Array.isArray(json.reasons)) throw new Error(`チェック役の答えの形が違う: ${String(raw).slice(0, 100)}`);
-  const clean = (list) => (Array.isArray(list) ? list : []).map((r) => String(r).trim()).filter(Boolean);
-  const reasons = clean(json.reasons);
-  const notes = clean(json.notes);
-  const withNotes = (r) => (notes.length ? { ...r, notes } : r);
-  if (json.verdict === '要確認') return withNotes({ ok: false, reasons: reasons.length ? reasons : ['理由の記載なし'] });
-  return withNotes({ ok: true, reasons: [] });
+  const checks = json?.checks;
+  if (!Array.isArray(checks) || !checks.every((c) => c && ['誤り', '問題なし'].includes(c.judgment))) {
+    throw new Error(`チェック役の答えの形が違う: ${String(raw).slice(0, 100)}`);
+  }
+  const clean = (s) => String(s ?? '').trim();
+  const reasons = [];
+  const ignored = [];
+  for (const c of checks.filter((x) => x.judgment === '誤り')) {
+    const label = [clean(c.point), clean(c.reason)].filter(Boolean).join('：') || '理由の記載なし';
+    const quote = clean(c.quote);
+    if (!quote) ignored.push(`${label}（根拠の公式テキストの引用がない）`);
+    else if (cardText !== undefined && !quoteFound(quote, cardText)) ignored.push(`${label}（引用「${quote}」が公式テキストに見つからない）`);
+    else if (NOT_WRONG.test(clean(c.reason))) ignored.push(`${label}（理由に「誤りではない」「問題なし」と書いてある）`);
+    else reasons.push(`${label}（公式テキスト「${quote}」）`);
+  }
+  const notes = (Array.isArray(json.notes) ? json.notes : []).map(clean).filter(Boolean);
+  const extra = { ...(notes.length ? { notes } : {}), ...(ignored.length ? { ignored } : {}) };
+  return reasons.length ? { ok: false, reasons, ...extra } : { ok: true, reasons: [], ...extra };
 }
 
 /** チェック役の結果の表示（PR・ログ用）。review は { status: 'ok' | 'warn' | 'error', reasons: string[], notes?: string[] } */
@@ -251,6 +351,17 @@ export function reviewLabel(review) {
   if (review.status === 'ok') return `✅ チェック済み${review.notes?.length ? `（参考・確認できず：${review.notes.join(' / ')}）` : ''}`;
   if (review.status === 'warn') return `⚠ 要確認：${review.reasons.join(' / ')}`;
   return `⚠ チェックできず${review.reasons?.length ? `（${review.reasons.join(' / ')}）` : ''}`;
+}
+
+/**
+ * 要確認のあとに自分で直したかの表示（PR・ログ用）。fix は checkAndFix の結果の fix
+ * - fixed: 「誤り」の理由を渡して直させ、もう一度チェックして問題なしになった
+ * - unfixed: 直せなかった（直した文もまた要確認・チェックできず・直す呼び出しが失敗）ので、人に知らせる
+ */
+export function fixLabel(fix) {
+  if (!fix) return '';
+  if (fix.outcome === 'fixed') return `🔧 自分で直せた（最初の指摘：${fix.firstReview.reasons.join(' / ')}）`;
+  return `🙋 直せずに人に知らせた${fix.reason ? `（${fix.reason}）` : ''}`;
 }
 
 /** 応答の本文（text ブロックをつなげ、前後の空白を除く） */
@@ -275,7 +386,8 @@ export function estimateCost(model, inputTokens, outputTokens) {
 export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, client, config = AI_HIGHLIGHT_CONFIG, log = () => {} } = {}) {
   const api = client ?? (apiKey ? new Anthropic({ apiKey, timeout: config.timeoutMs, maxRetries: 2 }) : null);
   // reviewCalls: calls のうちチェック役の分
-  const stats = { model: config.model, enabled: Boolean(api), calls: 0, reviewCalls: 0, maxCalls: config.maxCallsPerRun, inputTokens: 0, outputTokens: 0, errors: 0 };
+  // fixCalls: calls のうち、チェック役の「誤り」を直させた分
+  const stats = { model: config.model, enabled: Boolean(api), calls: 0, reviewCalls: 0, fixCalls: 0, maxCalls: config.maxCallsPerRun, inputTokens: 0, outputTokens: 0, errors: 0 };
 
   async function call(messages, { system = SYSTEM, format } = {}) {
     if (stats.calls >= config.maxCallsPerRun) throw new LimitError(`1回の実行で API を呼べる上限（${config.maxCallsPerRun}回）に達した`);
@@ -341,9 +453,11 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
       stats.reviewCalls++;
       if (response.stop_reason === 'refusal') return { status: 'error', reasons: ['AI が応答を断った（refusal）'] };
       if (response.stop_reason === 'max_tokens') return { status: 'error', reasons: [`応答が長さの上限（max_tokens ${config.maxTokens}）で切れた`] };
-      const { ok, reasons, notes } = parseReview(textOf(response));
+      const { ok, reasons, notes, ignored } = parseReview(textOf(response), { cardText: reviewCardText(input) });
       const result = { status: ok ? 'ok' : 'warn', reasons, ...(notes ? { notes } : {}) };
       log(`    チェック役: ${reviewLabel(result)}`);
+      // 誤りとして数えなかった「誤り」（引用がない・引用が公式テキストにない・理由が「問題なし」）はログにだけ出す
+      if (ignored) log(`    （誤りとして数えなかった点: ${ignored.join(' / ')}）`);
       return result;
     } catch (error) {
       if (error instanceof LimitError) return { status: 'error', reasons: [error.message], limit: true };
@@ -358,7 +472,76 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
     }
   }
 
-  return { write, review, stats };
+  /**
+   * チェック役の「誤り」の理由を渡して、見どころを1回だけ直させる（点検 reviewAiHighlight も通す。例外は投げない）
+   * @param input write と同じもの
+   * @param text 要確認になった見どころ
+   * @param reasons チェック役の「誤り」の理由
+   * @returns {Promise<{ text: string } | { text: null, reason: string, limit?: boolean, apiError?: boolean, fatal?: boolean }>}
+   */
+  async function fix(input, text, reasons) {
+    if (!api) return { text: null, reason: 'ANTHROPIC_API_KEY が設定されていない' };
+    const messages = [
+      { role: 'user', content: buildPrompt(input) },
+      { role: 'assistant', content: text },
+      {
+        role: 'user',
+        content: `この見どころを公式テキストと見比べたチェック役が、次の点を「誤り」と指摘しました。公式テキストに合うように誤りを直し、見どころの文だけをもう一度書いてください（ほかの守ることもそのまま守る）。\n${reasons.map((r) => `- ${r}`).join('\n')}`,
+      },
+    ];
+    try {
+      const response = await call(messages);
+      stats.fixCalls++;
+      if (response.stop_reason === 'refusal') return { text: null, reason: 'AI が応答を断った（refusal）' };
+      if (response.stop_reason === 'max_tokens') return { text: null, reason: `応答が長さの上限（max_tokens ${config.maxTokens}）で切れた` };
+      const fixed = textOf(response);
+      const problems = reviewAiHighlight(fixed, input);
+      log(`    直した文: ${fixed}${problems.length ? `\n    ⚠ ${problems.join(' / ')}` : ''}`);
+      if (problems.length) return { text: null, reason: `直した文が点検を通らなかった（${problems.join(' / ')}）` };
+      return { text: fixed };
+    } catch (error) {
+      if (error instanceof LimitError) return { text: null, reason: error.message, limit: true };
+      stats.errors++;
+      const detail = apiErrorDetail(error, [apiKey]);
+      log(`    ⚠ 直すときに Claude API のエラー: ${detail}`);
+      return { text: null, reason: `Claude API のエラー（${detail}）`, apiError: true, fatal: isFatalApiError(error) };
+    }
+  }
+
+  /**
+   * チェックして、要確認なら自分で直す（書く→チェック→直す→チェック。直すのは1回まで。例外は投げない）
+   * 1. チェック役にかける。問題なし・チェックできずなら、そのまま返す（fix: null）
+   * 2. 要確認なら、「誤り」の理由を渡して直させ（fix）、直した文をもう一度チェックする
+   * 3. 問題なしになれば直した文を返す（fix.outcome: 'fixed'）。それでも要確認・チェックできず・直せなかったときは fix.outcome: 'unfixed'
+   *    （直した文があればその文と2回目のチェックの結果、なければ元の文と1回目の結果を返す。人に知らせる）
+   * @param input write と同じもの（deckName, main, recipe, profiles, names, others）
+   * @param text チェックする見どころ
+   * @returns {Promise<{ text: string, review: object, fix: null | { outcome: 'fixed' | 'unfixed', before: string, after?: string, firstReview: object, reason?: string }, limit?: boolean, apiError?: boolean, fatal?: boolean }>}
+   */
+  async function checkAndFix(input, text) {
+    const reviewOf = (t) => review({ text: t, main: input.main, recipe: input.recipe, profiles: input.profiles });
+    const flags = (...results) => {
+      const out = {};
+      for (const key of ['limit', 'apiError', 'fatal']) if (results.some((r) => r?.[key])) out[key] = true;
+      return out;
+    };
+    const first = await reviewOf(text);
+    if (first.status !== 'warn') return { text, review: first, fix: null, ...flags(first) };
+    log('    → 要確認のため、「誤り」の理由を渡して直させます');
+    const fixed = await fix(input, text, first.reasons);
+    if (!fixed.text) return { text, review: first, fix: { outcome: 'unfixed', before: text, firstReview: first, reason: fixed.reason }, ...flags(fixed) };
+    const second = await reviewOf(fixed.text);
+    const outcome = second.status === 'ok' ? 'fixed' : 'unfixed';
+    log(`    → ${outcome === 'fixed' ? '自分で直せた' : '直せなかった（人に知らせる）'}`);
+    return {
+      text: fixed.text,
+      review: second,
+      fix: { outcome, before: text, after: fixed.text, firstReview: first, ...(second.status === 'error' ? { reason: '直した文をチェックできなかった' } : {}) },
+      ...flags(second),
+    };
+  }
+
+  return { write, review, fix, checkAndFix, stats };
 }
 
 class LimitError extends Error {}
@@ -398,7 +581,7 @@ export function usageLines(stats) {
   const cost = estimateCost(stats.model, stats.inputTokens, stats.outputTokens);
   return [
     `- モデル: \`${stats.model}\`（\`scripts/lib/ai-highlight.js\` の \`AI_HIGHLIGHT_CONFIG\`）`,
-    `- API を呼んだ回数: ${stats.calls}回（上限 ${stats.maxCalls}回。うちチェック役 ${stats.reviewCalls ?? 0}回）${stats.errors ? `・うちエラー ${stats.errors}回` : ''}`,
+    `- API を呼んだ回数: ${stats.calls}回（上限 ${stats.maxCalls}回。うちチェック役 ${stats.reviewCalls ?? 0}回${stats.fixCalls ? `・直し ${stats.fixCalls}回` : ''}）${stats.errors ? `・うちエラー ${stats.errors}回` : ''}`,
     `- 使った量: 入力 ${stats.inputTokens.toLocaleString('en-US')} トークン・出力 ${stats.outputTokens.toLocaleString('en-US')} トークン（出力には AI が考えた分を含む）`,
     `- おおよその料金: ${cost === null ? '不明（料金表 PRICES にないモデル）' : `$${cost.toFixed(4)}`}`,
   ];

@@ -49,7 +49,7 @@ import { buildGamePlan, recipeProfiles } from './lib/game-plan.js';
 import { CARD_ABILITIES_PATH, loadCardAbilities, matchDeckNameRule, needsAbilities, ruleMainCard } from './lib/deck-name-rules.js';
 import { auditHighlights, chooseHighlights, highlightCandidates } from './lib/highlight.js';
 import { generatedItem, highlightMethod } from './lib/pr-body.js';
-import { AI_HIGHLIGHT_CONFIG, createAiHighlighter, reviewLabel, usageLines } from './lib/ai-highlight.js';
+import { AI_HIGHLIGHT_CONFIG, createAiHighlighter, fixLabel, reviewLabel, usageLines } from './lib/ai-highlight.js';
 
 const ROOT = new URL('../', import.meta.url);
 const path = (p) => fileURLToPath(new URL(p, ROOT));
@@ -449,7 +449,7 @@ async function main() {
   // 上で選んだ従来の方法の見どころを使う（AI の失敗で記事の自動生成を止めない）
   const ai = createAiHighlighter({ log: (msg) => console.log(msg) });
   const current = new Map(highlightInputs.map(({ column }) => [column.slug, chosen.get(column.slug) ?? null]));
-  const highlightResult = new Map(); // slug → { ai: boolean, reason?: string, review?: { status, reasons } }（PR 本文用）
+  const highlightResult = new Map(); // slug → { ai: boolean, reason?: string, review?: { status, reasons }, fix?: { outcome, … } }（PR 本文用）
   if (highlightInputs.length) console.log(`\n■ 見どころ（AI: ${ai.stats.enabled ? AI_HIGHLIGHT_CONFIG.model : 'ANTHROPIC_API_KEY なし → 従来の方法'}）`);
   for (const { column, recipe, profiles } of highlightInputs) {
     try {
@@ -459,11 +459,17 @@ async function main() {
         ...sameDay,
         ...highlightInputs.filter((h) => h.column !== column).map((h) => ({ slug: h.column.slug, highlight: current.get(h.column.slug), names: namesOf(h.recipe, h.column) })),
       ].filter((o) => o.highlight && o.highlight !== HIGHLIGHT_TODO);
-      const r = await ai.write({ deckName: column.deckName, main: column.keyCards[0], recipe, profiles, names: namesOf(recipe, column), others });
-      if (r.text) current.set(column.slug, r.text);
-      // チェック役: AI の文を公式テキストと見比べる（⚠ でも文は使い、PR に出すだけ）
-      const review = r.text ? await ai.review({ text: r.text, main: column.keyCards[0], recipe, profiles }) : null;
-      highlightResult.set(column.slug, r.text ? { ai: true, review } : { ai: false, reason: r.reason });
+      const input = { deckName: column.deckName, main: column.keyCards[0], recipe, profiles, names: namesOf(recipe, column), others };
+      const r = await ai.write(input);
+      if (!r.text) {
+        highlightResult.set(column.slug, { ai: false, reason: r.reason });
+        continue;
+      }
+      // チェック役: AI の文を公式テキストと見比べ、要確認なら「誤り」の理由を渡して1回だけ直させ、もう一度チェックする。
+      // それでも要確認なら（直した文を使い）PR で人に知らせる
+      const checked = await ai.checkAndFix(input, r.text);
+      current.set(column.slug, checked.text);
+      highlightResult.set(column.slug, { ai: true, review: checked.review, fix: checked.fix });
     } catch (error) {
       console.log(`  ⚠ AI の見どころを作れませんでした（${error?.message ?? error}）。従来の方法を使います`);
       highlightResult.set(column.slug, { ai: false, reason: '予期しないエラー' });
@@ -546,13 +552,23 @@ async function main() {
   const uncertainColumns = generated.filter((c) => c.ruleUncertain);
   const conflictColumns = generated.filter((c) => c.ruleConflict);
   // チェック役で ⚠（要確認・チェックできず）になった AI の見どころは、本文のいちばん上にまとめる
+  // （要確認で AI が自分で直し、問題なしになった記事は ✅ なのでここには出さない。直せなかった記事は「直せずに人に知らせた」を付ける）
   const reviewFlagged = generated.filter((c) => c.highlightResult?.ai && c.highlightResult.review?.status !== 'ok');
+  const selfFixed = generated.filter((c) => c.highlightResult?.fix?.outcome === 'fixed');
   const body = [
     ...(reviewFlagged.length
       ? [
           '> [!WARNING]',
           `> **見どころのチェック役の AI が ⚠ を付けた記事（${reviewFlagged.length}本）**。記事の「主力カードの効果」と見比べ、直すなら \`highlight\` を手で直して \`highlightBy\` を \`"manual"\` にしてください`,
-          ...reviewFlagged.map((c) => `> - \`/columns/${c.slug}/\`（${c.deckName}）: ${reviewLabel(c.highlightResult.review) || '⚠ チェックできず'}`),
+          ...reviewFlagged.map(
+            (c) => `> - \`/columns/${c.slug}/\`（${c.deckName}）: ${reviewLabel(c.highlightResult.review) || '⚠ チェックできず'}${c.highlightResult.fix ? `・${fixLabel(c.highlightResult.fix)}` : ''}`,
+          ),
+          '',
+        ]
+      : []),
+    ...(selfFixed.length
+      ? [
+          `> 🔧 見どころのチェック役が要確認にし、AI が自分で直して問題なしになった記事（${selfFixed.length}本）: ${selfFixed.map((c) => `\`/columns/${c.slug}/\``).join('・')}（直す前の文と指摘は「生成した記事」に出しています）`,
           '',
         ]
       : []),

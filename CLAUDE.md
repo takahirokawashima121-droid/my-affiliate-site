@@ -24,7 +24,8 @@
   - `scripts/lib/deck-name-rules.js` … デッキ名の通称ルール（`DECK_NAME_RULES`。ポケカブックの名前より優先）。特性で判定するルール用の特性の一覧は `scripts/lib/card-abilities.json`（自動生成のときに公式のカードテキストから追記される）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
   - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
-  - `scripts/lib/ai-highlight.js` … 自動生成の見どころを Claude API で書く（設定は `AI_HIGHLIGHT_CONFIG`。くわしくは「6. 記事・紹介文の品質基準」）。API のエラーの理由の文（`apiErrorDetail`。キーの文字は伏せる）・見どころのチェック役（`review`）もここ
+  - `scripts/lib/ai-highlight.js` … 自動生成の見どころを Claude API で書く（設定は `AI_HIGHLIGHT_CONFIG`。くわしくは「6. 記事・紹介文の品質基準」）。API のエラーの理由の文（`apiErrorDetail`。キーの文字は伏せる）・見どころのチェック役（`review`）・要確認のときに AI に直させる処理（`checkAndFix`）もここ
+  - `scripts/lib/game-rules.md` … ポケカの基本ルールのメモ（公式テキストには書かれていないが、ゲームのルールで決まっていること）。見どころを書く役とチェック役の両方に渡す。足し方は「6. 記事・紹介文の品質基準」
   - `scripts/lib/highlight-rewrite.js` … 公開済みの記事の見どころの AI でのまとめ書き直し（対象の選び方・同じ日の記事との点検・`deck-columns.json` への反映・PR 本文）。実行は `scripts/ai-highlight-rewrite.js`
   - `scripts/lib/pr-body.js` … 自動生成の PR 本文の「生成した記事」の1本分（大会の日付・開催店舗と都道府県・順位・元記事の何会場目か・デッキ名が●付き小見出しか推定か）。取れなかった項目は「取得できず」と書く
   - `scripts/cache/processed-decks.json` … 処理済みの記事・デッキ
@@ -41,8 +42,8 @@
   - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/ai-highlight.js` の AI の見どころの点検と従来の方法への切り替え（API は呼ばない）、`scripts/lib/highlight-rewrite.js` のまとめ書き直し（`highlightBy: "manual"` を上書きしないこと・API のエラーの理由。API は呼ばない）、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別のテスト。どれかを変更したら必ず実行する）
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run ai-highlight-test -- --slug=スラッグ`（公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて出す。ファイルは変えない。`ANTHROPIC_API_KEY` が必要。GitHub Actions の「AI highlight test (manual)」からも実行できる）
-  - `npm run ai-highlight-review`（公開済みの記事の見どころをチェック役の AI にかけて結果を出す。`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の7本（`scripts/test/fixtures/ai-highlight-review-cases.json`）も一緒にチェックし、`mustFlag: true` の2本（手で直す前の文＝`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`）をどちらも「要確認」にでき、`mustNotFlag: true` の3本（今サイトに出ている文＝`slowking-deck`・`n-zoroark-ex-deck`・`mabusoruex-deck-0928`）をすべて「問題なし」にできれば合格と出す。ファイルは変えない。GitHub Actions の「AI highlight review (manual)」からも実行できる）
-  - `npm run ai-highlight-rewrite`（公開済みの記事の見どころを Claude API でまとめて書き直す。`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。ふだんは GitHub Actions の「AI highlight rewrite (manual)」から実行し、結果を `auto/ai-highlight-rewrite` ブランチの PR にする。main には直接入れない）
+  - `npm run ai-highlight-review`（公開済みの記事の見どころをチェック役の AI にかけて結果を出す。`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の9本（`scripts/test/fixtures/ai-highlight-review-cases.json`）も一緒にチェックし、`mustFlag: true` の2本（手で直す前の文＝`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`）をどちらも「要確認」にでき、`mustNotFlag: true` の5本（今サイトに出ている文＝`slowking-deck`・`n-zoroark-ex-deck`・`mabusoruex-deck-0928`・`n-zoroark-ex-deck-0927`・`mega-lopunny-ex-deck-0927`）をすべて「問題なし」にできれば合格と出す。ファイルは変えない。GitHub Actions の「AI highlight review (manual)」からも実行できる）
+  - `npm run ai-highlight-rewrite`（公開済みの記事の見どころを Claude API でまとめて書き直す。`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり。`--only-flagged` で「要確認の記事だけ直す」。ふだんは GitHub Actions の「AI highlight rewrite (manual)」から実行し、結果を `auto/ai-highlight-rewrite`（要確認の記事だけ直すときは `auto/ai-highlight-fix`）ブランチの PR にする。main には直接入れない）
   - `npm run apply-name-rules`（デッキ名の付け足しを外し、通称ルールを既存の記事に当てはめる。`--dry-run` あり。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない）
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
@@ -132,15 +133,28 @@
   - AI に渡すのは、デッキ名・60枚のレシピ・採用カードの公式テキスト（`recipeProfiles` の内容）だけ。渡したものに書かれていないこと（効果・ダメージ・枚数・環境の話など）を書かない・主役のカード（`keyCards` の先頭）から書き始める・説明文を貼らず自然な日本語にする・書くカードは主役とそれを支えるカード1枚まで・長さは従来と同じくらい（`HIGHLIGHT_MAX` 以内）・誇張（最強・必勝・絶対など）を使わない、をプロンプトで指示する
   - AI の文は `reviewAiHighlight` で点検する（`BANNED_PHRASES`・同じ日の記事の書き出し・主役からの書き出し・長さ・誇張・データにない「」の名前や数字・公式テキストの長い文の貼り付け）。引っかかったら理由を伝えて**1回だけ**書き直させる
   - それでも通らない・API のエラー・`ANTHROPIC_API_KEY` がない・呼び出し回数の上限に達したときは、従来の方法の見どころを使う。**AI の失敗で記事の自動生成を止めない**
-  - **チェック役**（`createAiHighlighter` の `review`）: 点検を通った AI の文を、別の呼び出しで、見どころと「そこに名前が出てくるカードの公式テキスト」だけを渡して見比べさせる。見どころは短い紹介文なので、「書いていないこと」ではなく「書いてあることが間違っていないか」だけを見る。答えは JSON（`{"verdict": "問題なし" | "要確認", "reasons": [...], "notes": [...]}`。structured outputs）
+  - **チェック役**（`createAiHighlighter` の `review`）: 点検を通った AI の文を、別の呼び出しで、見どころと「そこに名前が出てくるカードの公式テキスト」だけを渡して見比べさせる。見どころは短い紹介文なので、「書いていないこと」ではなく「書いてあることが間違っていないか」だけを見る。答えは JSON で、気になった点を1つずつ「誤り」か「問題なし」で答えさせる（`{"checks": [{"point": "…", "judgment": "誤り" | "問題なし", "reason": "…", "quote": "…"}], "notes": [...]}`。structured outputs）
+    - **判定はプログラムで決める**（`parseReview`）: `checks` に「誤り」が1つでもあれば要確認、なければ問題なし（AI に要確認かどうかを答えさせない。「理由には問題なしと書いてあるのに要確認」という矛盾を起こさないため）。PR・ログに出す理由は「誤り」の点だけ（「どの部分：理由（公式テキスト「引用」）」）
+    - **「誤り」には根拠の公式テキストの一文を必ず引用させる**（`quote`）。次の「誤り」は誤りとして数えない（ログに「誤りとして数えなかった点」として出すだけ）: 引用がない・引用がチェック役に渡した公式テキストに見つからない（`quoteFound`。全角半角・空白・かぎかっこ・句読点の違いと「…」の省略は見ない。4字未満の引用は根拠にしない）・理由に「誤りではない」「問題なし」などと書いてある
     - 要確認にするもの: 公式テキストとの食い違い（「山札にもどす」を「回収する」など）・どのカードの効果か／効果の対象の取り違え・書いてある数字の違い・対象を限定する条件が抜けて文が間違いになる（「ルールを持たないポケモンなら」→「ポケモンなら」など）・ルール上できない組み合わせ（ふしぎなアメで飛ばした1進化の特性を使うなど）
     - 要確認にしないもの: 数字・枚数・ダメージの省略、「自分の番に1回」などの回数制限の省略、デメリット・代償の省略、ゲームの基本ルールの省略、スタジアムが「おたがいに」効くことの省略、意味が変わらない言い換え、公式テキストが渡されていないカード（チェック役に渡す文に「確認できず」の名前として並べ、答えの `notes` に参考として書かせる。「✅ チェック済み（参考・確認できず：…）」と出る）
-    - PR（自動生成・まとめ書き直し）の記事ごとに「✅ チェック済み」「⚠ 要確認：理由」「⚠ チェックできず」を出し、⚠ の記事は PR の本文のいちばん上にまとめる
+    - **要確認なら、AI に自分で直させる**（`createAiHighlighter` の `checkAndFix`。自動生成とまとめ書き直しの両方）
+      1. チェック役の「誤り」の理由を書く役に渡して、見どころを書き直させる（`fix`。直した文も `reviewAiHighlight` の点検を通す）
+      2. 書き直した文を、もう一度チェック役にかける
+      3. 問題なしになれば直した文を使い「🔧 自分で直せた（最初の指摘：…）」、それでも要確認なら直した文を使い「⚠ 要確認：理由」「🙋 直せずに人に知らせた」を出す（**書き直しは1回まで**）。直した文が点検を通らない・API のエラーのときは元の文のまま「🙋 直せずに人に知らせた（理由）」
+      - 呼ぶ回数は1本あたり最大5回（書く2回・チェック・直す・チェック）
+    - PR（自動生成・まとめ書き直し）の記事ごとに「✅ チェック済み」「⚠ 要確認：理由」「⚠ チェックできず」と、直させたときは「🔧 自分で直せた」「🙋 直せずに人に知らせた」を出し、⚠ の記事は PR の本文のいちばん上にまとめる（自動生成の PR では、直せた記事の直す前の文も出す）
     - ⚠ でも AI の文は使う（直すかどうかは人が決める）。チェック役のエラー・上限でも文は使い「⚠ チェックできず」にする
-    - チェック役の呼び出しも、1回の実行の上限回数に数える
+    - チェック役・直しの呼び出しも、1回の実行の上限回数に数える
+  - **ポケカの基本ルールのメモ**（`scripts/lib/game-rules.md`）: 公式テキストには書かれていないが、ゲームのルールで決まっていることを1か所にまとめ、書く役とチェック役の両方のプロンプト（system）に入れる。チェック役は、このメモに合っている書き方を「誤り」にしない
+    - **足し方**（「AI がこのルールを間違えた」と言われたら）
+      1. `scripts/lib/game-rules.md` の「## ルール」の下に、「- 」で始めて1行足す（1行に1つ。「- 」で始まらない行・ほかの見出しの下の行は AI に渡らない）。例: `- 「〇〇」の効果は、…。（例: △△の「□□」）`
+      2. 間違えた見どころを `scripts/test/fixtures/ai-highlight-review-cases.json` に `mustNotFlag: true`（正しい文なのに要確認にされた）か `mustFlag: true`（間違った文を見逃した）で足し、`scripts/test/ai-highlight.test.js` の本数と一覧を直して `npm test`
+      3. 「AI highlight review (manual)」で合格するか確かめる
+      - コードは変えなくてよい（`scripts/lib/ai-highlight.js` が読み込む）
   - PR の「生成した記事」の各記事に「見どころ（AIで作成）」「見どころ（従来の方法・理由）」を出し、「Claude API（見どころ）の使用量」にモデル・呼んだ回数・トークン数・おおよその料金（ドル）を出す
   - **モデルの変え方**: `scripts/lib/ai-highlight.js` の `AI_HIGHLIGHT_CONFIG.model` だけを書き換える（今は `claude-sonnet-5-5`）。料金の目安は同じファイルの `PRICES` にあるモデルだけ出る（ないモデルは「不明」。追記すれば出る）。effort に対応していないモデル（`claude-haiku-4-5` など）にするときは `effort` を `null` にする。変えたら「AI highlight test (manual)」で数本試してから PR にする
-  - 1回の実行（`npm run auto-decks` / `npm run auto-city` それぞれ）で API を呼ぶ回数の上限は `AI_HIGHLIGHT_CONFIG.maxCallsPerRun`（20回。チェック役の分も数える）
+  - 1回の実行（`npm run auto-decks` / `npm run auto-city` それぞれ）で API を呼ぶ回数の上限は `AI_HIGHLIGHT_CONFIG.maxCallsPerRun`（40回。チェック役・直しの分も数える。1本あたり最大5回）
   - API のエラーのときは、API が返した理由の文（残高不足など）をログと PR 本文に出す（`apiErrorDetail`）。**キーの文字は出さない**（`sk-ant-…` と渡したキーは伏せる）
 - **見どころを書いたのは誰かの印**（`deck-columns.json` の各記事の `highlightBy`。`highlight` のすぐ後ろに置く）
   - `"ai"` … Claude API が書いた見どころ。自動生成・まとめ書き直しで AI の文を使ったときに自動で付く
@@ -152,14 +166,19 @@
     "highlightBy": "manual",
     ```
   - AI の見どころに戻してよいときは `highlightBy` の行を消す（次のまとめ書き直しで書き直される）
-  - 今 `"manual"` の記事: 9/27 シティリーグの4本（`dragapult-ex-deck-0927`・`mega-kangaskhan-ex-deck-0927`・`n-zoroark-ex-deck-0927`・`mega-sharpedo-ex-deck-0927`）・`dipplin-festival-lead-deck-0929`・`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`・`n-zoroark-ex-deck`・`tauros-deck-0928`
+  - 今 `"manual"` の記事: 9/27 シティリーグの4本（`dragapult-ex-deck-0927`・`mega-kangaskhan-ex-deck-0927`・`n-zoroark-ex-deck-0927`・`mega-sharpedo-ex-deck-0927`）・`dipplin-festival-lead-deck-0929`・`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`・`n-zoroark-ex-deck`・`tauros-deck-0928`・`mega-lopunny-ex-deck-0927`
 - **公開済みの記事の見どころのまとめ書き直し**（Actions の「AI highlight rewrite (manual)」= `.github/workflows/ai-highlight-rewrite.yml` → `scripts/ai-highlight-rewrite.js`。手動実行のみ）
   - 対象は、公開済みのデッキ記事のうち `highlightBy` が `"manual"` でないもの（公開日が新しい順）。入力欄「試しに何本だけ」に数字を入れるとその本数だけ（空欄ならすべて）
-  - 書き方は自動生成と同じ（同じ指示・同じ点検・1回だけの書き直し。AI に渡すのはデッキ名・60枚のレシピ・採用カードの公式テキストだけ）
+  - 書き方は自動生成と同じ（同じ指示・同じ点検・1回だけの書き直し・チェック役が要確認なら1回だけ直させる。AI に渡すのはデッキ名・60枚のレシピ・採用カードの公式テキスト・ルールのメモだけ）
   - 点検に通らなかった・API のエラーの記事は、今の見どころのまま残す
   - 同じ日の記事と書き出しが似ないよう、比べる相手には「書き直した記事は新しい文・それ以外は今の文」を渡す（書き直した文どうしでも点検する）
-  - 1回の実行で API を呼ぶ回数の上限は `REWRITE_MAX_CALLS`（250回。チェック役の分を含む。この作業と「AI highlight review (manual)」だけ。通常の自動生成は20回）。残高不足・キーの問題のエラーが出たとき、ほかのエラーが3回続いたときは、残りの記事は呼ばずにやめる
-  - 結果は `auto/ai-highlight-rewrite` ブランチの PR にする（main に直接入れない）。PR の本文に、記事ごとの変更前・変更後の見どころとチェック役の結果（表）、書き直せなかった記事と理由、使った量とおおよその料金、書き直し後の点検を出す
+  - 1回の実行で API を呼ぶ回数の上限は `REWRITE_MAX_CALLS`（250回。チェック役・直しの分を含む。この作業と「AI highlight review (manual)」だけ。通常の自動生成は40回）。残高不足・キーの問題のエラーが出たとき、ほかのエラーが3回続いたときは、残りの記事は呼ばずにやめる
+  - 結果は `auto/ai-highlight-rewrite` ブランチの PR にする（main に直接入れない）。PR の本文に、記事ごとの変更前・変更後の見どころとチェック役の結果（表。自分で直せた / 直せずに人に知らせた も）、書き直せなかった記事と理由、使った量とおおよその料金、書き直し後の点検を出す
+  - **要確認の記事だけ直すモード**（入力欄「やること」で「要確認の記事だけ直す」を選ぶ。`--only-flagged`）
+    - manual 以外の公開済みの記事の今の見どころをチェック役にかけ、要確認になった記事だけを上の方法（「誤り」の理由を渡して1回だけ直させ、もう一度チェック）で直す
+    - 問題なし・チェックできずの記事は変えない。直しても要確認のままの記事も変えず（直した案と理由を PR に出す）、人に知らせる。直せた記事だけ `highlight` を変えて `highlightBy` を `"ai"` にする
+    - manual の記事は直さない（チェックだけ）。要確認なら PR で知らせるだけ
+    - 結果は `auto/ai-highlight-fix` ブランチの PR にし、要確認になった記事ごとに結果・変更前・変更後・理由を表で出す。直せた記事が1本もない（deck-columns.json が変わらない）ときは PR ができないので、実行結果の Summary で見る
 - 解説が生成できなかった記事は TODO のまま残し、PR で報告する（中身のない文で埋めない）
 
 ## 7. デザインのルール（ホワイトラボ）

@@ -5,9 +5,9 @@
 //   npm run ai-highlight-review -- --slug=n-zoroark-ex-deck   1本だけ
 //   GitHub Actions の「AI highlight review (manual)」（.github/workflows/ai-highlight-review.yml）からも実行できる
 //
-// どちらの場合も、テスト用の7本（scripts/test/fixtures/ai-highlight-review-cases.json）を一緒にチェックし、合否を最後に出す。
+// どちらの場合も、テスト用の9本（scripts/test/fixtures/ai-highlight-review-cases.json）を一緒にチェックし、合否を最後に出す。
 // 合格の基準: mustFlag: true の2本（まとめ書き直しで AI が書き、人が手で直す前の文＝seek-inspiration-deck-0929・dipplin-festival-lead-deck-0927）を
-// どちらも「要確認」にでき、mustNotFlag: true の3本（今サイトに出ている文＝slowking-deck・n-zoroark-ex-deck・mabusoruex-deck-0928）をすべて「問題なし」にできること。
+// どちらも「要確認」にでき、mustNotFlag: true の5本（今サイトに出ている文＝slowking-deck・n-zoroark-ex-deck・mabusoruex-deck-0928・n-zoroark-ex-deck-0927・mega-lopunny-ex-deck-0927）をすべて「問題なし」にできること。
 // mustFlag: false の2本（n-zoroark-ex-deck・tauros-deck-0928 の手で直す前の文）は、直す前の文も間違いではないため、合否に数えない。
 // チェック役に渡すのは、見どころと、そこに出てくるカードの公式テキスト（公式サイトのカード詳細。.cache/ にあれば再取得しない）だけ。
 // 1回の実行で API を呼ぶ回数の上限は REWRITE_MAX_CALLS（250回）。ANTHROPIC_API_KEY が必要（ない・エラーのときは終了コード 1）
@@ -59,7 +59,7 @@ async function main() {
   const published = columns.filter((c) => c.pubDate <= todayJst());
   const targets = slug ? published.filter((c) => c.slug === slug) : published;
   if (slug && !targets.length) throw new Error(`slug「${slug}」の公開済みの記事が src/data/deck-columns.json にありません`);
-  // テスト用の7本（手で直す前の文・今サイトに出ている文。カードは今の記事のレシピを使う）
+  // テスト用の9本（手で直す前の文・今サイトに出ている文。カードは今の記事のレシピを使う）
   const cases = fixture.cases.map((k) => ({ ...columns.find((c) => c.slug === k.slug), highlight: k.highlight, testCase: k }));
 
   console.log(`■ 見どころのチェック（モデル: ${AI_HIGHLIGHT_CONFIG.model}・API を呼ぶ上限 ${REWRITE_MAX_CALLS}回）`);

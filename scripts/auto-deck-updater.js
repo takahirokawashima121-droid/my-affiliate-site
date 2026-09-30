@@ -464,6 +464,12 @@ async function main() {
       if (gen) gen.title = title;
     }
   }
+  // 新しくルールで付けた採用型を保存する（保存済み・手で書いた採用型は付け直さない）
+  for (const g of sameNameDay) {
+    for (const { c } of g.columns) {
+      if (place.newLabels.has(c.slug)) Object.assign(c, { titleLabel: place.newLabels.get(c.slug), titleLabelBy: 'auto' });
+    }
+  }
   await writeJson(COLUMNS_PATH, columns);
 
   // 処理済みを記録（選ばなかったデッキ・無効だったデッキも記録し、次回は新しい記事のデッキだけを見る）

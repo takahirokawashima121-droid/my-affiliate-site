@@ -69,7 +69,9 @@
       "ゲッコウガex",
       "メガユキメノコex",
       "なみのりビーチ"
-    ]
+    ],
+    "titleLabel": "ユキワラシ採用型",
+    "titleLabelBy": "auto"
   },
   {
     "slug": "orivuaex-deck-0926",
@@ -123,7 +125,9 @@
       "ジャンボアイス",
       "おいしいおむすび",
       "ロケット団のラムダ"
-    ]
+    ],
+    "titleLabel": "AZの安らぎ採用型",
+    "titleLabelBy": "auto"
   },
   {
     "slug": "msanaitoex-deck-0926",
@@ -230,7 +234,9 @@
       "ノココッチex",
       "なみのりビーチ",
       "ふうせん"
-    ]
+    ],
+    "titleLabel": "ワニノコ採用型",
+    "titleLabelBy": "auto"
   },
   {
     "slug": "mjigarudeex-deck-0926-2",
@@ -248,7 +254,9 @@
       "エネルギーつけかえ",
       "ポケモンキャッチャー",
       "エネルギーコイン"
-    ]
+    ],
+    "titleLabel": "ゴヨウ採用型",
+    "titleLabelBy": "auto"
   },
   {
     "slug": "dragapult-ex-yonoir-deck",

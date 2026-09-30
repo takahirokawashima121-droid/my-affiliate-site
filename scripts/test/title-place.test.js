@@ -123,3 +123,34 @@ test('定番カード（全デッキ記事の半分以上）は選ばず、同�
   const usage2 = cardUsage([[E('X', 4, 'グッズ')], [E('X', 1, 'グッズ')], [E('Y', 1, 'グッズ')], [], [], []]);
   assert.equal(recipeLabels([[E('X', 4, 'グッズ'), E('Y', 1, 'グッズ')], []], usage2)[0].card, 'Y');
 });
+
+test('保存済みの採用型（titleLabel）は付け直さず、新しく重なった記事だけにルールで付ける', () => {
+  const E = (name, qty, category) => ({ name, qty, category });
+  const recipes = {
+    x: [E('メガジガルデex', 3, 'ポケモン'), E('ヒーローマント', 1, 'ポケモンのどうぐ')],
+    y: [E('メガジガルデex', 3, 'ポケモン'), E('サバイブギプス', 1, 'ポケモンのどうぐ')],
+    z: [E('メガジガルデex', 3, 'ポケモン'), E('ヒーローマント', 1, 'ポケモンのどうぐ'), E('ムク', 1, 'サポート')],
+  };
+  // 定番カードの判定用のほかの記事（名前が別々なのでグループにならない）
+  const others = ['p', 'q', 'r', 's'].map((slug) => ({ ...gym(slug, `デッキ${slug}`), result: '9/27 ジムバトル優勝' }));
+  for (const o of others) recipes[o.slug] = [E('ドラパルトex', 3, 'ポケモン')];
+  // x はルールで付けた名前（今のルールならヒーローマントは z にも入るので選ばれない）、y は手で書いた名前
+  const x = { ...gym('x'), titleLabel: 'ヒーローマント採用型', titleLabelBy: 'auto' };
+  const y = { ...gym('y'), titleLabel: '回復型', titleLabelBy: 'manual' };
+  const { titles, newLabels, groups, unresolved } = placeTitles([x, y, gym('z'), ...others], (c) => recipes[c.slug]);
+  assert.match(titles.get('x'), /メガジガルデex（ヒーローマント採用型）デッキ/);
+  assert.match(titles.get('y'), /メガジガルデex（回復型）デッキ/);
+  assert.match(titles.get('z'), /メガジガルデex（ムク採用型）デッキ/);
+  assert.deepEqual([...newLabels], [['z', 'ムク採用型']]); // 保存するのは新しく付けた z だけ
+  assert.deepEqual(groups[0].columns.map((t) => t.saved), ['auto', 'manual', null]);
+  assert.deepEqual(unresolved, []);
+});
+
+test('手で書いた採用型に書き換えると、タイトルの（…）を付け替える・別構築の番号は保存済みと重ならない', () => {
+  assert.equal(withLabel('【9/26 ジムバトル優勝】メガジガルデex（回復型）デッキ', 'メガジガルデex', '速攻型'), '【9/26 ジムバトル優勝】メガジガルデex（速攻型）デッキ');
+  const E = (name) => ({ name, qty: 1, category: 'ポケモン' });
+  const recipes = { a: [E('X')], b: [E('X')] };
+  const a = { ...gym('a'), titleLabel: '別構築', titleLabelBy: 'auto' };
+  const { newLabels } = placeTitles([a, gym('b')], (c) => recipes[c.slug]);
+  assert.equal(newLabels.get('b'), '別構築2');
+});

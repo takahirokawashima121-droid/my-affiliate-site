@@ -34,13 +34,30 @@ export type DeckColumn = {
   gamePlan?: { early: string[]; mid: string[]; end: string[] };
   /** 開催日（YYYY-MM-DD）。省略時は result の「M/D」と公開年から求める */
   eventDate?: string;
+  /**
+   * タイトルだけに付ける採用型（「ワニノコ採用型」「別構築」など）。同じ日・同じ名前の記事をタイトルで区別するためのもの（デッキ名には付けない）。
+   * scripts/lib/title-place.js が付けて保存し、保存済みの記事は付け直さない。ここを書き換えれば、タイトルにはこの名前が出る
+   */
+  titleLabel?: string;
+  /** titleLabel を付けたのは誰か（'auto' = ルールで自動 / 'manual' = 人が手で書いた。どちらも自動では上書きしない） */
+  titleLabelBy?: 'auto' | 'manual';
 };
 
 export type EventType = 'city' | 'gym';
 export type EventRank = '優勝' | '準優勝' | 'TOP4' | 'TOP8';
 
 // 記事の一覧は deck-columns.json（scripts/auto-deck-updater.js が新着デッキの記事を追記する）
-export const DECK_COLUMNS = deckColumns as DeckColumn[];
+/**
+ * タイトルの【】のすぐあとのデッキ名に「（{titleLabel}）」を付ける（scripts/lib/title-place.js の withLabel と同じ）。
+ * deck-columns.json の titleLabel だけを手で書き換えても、タイトルに反映されるようにする
+ */
+function titleWithLabel(c: DeckColumn): string {
+  const m = c.title.match(/^(【[^】]*】)(.*)$/);
+  if (!c.titleLabel || !m || !m[2].startsWith(c.deckName)) return c.title;
+  const rest = m[2].slice(c.deckName.length).replace(/^（[^（）]*）/, '');
+  return `${m[1]}${c.deckName}（${c.titleLabel}）${rest}`;
+}
+export const DECK_COLUMNS = (deckColumns as DeckColumn[]).map((c) => (c.titleLabel ? { ...c, title: titleWithLabel(c) } : c));
 
 export const columnPath = (c: DeckColumn) => `/columns/${c.slug}/`;
 

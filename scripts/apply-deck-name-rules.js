@@ -90,8 +90,11 @@ async function main() {
       ? place.groups.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map((t) => `${url(t.c)}（${memberNote(t)}）`).join('・')}`)
       : ['- なし']),
     '',
-    `### タイトルを変えた記事（開催地・採用型を付けた／外した）（${place.titles.size}件）`,
+    `### タイトルを変えた記事（開催地・採用型を付けた／外した。新しく付けた採用型は titleLabel に保存）（${place.titles.size}件）`,
     ...(place.titles.size ? [...place.titles].map(([slug, title]) => `- \`/columns/${slug}/\` → ${title}`) : ['- なし']),
+    '',
+    `### 新しく保存する採用型（deck-columns.json の titleLabel。titleLabelBy: 'auto'）（${place.newLabels.size}件）`,
+    ...(place.newLabels.size ? [...place.newLabels].map(([slug, label]) => `- \`/columns/${slug}/\` → ${label}`) : ['- なし']),
     '',
     `### ⚠ タイトルで区別できない記事（店舗のデータもレシピもない）（${place.unresolved.length}組）`,
     ...(place.unresolved.length ? place.unresolved.map((g) => `- ${g.deckName}（${g.day}）: ${g.columns.map(url).join('・')}`) : ['- なし']),
@@ -132,7 +135,11 @@ async function main() {
     }
     c.deckName = after.deckName;
   }
-  for (const c of columns) if (place.titles.has(c.slug)) c.title = place.titles.get(c.slug);
+  for (const c of columns) {
+    if (place.titles.has(c.slug)) c.title = place.titles.get(c.slug);
+    // 新しくルールで付けた採用型を保存する（保存済み・手で書いた採用型は付け直さない）
+    if (place.newLabels.has(c.slug)) Object.assign(c, { titleLabel: place.newLabels.get(c.slug), titleLabelBy: 'auto' });
+  }
   for (const [f, text] of texts) if (text !== (await readFile(f, 'utf8'))) await writeFile(f, text, 'utf8');
   await writeFile(COLUMNS_PATH, `${JSON.stringify(columns, null, 2)}\n`, 'utf8');
   console.log(`${changes.length}件を書き換えました（src/data/deck-columns.json・src/pages/columns/*.astro・src/content/blog/*.md）。本文の表記は git diff で確認してください`);

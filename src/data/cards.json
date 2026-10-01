@@ -8681,5 +8681,43 @@
     "yahooUpdatedAt": "2026-10-01T12:31:09+09:00",
     "buybackPrice": 10,
     "updatedAt": "2026-10-01T12:31:09+09:00"
+  },
+  {
+    "id": "hariteyama-r-m1l-025",
+    "name": "ハリテヤマ",
+    "rarity": "R",
+    "cardNumber": "025/063",
+    "expansionCode": "M1L",
+    "regulationMark": "I",
+    "imageUrl": "https://item-shopping.c.yimg.jp/i/j/appbear-stor_3010-011009",
+    "salePrice": 159,
+    "saleInStock": true,
+    "saleShop": "楽天市場",
+    "saleUrl": "https://af.moshimo.com/af/c/click?a_id=5821460&p_id=54&pc_id=54&pl_id=616&url=https%3A%2F%2Fitem.rakuten.co.jp%2Fauc-mediaroad%2Ft_01k3pyrgqg6302jd466retqw2h_1%2F",
+    "saleImpressionUrl": "https://i.moshimo.com/af/i/impression?a_id=5821460&p_id=54&pc_id=54&pl_id=616",
+    "yahooPrice": 115,
+    "yahooUrl": "https://af.moshimo.com/af/c/click?a_id=5821461&p_id=1225&pc_id=1925&pl_id=18502&url=https%3A%2F%2Fstore.shopping.yahoo.co.jp%2Fappbear-stor%2F3010-011009.html",
+    "yahooUpdatedAt": "2026-10-02T04:44:46+09:00",
+    "buybackPrice": 70,
+    "updatedAt": "2026-10-02T04:44:46+09:00"
+  },
+  {
+    "id": "makunoshita-c-m1l-024",
+    "name": "マクノシタ",
+    "rarity": "C",
+    "cardNumber": "024/063",
+    "expansionCode": "M1L",
+    "regulationMark": "I",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/auc-mediaroad/cabinet/trc52/trc153699.jpg?_ex=300x300",
+    "salePrice": 29,
+    "saleInStock": true,
+    "saleShop": "楽天市場",
+    "saleUrl": "https://af.moshimo.com/af/c/click?a_id=5821460&p_id=54&pc_id=54&pl_id=616&url=https%3A%2F%2Fitem.rakuten.co.jp%2Fauc-mediaroad%2Ft_01k3pyrgrqzh1n9sf40egwmqwx_1%2F",
+    "saleImpressionUrl": "https://i.moshimo.com/af/i/impression?a_id=5821460&p_id=54&pc_id=54&pl_id=616",
+    "yahooPrice": 29,
+    "yahooUrl": "https://af.moshimo.com/af/c/click?a_id=5821461&p_id=1225&pc_id=1925&pl_id=18502&url=https%3A%2F%2Fstore.shopping.yahoo.co.jp%2Fotakarajima%2Ftrc-01kvf2shypd1axbrcm9e5t5dd6.html",
+    "yahooUpdatedAt": "2026-10-02T04:44:47+09:00",
+    "buybackPrice": 10,
+    "updatedAt": "2026-10-02T04:44:47+09:00"
   }
 ]

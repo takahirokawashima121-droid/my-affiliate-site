@@ -4,14 +4,24 @@
   ],
   "cards": [
     {
-      "id": "gekogashira-c-sv5a-024",
-      "name": "ゲコガシラ",
+      "id": "hariteyama-r-m1l-025",
+      "name": "ハリテヤマ",
+      "rarity": "R",
+      "cardNumber": "025/063",
+      "expansionCode": "M1L",
+      "regulationMark": "I",
+      "deck": "mega-lucario-ex-deck-1001-mew-ex",
+      "role": "ポケモン（公式カードID 47758）"
+    },
+    {
+      "id": "makunoshita-c-m1l-024",
+      "name": "マクノシタ",
       "rarity": "C",
-      "cardNumber": "024/066",
-      "expansionCode": "SV5a",
-      "regulationMark": "H",
-      "deck": "greninja-ex-deck-0927",
-      "role": "ポケモン（公式カードID 45600）"
+      "cardNumber": "024/063",
+      "expansionCode": "M1L",
+      "regulationMark": "I",
+      "deck": "mega-lucario-ex-deck-1001-mew-ex",
+      "role": "ポケモン（公式カードID 47757）"
     }
   ]
 }

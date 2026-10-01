@@ -1,0 +1,58 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-10-02 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="n-zorua-deck-0930">
+  <p>
+    9/30 ジムバトル優勝の<strong>Nのゾロアークex＋ゲンガーexデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 23枚・グッズ 15枚・ポケモンのどうぐ 2枚・サポート 11枚・エネルギー 9枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="ns-zoroark-ex-rr-sv9-061" qty={2}>
+    <ul>
+        <li><strong>特性「とりひき」</strong>：自分の番に、自分の手札を1枚トラッシュするなら、1回使える。自分の山札を2枚引く。</li>
+        <li><strong>ワザ「ナイトジョーカー」</strong>（悪悪）：自分のベンチの「Nのポケモン」が持つワザを1つ選び、このワザとして使う。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="gengaex-rr-sv5k-047" qty={2}>
+    <ul>
+        <li><strong>特性「むしばむのろい」</strong>：このポケモンがいるかぎり、相手は手札からエネルギーをポケモンにつけるたび、そのポケモンにダメカンを2個のせる。</li>
+        <li><strong>ワザ「トリックステップ」</strong>（悪悪・160）：のぞむなら、相手のバトルポケモンについているエネルギーを1個選び、相手のベンチポケモンにつけ替える。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="ns-zorua-c-sv9-060" qty={2}>
+    <ul>
+        <li><strong>ワザ「ひっかく」</strong>（悪・20）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="fuusen-u-sv11b-082" qty={2}>
+    <ul>
+        <li><strong>ポケモンのどうぐ</strong>：このカードをつけているポケモンは、にげるためのエネルギーが2個ぶん少なくなる。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="enerugirisaikuru-mc-640" qty={1}>
+    <ul>
+        <li><strong>グッズ</strong>：自分のトラッシュから基本エネルギーを5枚まで選び、相手に見せて、山札にもどして切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

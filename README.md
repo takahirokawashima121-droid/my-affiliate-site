@@ -131,6 +131,16 @@ npm install --no-save playwright
 node scripts/render-x-assets.js --scale=2   # .cache/x-assets/ にアイコン・ヘッダー・バナーと、確認用の icon-circle・header-guide を保存
 ```
 
+## デザインの相談用スキル（UI UX Pro Max）
+
+`.claude/skills/ui-ux-pro-max/` に、Claude Code 用のスキル「UI UX Pro Max」（[nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) v2.13.0・MIT ライセンス）を入れています。リポジトリの中にあるので、ブラウザ版の Claude Code でもそのまま使えます（「/ui-ux-pro-max」で呼び出すか、UI の作業のときに Claude が自動で読み込みます）。
+
+- 中身は説明（`SKILL.md`・`references/`）・配色やUXの指針のデータ（`data/` の CSV）・検索用の Python スクリプト（`scripts/`。標準ライブラリだけで、ネットにはつながない）だけです。サイトの表示・ビルド（`src/`・`public/`）には関係しません
+- リポジトリのルートから `python3 .claude/skills/ui-ux-pro-max/scripts/search.py "キーワード" --stack astro` のように検索できます
+- スキルの提案より CLAUDE.md の「7. デザインのルール（ホワイトラボ）」を優先します
+- 元のリポジトリから変えた点: パスを `${CLAUDE_PLUGIN_ROOT}/…` からリポジトリのルートからの相対パスにした・開発用のテスト（`scripts/tests/`）を外した。ライセンスの全文は `.claude/skills/ui-ux-pro-max/LICENSE`
+- 更新するときは、元のリポジトリの `.claude/skills/ui-ux-pro-max/` で置き換え、上の2点を同じように直します
+
 ## コラム記事の追加
 
 `src/content/blog/` に `.md` ファイルを追加するだけです。書き方は `src/content/blog/how-to-write-post.md` を参照してください。

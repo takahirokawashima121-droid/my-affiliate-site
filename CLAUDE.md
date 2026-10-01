@@ -32,6 +32,7 @@
   - `public/og-default.png` … 個別の画像がないページの OG 画像（1200×630）。元は `scripts/assets/og-default.html` で、`node scripts/render-og-image.js` で作り直す（手順は README の「OG画像」）
   - `public/generate-assets.html` … X のアイコン・プロフィールのヘッダー（1500×500）・サイト紹介バナー（1200×675）の描画と保存（デザインはサイト・OG画像に合わせた白基調）。`node scripts/render-x-assets.js` でフォントを確認してから PNG に書き出せる（手順は README の「X（旧Twitter）用の画像」）
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
+  - `.claude/skills/ui-ux-pro-max/` … UI・UX の相談用の Claude Code スキル「UI UX Pro Max」（外部の MIT ライセンスのもの。ライセンス全文は同じフォルダの `LICENSE`）。サイトのビルドには関係しない。**提案と「7. デザインのルール（ホワイトラボ）」が食い違うときは 7 を優先する**。`--persist` でファイルを書き出す使い方はしない。入れ方・更新のしかたは README の「デザインの相談用スキル」
 - 主要コマンド
   - `npm run dev` / `npm run build` / `npm run preview` / `npx astro check`
   - `npm run update-prices`（`--ids=` `--budget=秒` `--dry-run`。GitHub Actions では `--budget=600`。手動実行では id と dry_run を入力でき、自動コミットは main のときだけ）。まとめ売り・選ぶ形の商品（「2枚セット」「〇〇と〇〇のセット」など。`isBundleTitle`）は最安値・代表画像の候補にしない。まとめ売りだけのお店は、もう片方のお店に1枚売りがあれば「在庫なし」「なし」にし、両方のお店に1枚売りがない（カードの値段が全部なくなる）ときだけ前回の値段・リンク・画像を残す（`resolveOutcomes`。どちらもログの最後に一覧で出す）。代表画像は1枚売りの商品を安い順に試し、取得できない画像は飛ばす（`pickAvailableImage`。1枚売りの画像が1つも取れないときだけ前の画像を残す）

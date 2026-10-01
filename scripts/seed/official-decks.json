@@ -4,24 +4,154 @@
   ],
   "cards": [
     {
-      "id": "hariteyama-r-m1l-025",
-      "name": "ハリテヤマ",
-      "rarity": "R",
-      "cardNumber": "025/063",
-      "expansionCode": "M1L",
-      "regulationMark": "I",
-      "deck": "mega-lucario-ex-deck-1001-mew-ex",
-      "role": "ポケモン（公式カードID 47758）"
+      "id": "korinku-c-m3-025",
+      "name": "コリンク",
+      "rarity": "C",
+      "cardNumber": "025/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "luxray-ex-deck-0930",
+      "role": "ポケモン（公式カードID 49658）"
     },
     {
-      "id": "makunoshita-c-m1l-024",
-      "name": "マクノシタ",
-      "rarity": "C",
-      "cardNumber": "024/063",
-      "expansionCode": "M1L",
+      "id": "rukushio-u-m3-026",
+      "name": "ルクシオ",
+      "rarity": "U",
+      "cardNumber": "026/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "luxray-ex-deck-0930",
+      "role": "ポケモン（公式カードID 49659）"
+    },
+    {
+      "id": "rentoraex-rr-sv6-041",
+      "name": "レントラーex",
+      "rarity": "RR",
+      "cardNumber": "041/101",
+      "expansionCode": "SV6",
+      "regulationMark": "H",
+      "deck": "luxray-ex-deck-0930",
+      "role": "ポケモン（公式カードID 45732）"
+    },
+    {
+      "id": "rentora-r-m3-027",
+      "name": "レントラー",
+      "rarity": "R",
+      "cardNumber": "027/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "luxray-ex-deck-0930",
+      "role": "ポケモン（公式カードID 49660）"
+    },
+    {
+      "id": "maggixyo-m2a-050",
+      "name": "マッギョ",
+      "rarity": "-",
+      "cardNumber": "050/193",
+      "expansionCode": "M2a",
       "regulationMark": "I",
-      "deck": "mega-lucario-ex-deck-1001-mew-ex",
-      "role": "ポケモン（公式カードID 47757）"
+      "deck": "luxray-ex-deck-0930",
+      "role": "ポケモン（公式カードID 48572・再録弾のためマークは推定）"
+    },
+    {
+      "id": "chikaranosunadokei-u-sv6a-058",
+      "name": "力の砂時計",
+      "rarity": "U",
+      "cardNumber": "058/064",
+      "expansionCode": "SV6a",
+      "regulationMark": "H",
+      "deck": "luxray-ex-deck-0930",
+      "role": "ポケモンのどうぐ（公式カードID 45933）"
+    },
+    {
+      "id": "gosu-c-sv5k-045",
+      "name": "ゴース",
+      "rarity": "C",
+      "cardNumber": "045/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "n-zorua-deck-0930",
+      "role": "ポケモン（公式カードID 45191）"
+    },
+    {
+      "id": "gengaex-rr-sv5k-047",
+      "name": "ゲンガーex",
+      "rarity": "RR",
+      "cardNumber": "047/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "n-zorua-deck-0930",
+      "role": "ポケモン（公式カードID 45193）"
+    },
+    {
+      "id": "gimanoichite-u-m2-076",
+      "name": "ギーマの一手",
+      "rarity": "U",
+      "cardNumber": "076/080",
+      "expansionCode": "M2",
+      "regulationMark": "I",
+      "deck": "n-zorua-deck-0930",
+      "role": "サポート（公式カードID 48416）"
+    },
+    {
+      "id": "minirixyuu-m2a-124",
+      "name": "ミニリュウ",
+      "rarity": "-",
+      "cardNumber": "124/193",
+      "expansionCode": "M2a",
+      "regulationMark": "I",
+      "deck": "mega-dragonite-ex-deck-0930",
+      "role": "ポケモン（公式カードID 48646・再録弾のためマークは推定）"
+    },
+    {
+      "id": "hakurixyu-m2a-125",
+      "name": "ハクリュー",
+      "rarity": "-",
+      "cardNumber": "125/193",
+      "expansionCode": "M2a",
+      "regulationMark": "I",
+      "deck": "mega-dragonite-ex-deck-0930",
+      "role": "ポケモン（公式カードID 48647・再録弾のためマークは推定）"
+    },
+    {
+      "id": "mkairixyuex-rr-m2a-126",
+      "name": "メガカイリューex",
+      "rarity": "RR",
+      "cardNumber": "126/193",
+      "expansionCode": "M2a",
+      "regulationMark": "I",
+      "deck": "mega-dragonite-ex-deck-0930",
+      "role": "ポケモン（公式カードID 48648・再録弾のためマークは推定）"
+    },
+    {
+      "id": "yukikaburi-c-m1s-017",
+      "name": "ユキカブリ",
+      "rarity": "C",
+      "cardNumber": "017/063",
+      "expansionCode": "M1S",
+      "regulationMark": "I",
+      "deck": "mega-abomasnow-ex-deck-0930",
+      "role": "ポケモン（公式カードID 47813）"
+    },
+    {
+      "id": "myukinooex-rr-m1s-018",
+      "name": "メガユキノオーex",
+      "rarity": "RR",
+      "cardNumber": "018/063",
+      "expansionCode": "M1S",
+      "regulationMark": "I",
+      "deck": "mega-abomasnow-ex-deck-0930",
+      "role": "ポケモン（公式カードID 47814）"
+    },
+    {
+      "id": "aokinotegiwa-mc-695",
+      "name": "アオキの手際",
+      "rarity": "-",
+      "cardNumber": "695/742",
+      "expansionCode": "MC",
+      "regulationMark": "I",
+      "deck": "mega-abomasnow-ex-deck-0930",
+      "role": "サポート（公式カードID 49411・再録弾のためマークは推定）"
     }
   ]
 }

@@ -50,6 +50,8 @@ export default defineConfig({
     '/cards/bravery-charm-sv4a-169/': '/',
     '/cards/pal-pad-u-sv1s-069/': '/',
   },
-  build: { inlineStylesheets: 'always' },
+  // CSS はページに埋め込まず1ファイルにして全ページで共有する（'always' だと約80KB が全ページに入り、
+  // デプロイが約2倍の大きさになる）。'auto' は 4KB 未満の小さい CSS だけ埋め込む
+  build: { inlineStylesheets: 'auto' },
   vite: { plugins: [tailwindcss()] },
 });

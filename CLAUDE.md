@@ -108,6 +108,8 @@
     - ドラパルトexのデッキに、ノココッチが入っている → 「ノココッチドラパ」
     - 違う名前の2つ以上のルールに当てはまるデッキ（例: ボムドラパとノココッチドラパの両方）は、どちらの名前にもせず元の名前のまま残し、PR の「人が確認すべき点」に書いて人に決めてもらう
     - ヤドキングが1枚だけなど、ルールのカードが少なく迷うデッキ（`minQty` 未満）も自動では通称にしない。PR の「人が確認すべき点」に一覧で書き、人に確認する
+  - **1本の記事のデッキ名だけを手で変える**ときは、`deck-columns.json` のその記事の `deckName`・`title`・`description` とページ（`src/pages/columns/{slug}.astro`）のデッキ名を直し、`deckName` のすぐ後ろに `"deckNameBy": "manual"` を付ける（`npm run apply-name-rules` が通称ルールの名前に戻さない。URL は変えない）
+    - 今 `"manual"` の記事: `bomb-dragapult-deck-1001-kadabra`（ボムフーディン/ドラパルト。通称ルールではボムドラパ）
   - **通称の足し方**（「〇〇が入った△△デッキは□□と呼ぶ」と言われたら）
     1. `scripts/lib/deck-name-rules.js` の `DECK_NAME_RULES` に1行足す
        - カード名で判定: `{ name: '□□', deck: '△△', card: '〇〇', note: '説明' }`

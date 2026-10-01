@@ -124,7 +124,7 @@ const jsonLd = [
               <div class="flex gap-3 pb-4">
                 {d.mainCard && <a href={columnPath(d.column)} class="block w-20 shrink-0 self-start sm:w-24" tabindex="-1" aria-hidden="true"><CardImage card={d.mainCard} sizes="96px" class="border border-slate-200" /></a>}
                 <div class="min-w-0 flex-1">
-                  <span class={`inline-block rounded-md px-2 py-0.5 text-[11px] font-black shadow-sm ring-1 ${theme[t.rank].badge}`}>{t.label}</span>
+                  <span class={`inline-block rounded-md px-2 py-0.5 text-xs font-black shadow-sm ring-1 ${theme[t.rank].badge}`}>{t.label}</span>
                   <h3 class="mt-1 text-base font-black leading-snug text-slate-900 sm:text-lg">
                     <a href={columnPath(d.column)} class="hover:text-blue-600">{d.column.deckName}</a>
                   </h3>
@@ -135,14 +135,14 @@ const jsonLd = [
               <div class="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4">
                 <dl class="flex items-end justify-between gap-2">
                   <div class="flex shrink-0 flex-col justify-end">
-                    <dt class="text-[11px] font-medium text-slate-600">60枚の最安パーツ概算</dt>
+                    <dt class="text-xs font-medium text-slate-600">60枚の最安パーツ概算</dt>
                     <dd class="text-xl font-black leading-tight tabular-nums text-rose-600">{d.estimate > 0 ? formatYen(d.estimate) : '集計中'}</dd>
                   </div>
                   <div class="flex min-w-0 flex-col items-end text-right">
-                    <dt class="text-[11px] font-medium text-slate-600">各サイトの評価</dt>
+                    <dt class="text-xs font-medium text-slate-600">各サイトの評価</dt>
                     <dd class="mt-1 flex flex-wrap justify-end gap-1">
                       {Object.entries(d.ratings).map(([key, rank]) => (
-                        <span class="whitespace-nowrap rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">{sourceName.get(key)} {rank}</span>
+                        <span class="whitespace-nowrap rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">{sourceName.get(key)} {rank}</span>
                       ))}
                     </dd>
                   </div>

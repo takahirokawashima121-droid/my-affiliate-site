@@ -58,13 +58,13 @@ export function deckSummary(column: { deckKey: string; keyCards: string[] }, car
   return { mainCard, estimate, categories, badges };
 }
 
-/** バッジの配色（サイト全体の配色に合わせ、紫は使わない） */
+/** バッジの配色（サイト全体の配色に合わせ、紫は使わない。白い文字が背景と 4.5:1 以上の濃さの差になる色にする） */
 export function deckBadgeClass(badge: string): string {
   return (
     {
-      メガシンカ: 'bg-gradient-to-r from-rose-600 to-orange-500 text-white',
+      メガシンカ: 'bg-gradient-to-r from-rose-600 to-orange-700 text-white',
       exアタッカー: 'bg-blue-600 text-white',
-      非ex: 'bg-emerald-600 text-white',
+      非ex: 'bg-emerald-700 text-white',
       低予算: 'bg-emerald-100 text-emerald-700',
     }[badge] ?? 'bg-slate-200 text-slate-700'
   );

@@ -11,4 +11,5 @@ const { column, size = 'sm' } = Astro.props;
 const badge = eventBadge(column);
 ---
 
-<span class:list={['inline-flex items-center whitespace-nowrap rounded-full font-bold', size === 'md' ? 'px-3 py-1 text-xs sm:text-sm' : 'px-2 py-0.5 text-[10px]', badge.className]}>{badge.label}</span>
+<!-- sm は13px。狭い枠では長い表記（「環境Tier1・大会準優勝構築」など）が横の要素に重ならないよう、枠の中で折り返す -->
+<span class:list={['inline-flex items-center rounded-full font-bold', size === 'md' ? 'whitespace-nowrap px-3 py-1 text-xs sm:text-sm' : 'max-w-full px-2.5 py-0.5 text-[13px] leading-snug', badge.className]}>{badge.label}</span>

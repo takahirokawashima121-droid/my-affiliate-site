@@ -78,13 +78,13 @@ const tab =
             <span class="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-4">
               <span class="flex items-end justify-between gap-2">
                 <span class="flex shrink-0 flex-col justify-end">
-                  <span class="text-[11px] font-medium text-slate-600">60枚の最安パーツ概算</span>
+                  <span class="text-xs font-medium text-slate-600">60枚の最安パーツ概算</span>
                   <span class="text-xl font-black leading-tight tabular-nums text-rose-600">{c.estimate > 0 ? formatYen(c.estimate) : '集計中'}</span>
                 </span>
                 <span class="flex min-w-0 flex-col items-end text-right">
-                  <span class="text-[11px] font-medium text-slate-600">デッキタイプ</span>
+                  <span class="text-xs font-medium text-slate-600">デッキタイプ</span>
                   <span class="mt-1 flex flex-wrap justify-end gap-1">
-                    {c.badges.map((b) => <span class={`whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
+                    {c.badges.map((b) => <span class={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-bold ${deckBadgeClass(b)}`}>{b}</span>)}
                   </span>
                 </span>
               </span>

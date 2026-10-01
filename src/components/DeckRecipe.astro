@@ -58,8 +58,8 @@ const nonStandard = rows.filter((r) => r.card && !isStandardLegal(r.card));
                 ) : (
                   <span class="font-bold text-slate-900">{r.name}</span>
                 )}
-                {r.card && <span class="ml-1 font-mono text-[11px] text-slate-600">[{cardModel(r.card)}]</span>}
-                {r.note && <span class="block text-[11px] text-slate-600">{r.note}</span>}
+                {r.card && <span class="ml-1 font-mono text-xs text-slate-600">[{cardModel(r.card)}]</span>}
+                {r.note && <span class="block text-xs text-slate-600">{r.note}</span>}
               </span>
               <span class="shrink-0 text-right tabular-nums">
                 {r.offer ? (

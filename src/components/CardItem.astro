@@ -51,7 +51,7 @@ const model = cardModel(card);
       <p class="mt-3 text-xs text-slate-600">
         差額 {gap.valid ? <span class="font-semibold text-slate-700">{formatYen(gap.spread)}</span> : inStock ? <span class="font-semibold text-amber-700">相場確認中</span> : <span class="font-semibold text-slate-600">—</span>}
       </p>
-      <p class="mt-1 text-[11px] text-slate-600">
+      <p class="mt-1 text-xs text-slate-600">
         更新: <time datetime={updatedAt.toISOString()}>{formatDateTime(updatedAt)}</time>
       </p>
       <span class="mt-auto pt-2 text-xs font-medium text-blue-600">詳細・相場を見る →</span>
@@ -61,29 +61,29 @@ const model = cardModel(card);
   <!-- 価格比較 -->
   <dl class="grid grid-cols-2 divide-x divide-slate-200 border-y border-slate-200 bg-slate-50 text-center">
     <div class="px-3 py-3">
-      <dt class="text-[11px] font-medium text-slate-600">販売最安値</dt>
+      <dt class="text-xs font-medium text-slate-600">販売最安値</dt>
       {best ? (
         <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-rose-600 sm:text-2xl">{formatYen(best.price)}</dd>
       ) : (
         <dd class="mt-1.5 text-base font-bold text-slate-600 sm:text-lg">在庫なし</dd>
       )}
-      <dd class="truncate text-[11px] text-slate-600">{best ? best.shop : '楽天・Yahoo!'}</dd>
+      <dd class="truncate text-xs text-slate-600">{best ? best.shop : '楽天・Yahoo!'}</dd>
       {/* 2大モールの価格をコンパクトに併記（安い方を強調） */}
-      <dd class="mt-1 flex justify-center gap-2 text-[10px] tabular-nums text-slate-600">
+      <dd class="mt-1 flex flex-wrap justify-center gap-x-2 text-xs tabular-nums text-slate-600">
         {([['楽天', offers.rakuten], ['Yahoo!', offers.yahoo]] as const).map(([label, o]) => (
-          <span class:list={[o && best && o.price === best.price && 'font-bold text-rose-600']}>{label} {o ? formatYen(o.price) : '—'}</span>
+          <span class:list={[o && best && o.price === best.price && 'font-bold text-rose-700']}>{label} {o ? formatYen(o.price) : '—'}</span>
         ))}
       </dd>
     </div>
     <div class="px-3 py-3">
-      <dt class="text-[11px] font-medium text-slate-600">買取目安</dt>
+      <dt class="text-xs font-medium text-slate-600">買取目安</dt>
       {buybackShown ? (
         <dd class="mt-0.5 text-xl font-extrabold tabular-nums text-emerald-600 sm:text-2xl">{formatYen(buybackPrice)}</dd>
       ) : (
         <dd class="mt-1.5 text-base font-bold text-slate-600 sm:text-lg">要査定</dd>
       )}
-      <dd class="text-[10px] leading-snug text-slate-600">{SITE.buybackEstimateNote}</dd>
-      {buybackUnverified && <dd class="mt-0.5 text-[11px]"><span class="rounded bg-amber-100 px-1 text-amber-800">相場確認中</span></dd>}
+      <dd class="text-xs leading-snug text-slate-600">{SITE.buybackEstimateNote}</dd>
+      {buybackUnverified && <dd class="mt-0.5 text-xs"><span class="rounded bg-amber-100 px-1 text-amber-800">相場確認中</span></dd>}
     </div>
   </dl>
 

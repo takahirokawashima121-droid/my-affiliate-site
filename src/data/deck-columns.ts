@@ -24,7 +24,7 @@ export type DeckColumn = {
   highlightBy?: 'ai' | 'manual';
   /**
    * ひとこと（一覧のカード＝トップの特集・デッキ解説の一覧に出す30〜40字の短い紹介）。ないときは一覧に見どころ（highlight）を出す（cardBlurb）。
-   * Claude API が書く（scripts/lib/ai-highlight.js の writeTagline）。記事の本文・X投稿文には使わない
+   * Claude API が書く（scripts/lib/ai-highlight.js の writeTagline）。X投稿文の「・」の行にも使う（src/utils/shareText.ts）。記事の本文には使わない
    */
   tagline?: string;
   /** ひとことを書いたのは誰か（'ai' = Claude API / 'manual' = 人が手で直した。'manual' は自動生成・まとめ作成で上書きしない） */

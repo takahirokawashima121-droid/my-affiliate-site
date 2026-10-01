@@ -28,7 +28,7 @@
 | `npm run ai-highlight-test -- --slug=スラッグ` | 公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて表示（ファイルは変えない。`ANTHROPIC_API_KEY` が必要） |
 | `npm run ai-highlight-review` | 公開済みの記事の見どころを、チェック役の AI（公式テキストと見比べる）にかけて結果を表示（`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の9本も一緒にチェック。ファイルは変えない。`ANTHROPIC_API_KEY` が必要） |
 | `npm run ai-highlight-rewrite` | 公開済みの記事の見どころを Claude API でまとめて書き直す（`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり・`--only-flagged` で要確認の記事だけ直す・`--tagline-only` で一覧のカードのひとことだけ作る（見どころは変えない。`--tagline-missing` も付けると、ひとことがまだない記事だけ）。ふだんは Actions の「AI highlight rewrite (manual)」から実行して PR にする） |
-| `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・デッキ名の通称ルール・見どころの自動生成（`scripts/lib/highlight.js`）・AI の見どころの点検と切り替え（`scripts/lib/ai-highlight.js`。API は呼ばない）・自動生成の PR 本文（`scripts/lib/pr-body.js`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
+| `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・デッキ名の通称ルール・見どころの自動生成（`scripts/lib/highlight.js`）・AI の見どころの点検と切り替え（`scripts/lib/ai-highlight.js`。API は呼ばない）・自動生成の PR 本文（`scripts/lib/pr-body.js`）・X投稿文が上限に収まり「…」で切れないこと（`src/utils/shareText.ts`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
 
 ## 最初にやること
 
@@ -183,7 +183,7 @@ npm run auto-decks                                         # 新着の優勝デ�
 
 ### 一覧のカードの「ひとこと」
 
-トップの特集・デッキ解説の一覧のカードには、`deck-columns.json` の `tagline`（ひとこと。30〜40字）があればそれを、なければ今までどおり見どころ（`highlight`）を出します（`src/data/deck-columns.ts` の `cardBlurb`）。記事の本文の「このデッキのポイント」と X投稿文は見どころのままです。
+トップの特集・デッキ解説の一覧のカードには、`deck-columns.json` の `tagline`（ひとこと。30〜40字）があればそれを、なければ今までどおり見どころ（`highlight`）を出します（`src/data/deck-columns.ts` の `cardBlurb`）。X投稿文（記事の最後の「Xシェア用テキスト」と自動生成の PR の本文）の「・」の1行目も、ひとことがあればそれを使います。ひとことがない記事は見どころを文の区切り（「。」）で止め、1文目も入りきらないときは見どころを使わず「入賞レシピと最安パーツの内訳は記事でチェック」の決まった1行に差し替えます（見どころを途中で切りません）。ハッシュタグ・価格の行・リンクは変わりません。記事の本文の「このデッキのポイント」は見どころのままです。
 
 - 自動生成では、見どころがすべて決まったあとに、同じデータ（デッキ名・60枚のレシピ・採用カードの公式テキスト）とその記事の見どころ（参考）を渡して、AI にひとことを1本書かせます（`scripts/lib/ai-highlight.js` の `writeTagline`）
 - 最初の指示で「40字を1字でも超えると使えない（35字くらいが目安）」と伝えます。答えは JSON の `tagline` に完成したひとこと1本だけを入れさせます（字数を数える考えごとが本文に混ざらないように）

@@ -83,11 +83,12 @@ test('同じ日の記事と書き出しが重なるときは、書き出しの�
   assert.equal(similarOpenings([{ ...existing[0] }, { slug: 'ceruledge', highlight: chosen, names: data.recipe.map((e) => e.name) }]).length, 0);
 });
 
-test('X投稿文は見どころを文の区切りで詰め、上限に収める', () => {
+test('X投稿文は見どころを文の区切りで止め、途中で「…」で切らずに上限に収める', () => {
   const [highlight] = highlightCandidates(input('dipplin-festival-lead-deck-0929'));
   const { parent } = buildXPosts({ deckName: 'おまつりおんど', result: '9/29 シティリーグ優勝', highlight, estimate: 12345, url: 'https://example.com/' });
   assert.ok(xWeightedLength(parent) <= PARENT_POST_LIMIT);
   assert.match(parent, /カミッチュは特性「おまつりおんど」/);
+  assert.doesNotMatch(parent, /…/);
   assert.doesNotMatch(parent, /まとめて確認/);
 });
 

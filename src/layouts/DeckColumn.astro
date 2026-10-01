@@ -61,8 +61,8 @@ const introEnd = body.indexOf('</p>');
 const [intro, rest] = introEnd === -1 ? ['', body] : [body.slice(0, introEnd + 4), body.slice(introEnd + 4)];
 
 const url = new URL(Astro.url.pathname, Astro.site).toString();
-// X 告知用の投稿文（記事末尾の折りたたみ。scripts/auto-deck-updater.js の PR 本文と同じ文面）
-const xPosts = buildXPosts({ deckName: column.deckName, result: column.result, highlight: column.highlight, estimate: deckEstimate(column.deckKey, cards), url });
+// X 告知用の投稿文（記事末尾の折りたたみ。scripts/auto-deck-updater.js の PR 本文と同じ文面。「・」の行はひとこと、なければ見どころ）
+const xPosts = buildXPosts({ deckName: column.deckName, result: column.result, highlight: column.highlight, tagline: column.tagline, estimate: deckEstimate(column.deckKey, cards), url });
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',

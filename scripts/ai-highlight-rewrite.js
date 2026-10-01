@@ -138,7 +138,7 @@ async function main() {
   }
 
   const applied = applyRewrites(columns, results);
-  const xText = (c) => buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, estimate: 0, url: '' }).parent;
+  const xText = (c) => buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, tagline: c.tagline, estimate: 0, url: '' }).parent;
   const audit = auditHighlights(columns.map((c) => ({ slug: c.slug, pubDate: c.pubDate, highlight: c.highlight, names: namesOf(c), xText: xText(c) })));
   const body = onlyFlagged ? fixFlaggedPrBody({ results, stats: ai.stats, audit, limit, all }) : rewritePrBody({ results, manual, stats: ai.stats, audit, limit, all });
 

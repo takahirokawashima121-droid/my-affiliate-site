@@ -9857,5 +9857,796 @@
         "officialCardId": "45639"
       }
     ]
+  },
+  "dudunsparce-dragapult-deck-0927-moltres": {
+    "deckId": "Ey23pU-bu8YAV-pyMpRp",
+    "url": "https://www.pokemon-card.com/deck/result.html/deckID/Ey23pU-bu8YAV-pyMpRp/",
+    "cards": [
+      {
+        "name": "ドラパルトex",
+        "qty": 3,
+        "category": "ポケモン",
+        "cardId": "dragapult-ex-rr-sv6-081",
+        "officialCardId": "49264"
+      },
+      {
+        "name": "ドロンチ",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "drakloak-c-sv6-080",
+        "officialCardId": "49263"
+      },
+      {
+        "name": "ドラメシヤ",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "dreepy-c-sv6-079",
+        "officialCardId": "49262"
+      },
+      {
+        "name": "ノココッチex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "nokokotchiex-rr-sv9-079",
+        "officialCardId": "49291"
+      },
+      {
+        "name": "ノココッチ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "dudunsparce-r-sv5k-057",
+        "officialCardId": "48483"
+      },
+      {
+        "name": "ノコッチ",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "dunsparce-c-sv5k-056",
+        "officialCardId": "45202"
+      },
+      {
+        "name": "スボミー",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "budew-m2a-011",
+        "officialCardId": "48533"
+      },
+      {
+        "name": "マシマシラ",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "mashimashira-r-sv6-055",
+        "officialCardId": "46736"
+      },
+      {
+        "name": "シェイミ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "shieimi-u-sv9a-006",
+        "officialCardId": "48534"
+      },
+      {
+        "name": "ファイヤー",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "fuaiya-u-m2-014",
+        "officialCardId": "48354"
+      },
+      {
+        "name": "ニャースex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "nixyasuex-rr-m3-061",
+        "officialCardId": "49694"
+      },
+      {
+        "name": "キチキギスex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "fezandipiti-ex-rr-sv6a-038",
+        "officialCardId": "49205"
+      },
+      {
+        "name": "なかよしポフィン",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "buddy-buddy-poffin-u-sv5k-063",
+        "officialCardId": "49570"
+      },
+      {
+        "name": "ポケパッド",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "poke-pad-u-m3-070",
+        "officialCardId": "50486"
+      },
+      {
+        "name": "ハイパーボール",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "haipaboru-u-sv1v-070",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "50422"
+      },
+      {
+        "name": "夜のタンカ",
+        "qty": 2,
+        "category": "グッズ",
+        "cardId": "night-stretcher-u-sv6a-056",
+        "officialCardId": "49386"
+      },
+      {
+        "name": "スペシャルレッドカード",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "special-red-card-u-m4-072",
+        "officialCardId": "50156"
+      },
+      {
+        "name": "アンフェアスタンプ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "unfair-stamp-ace-sv5a-053",
+        "note": "ACE SPEC（デッキに1枚まで）",
+        "officialCardId": "49349"
+      },
+      {
+        "name": "リーリエの決心",
+        "qty": 4,
+        "category": "サポート",
+        "cardId": "ririenokesshin-u-m1l-062",
+        "officialCardId": "50489"
+      },
+      {
+        "name": "アカマツ",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "crispin-u-sv7-097",
+        "officialCardId": "49412"
+      },
+      {
+        "name": "メイのはげまし",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "meinohagemashi-u-m3-075",
+        "officialCardId": "49708"
+      },
+      {
+        "name": "ジャッジマン",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "jixyajjiman-u-sv9a-062",
+        "officialCardId": "40476"
+      },
+      {
+        "name": "ボスの指令",
+        "qty": 3,
+        "category": "サポート",
+        "cardId": "bosunoshireigechisu-r-sv1a-069",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "50467"
+      },
+      {
+        "name": "危ない廃墟",
+        "qty": 2,
+        "category": "スタジアム",
+        "cardId": "abunaihaikixyo-u-m1l-063",
+        "officialCardId": "47796"
+      },
+      {
+        "name": "基本超エネルギー",
+        "qty": 3,
+        "category": "エネルギー",
+        "officialCardId": "49463"
+      },
+      {
+        "name": "基本炎エネルギー",
+        "qty": 3,
+        "category": "エネルギー",
+        "officialCardId": "49460"
+      },
+      {
+        "name": "基本悪エネルギー",
+        "qty": 2,
+        "category": "エネルギー",
+        "officialCardId": "49465"
+      }
+    ]
+  },
+  "mega-kangaskhan-ex-deck-0927-raging-bolt-ex": {
+    "deckId": "dk1kFw-jXnNzB-Fbvkdk",
+    "url": "https://www.pokemon-card.com/deck/result.html/deckID/dk1kFw-jXnNzB-Fbvkdk/",
+    "cards": [
+      {
+        "name": "メガガルーラex",
+        "qty": 3,
+        "category": "ポケモン",
+        "cardId": "mega-kangaskhan-ex-rr-m1s-051",
+        "officialCardId": "48466"
+      },
+      {
+        "name": "オーガポン みどりのめんex",
+        "qty": 3,
+        "category": "ポケモン",
+        "cardId": "ogerpon-teal-ex-rr-sv6-016",
+        "officialCardId": "47122"
+      },
+      {
+        "name": "オーガポン いどのめんex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "ogerpon-wellspring-ex-rr-sv6-038",
+        "officialCardId": "47129"
+      },
+      {
+        "name": "タケルライコex",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "raging-bolt-ex-rr-sv5k-053",
+        "officialCardId": "45532"
+      },
+      {
+        "name": "ラティアスex",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "latias-ex-rr-sv7a-019",
+        "officialCardId": "46324"
+      },
+      {
+        "name": "ニャースex",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "nixyasuex-rr-m3-061",
+        "officialCardId": "50067"
+      },
+      {
+        "name": "キチキギスex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "fezandipiti-ex-rr-sv6a-038",
+        "officialCardId": "50004"
+      },
+      {
+        "name": "テツノイサハex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "tetsunoisahaex-rr-sv5m-016",
+        "officialCardId": "45556"
+      },
+      {
+        "name": "リーリエのピッピex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "lillies-clefairy-ex-rr-sv9-033",
+        "officialCardId": "47235"
+      },
+      {
+        "name": "パオジアン",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "paojian-r-sv8-032",
+        "officialCardId": "49872"
+      },
+      {
+        "name": "ファイアローex",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "talonflame-ex-rr-m6-062",
+        "officialCardId": "50537"
+      },
+      {
+        "name": "ナゲツケサル",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "nagetsukesaru-u-sv7a-031",
+        "officialCardId": "49123"
+      },
+      {
+        "name": "ハイパーボール",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "haipaboru-u-sv1v-070",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "49976"
+      },
+      {
+        "name": "エネルギーつけかえ",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "enerugitsukekae-mc-638",
+        "officialCardId": "50323"
+      },
+      {
+        "name": "ガラスのラッパ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "garasunorappa-u-sv7-089",
+        "officialCardId": "49975"
+      },
+      {
+        "name": "夜のタンカ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "night-stretcher-u-sv6a-056",
+        "officialCardId": "48440"
+      },
+      {
+        "name": "アンフェアスタンプ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "unfair-stamp-ace-sv5a-053",
+        "note": "ACE SPEC（デッキに1枚まで）",
+        "officialCardId": "47870"
+      },
+      {
+        "name": "エネルギー回収",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "enerugikaishixyuu-u-sv11w-079",
+        "officialCardId": "50203"
+      },
+      {
+        "name": "アカマツ",
+        "qty": 4,
+        "category": "サポート",
+        "cardId": "crispin-u-sv7-097",
+        "officialCardId": "47148"
+      },
+      {
+        "name": "シアノ",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "shiano-u-sv8-102",
+        "officialCardId": "46650"
+      },
+      {
+        "name": "ジャッジマン",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "jixyajjiman-u-sv9a-062",
+        "officialCardId": "47384"
+      },
+      {
+        "name": "ボスの指令",
+        "qty": 3,
+        "category": "サポート",
+        "cardId": "bosunoshireigechisu-r-sv1a-069",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "42900"
+      },
+      {
+        "name": "暗号マニアの解読",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "ciphermaniacs-codebreaking-u-sv5m-067",
+        "officialCardId": "45562"
+      },
+      {
+        "name": "ゼロの大空洞",
+        "qty": 3,
+        "category": "スタジアム",
+        "cardId": "area-zero-underdepths-u-sv7-102",
+        "officialCardId": "46183"
+      },
+      {
+        "name": "基本草エネルギー",
+        "qty": 7,
+        "category": "エネルギー",
+        "officialCardId": "50745"
+      },
+      {
+        "name": "基本闘エネルギー",
+        "qty": 2,
+        "category": "エネルギー",
+        "officialCardId": "50750"
+      },
+      {
+        "name": "基本雷エネルギー",
+        "qty": 2,
+        "category": "エネルギー",
+        "officialCardId": "50748"
+      },
+      {
+        "name": "基本超エネルギー",
+        "qty": 2,
+        "category": "エネルギー",
+        "officialCardId": "50749"
+      },
+      {
+        "name": "基本水エネルギー",
+        "qty": 1,
+        "category": "エネルギー",
+        "officialCardId": "50747"
+      }
+    ]
+  },
+  "greninja-ex-deck-0927": {
+    "deckId": "8KGDc8-3vzrj5-G8DYK8",
+    "url": "https://www.pokemon-card.com/deck/result.html/deckID/8KGDc8-3vzrj5-G8DYK8/",
+    "cards": [
+      {
+        "name": "ケロマツ",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "keromatsu-c-m4-020",
+        "officialCardId": "50104"
+      },
+      {
+        "name": "ゲコガシラ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "gekogashira-c-m4-021",
+        "officialCardId": "50105"
+      },
+      {
+        "name": "ゲコガシラ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "gekogashira-c-sv5a-024",
+        "officialCardId": "45600"
+      },
+      {
+        "name": "ゲッコウガex",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "gekkougaex-rr-sv5a-045",
+        "officialCardId": "45621"
+      },
+      {
+        "name": "ゲッコウガex",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "gekkougaiekkusu-rr-m6a-015",
+        "officialCardId": "50627"
+      },
+      {
+        "name": "ヨマワル",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "duskull-c-sv6a-018",
+        "officialCardId": "49024"
+      },
+      {
+        "name": "サマヨール",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "dusclops-c-sv6a-019",
+        "officialCardId": "49025"
+      },
+      {
+        "name": "ヨノワール",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "dusknoir-r-sv6a-020",
+        "officialCardId": "49026"
+      },
+      {
+        "name": "ニャースex",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "nixyasuex-rr-m3-061",
+        "officialCardId": "49694"
+      },
+      {
+        "name": "キチキギスex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "fezandipiti-ex-rr-sv6a-038",
+        "officialCardId": "49205"
+      },
+      {
+        "name": "ラティアスex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "latias-ex-rr-sv7a-019",
+        "officialCardId": "49524"
+      },
+      {
+        "name": "スボミー",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "budew-m2a-011",
+        "officialCardId": "46662"
+      },
+      {
+        "name": "ふしぎなアメ",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "fushiginaame-u-sv3a-053",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "42789"
+      },
+      {
+        "name": "なかよしポフィン",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "buddy-buddy-poffin-u-sv5k-063",
+        "officialCardId": "45209"
+      },
+      {
+        "name": "ポケパッド",
+        "qty": 3,
+        "category": "グッズ",
+        "cardId": "poke-pad-u-m3-070",
+        "officialCardId": "49703"
+      },
+      {
+        "name": "ハイパーボール",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "haipaboru-u-sv1v-070",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "43106"
+      },
+      {
+        "name": "夜のタンカ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "night-stretcher-u-sv6a-056",
+        "officialCardId": "49386"
+      },
+      {
+        "name": "ポケモンいれかえ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "switch-u-sv5a-056",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "50599"
+      },
+      {
+        "name": "ジャッジマン",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "jixyajjiman-u-sv9a-062",
+        "officialCardId": "41090"
+      },
+      {
+        "name": "ボスの指令",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "bosunoshireigechisu-r-sv1a-069",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "43034"
+      },
+      {
+        "name": "アクロマの執念",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "colresss-tenacity-u-sv6a-059",
+        "officialCardId": "46825"
+      },
+      {
+        "name": "リーリエの決心",
+        "qty": 4,
+        "category": "サポート",
+        "cardId": "ririenokesshin-u-m1l-062",
+        "officialCardId": "47795"
+      },
+      {
+        "name": "トウコ",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "touko-u-sv11w-085",
+        "officialCardId": "49434"
+      },
+      {
+        "name": "偉大な大樹",
+        "qty": 1,
+        "category": "スタジアム",
+        "cardId": "idainataijixyu-sv7-101",
+        "note": "ACE SPEC（デッキに1枚まで）",
+        "officialCardId": "46040"
+      },
+      {
+        "name": "ジャミングタワー",
+        "qty": 1,
+        "category": "スタジアム",
+        "cardId": "jamming-tower-u-sv6-100",
+        "officialCardId": "47214"
+      },
+      {
+        "name": "基本水エネルギー",
+        "qty": 6,
+        "category": "エネルギー",
+        "officialCardId": "4104"
+      },
+      {
+        "name": "イグニッションエネルギー",
+        "qty": 3,
+        "category": "エネルギー",
+        "cardId": "igunisshixyonenerugi-u-sv11w-086",
+        "officialCardId": "49452"
+      }
+    ]
+  },
+  "mega-absol-ex-deck-0927-shaymin": {
+    "deckId": "wFkFVv-zmaldG-Fbbkkb",
+    "url": "https://www.pokemon-card.com/deck/result.html/deckID/wFkFVv-zmaldG-Fbbkkb/",
+    "cards": [
+      {
+        "name": "メガアブソルex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "mabusoruex-rr-m1l-038",
+        "officialCardId": "47771"
+      },
+      {
+        "name": "モモワロウex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "momowarouex-rr-sv6a-039",
+        "officialCardId": "46766"
+      },
+      {
+        "name": "イーユイ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "iyui-r-m5-057",
+        "officialCardId": "50276"
+      },
+      {
+        "name": "ロケット団のニューラ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "rokettodannonixyura-r-sv10-072",
+        "officialCardId": "48626"
+      },
+      {
+        "name": "アラブルタケ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "araburutake-u-sv6-071",
+        "officialCardId": "45762"
+      },
+      {
+        "name": "ストリンダー",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "sutorinda-r-m2-057",
+        "officialCardId": "48397"
+      },
+      {
+        "name": "エレズン",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "erezun-c-m2-056",
+        "officialCardId": "48396"
+      },
+      {
+        "name": "マシマシラ",
+        "qty": 3,
+        "category": "ポケモン",
+        "cardId": "mashimashira-r-sv6-055",
+        "officialCardId": "46736"
+      },
+      {
+        "name": "シェイミ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "shieimi-u-sv9a-006",
+        "officialCardId": "48321"
+      },
+      {
+        "name": "ポケパッド",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "poke-pad-u-m3-070",
+        "officialCardId": "49378"
+      },
+      {
+        "name": "なかよしポフィン",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "buddy-buddy-poffin-u-sv5k-063",
+        "officialCardId": "45209"
+      },
+      {
+        "name": "ハイパーボール",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "haipaboru-u-sv1v-070",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "43821"
+      },
+      {
+        "name": "夜のタンカ",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "night-stretcher-u-sv6a-056",
+        "officialCardId": "49386"
+      },
+      {
+        "name": "エネルギーリサイクル",
+        "qty": 2,
+        "category": "グッズ",
+        "cardId": "enerugirisaikuru-mc-640",
+        "officialCardId": "49356"
+      },
+      {
+        "name": "ロケット団のレシーバー",
+        "qty": 2,
+        "category": "グッズ",
+        "cardId": "rokettodannoreshiba-u-sv10-090",
+        "officialCardId": "49391"
+      },
+      {
+        "name": "ポケギア3.0",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "pokegear-3-u-sv11b-081",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "49376"
+      },
+      {
+        "name": "エネルギーつけかえ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "enerugitsukekae-mc-638",
+        "officialCardId": "42714"
+      },
+      {
+        "name": "スペシャルレッドカード",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "special-red-card-u-m4-072",
+        "officialCardId": "50156"
+      },
+      {
+        "name": "シークレットボックス",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "secret-box-ace-sv6-092",
+        "note": "ACE SPEC（デッキに1枚まで）",
+        "officialCardId": "45783"
+      },
+      {
+        "name": "ふうせん",
+        "qty": 2,
+        "category": "ポケモンのどうぐ",
+        "cardId": "fuusen-u-sv11b-082",
+        "officialCardId": "47618"
+      },
+      {
+        "name": "リーリエの決心",
+        "qty": 4,
+        "category": "サポート",
+        "cardId": "ririenokesshin-u-m1l-062",
+        "officialCardId": "47795"
+      },
+      {
+        "name": "ロケット団のラムダ",
+        "qty": 4,
+        "category": "サポート",
+        "cardId": "rokettodannoramuda-u-sv10-094",
+        "officialCardId": "47487"
+      },
+      {
+        "name": "ハッサク",
+        "qty": 3,
+        "category": "サポート",
+        "cardId": "drayton-u-sv6-098",
+        "officialCardId": "45789"
+      },
+      {
+        "name": "ミアレシティ",
+        "qty": 1,
+        "category": "スタジアム",
+        "cardId": "miareshitei-u-m3-077",
+        "officialCardId": "49710"
+      },
+      {
+        "name": "ロケット団の監視塔",
+        "qty": 1,
+        "category": "スタジアム",
+        "cardId": "rokettodannokanshitou-u-sv10-096",
+        "officialCardId": "48711"
+      },
+      {
+        "name": "基本悪エネルギー",
+        "qty": 10,
+        "category": "エネルギー",
+        "officialCardId": "46122"
+      }
+    ]
   }
 }

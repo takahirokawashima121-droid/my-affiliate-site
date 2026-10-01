@@ -4,34 +4,14 @@
   ],
   "cards": [
     {
-      "id": "henkanoshixyo-u-m4-074",
-      "name": "変化の書",
-      "rarity": "U",
-      "cardNumber": "074/083",
-      "expansionCode": "M4",
-      "regulationMark": "J",
-      "deck": "n-zoroark-ex-deck-0929-budew",
-      "role": "グッズ（公式カードID 50158）"
-    },
-    {
-      "id": "dotakun-u-sv5k-029",
-      "name": "ドータクン",
-      "rarity": "U",
-      "cardNumber": "029/071",
-      "expansionCode": "SV5K",
-      "regulationMark": "H",
-      "deck": "bomb-dragapult-deck-0927-mew-ex",
-      "role": "ポケモン（公式カードID 45175）"
-    },
-    {
-      "id": "domira-c-sv5k-028",
-      "name": "ドーミラー",
+      "id": "gekogashira-c-sv5a-024",
+      "name": "ゲコガシラ",
       "rarity": "C",
-      "cardNumber": "028/071",
-      "expansionCode": "SV5K",
+      "cardNumber": "024/066",
+      "expansionCode": "SV5a",
       "regulationMark": "H",
-      "deck": "bomb-dragapult-deck-0927-mew-ex",
-      "role": "ポケモン（公式カードID 45174）"
+      "deck": "greninja-ex-deck-0927",
+      "role": "ポケモン（公式カードID 45600）"
     }
   ]
 }

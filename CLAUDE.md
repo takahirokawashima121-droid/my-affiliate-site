@@ -34,12 +34,12 @@
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
 - 主要コマンド
   - `npm run dev` / `npm run build` / `npm run preview` / `npx astro check`
-  - `npm run update-prices`（`--ids=` `--budget=秒` `--dry-run`。GitHub Actions では `--budget=600`）
+  - `npm run update-prices`（`--ids=` `--budget=秒` `--dry-run`。GitHub Actions では `--budget=600`。手動実行では id と dry_run を入力でき、自動コミットは main のときだけ）。まとめ売り・選ぶ形の商品（「2枚セット」「〇〇と〇〇のセット」など。`isBundleTitle`）は最安値・代表画像の候補にしない。まとめ売りだけのお店は、もう片方のお店に1枚売りがあれば「在庫なし」「なし」にし、両方のお店に1枚売りがない（カードの値段が全部なくなる）ときだけ前回の値段・リンク・画像を残す（`resolveOutcomes`。どちらもログの最後に一覧で出す）。代表画像は1枚売りの商品を安い順に試し、取得できない画像は飛ばす（`pickAvailableImage`。1枚売りの画像が1つも取れないときだけ前の画像を残す）
   - `npm run add-cards`（`--dry-run`）/ `npm run sync-trending`（`--dry-run`）
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
-  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/ai-highlight.js` の AI の見どころの点検と従来の方法への切り替え（API は呼ばない）、`scripts/lib/highlight-rewrite.js` のまとめ書き直し（`highlightBy: "manual"` を上書きしないこと・API のエラーの理由。API は呼ばない）、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別、`src/utils/shareText.ts` の X投稿文（全記事で上限に収まり「…」で切れないこと。`scripts/test/share-text.test.js`）、`.github/workflows/` の YAML の書き方（`scripts/test/workflows.test.js`）のテスト。どれかを変更したら必ず実行する）
+  - `npm test`（`scripts/update-prices.js` のまとめ売りの除外（`scripts/test/update-prices.test.js`）、`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/ai-highlight.js` の AI の見どころの点検と従来の方法への切り替え（API は呼ばない）、`scripts/lib/highlight-rewrite.js` のまとめ書き直し（`highlightBy: "manual"` を上書きしないこと・API のエラーの理由。API は呼ばない）、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別、`src/utils/shareText.ts` の X投稿文（全記事で上限に収まり「…」で切れないこと。`scripts/test/share-text.test.js`）、`.github/workflows/` の YAML の書き方（`scripts/test/workflows.test.js`）のテスト。どれかを変更したら必ず実行する）
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run ai-highlight-test -- --slug=スラッグ`（公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて出す。ファイルは変えない。`ANTHROPIC_API_KEY` が必要。GitHub Actions の「AI highlight test (manual)」からも実行できる）
   - `npm run ai-highlight-review`（公開済みの記事の見どころをチェック役の AI にかけて結果を出す。`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の9本（`scripts/test/fixtures/ai-highlight-review-cases.json`）も一緒にチェックし、`mustFlag: true` の2本（手で直す前の文＝`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`）をどちらも「要確認」にでき、`mustNotFlag: true` の5本（今サイトに出ている文＝`slowking-deck`・`n-zoroark-ex-deck`・`mabusoruex-deck-0928`・`n-zoroark-ex-deck-0927`・`mega-lopunny-ex-deck-0927`）をすべて「問題なし」にできれば合格と出す。ファイルは変えない。GitHub Actions の「AI highlight review (manual)」からも実行できる）

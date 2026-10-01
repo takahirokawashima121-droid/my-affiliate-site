@@ -16,6 +16,15 @@ on:
     # 1日2回（更新時期が来たカードだけを取得。2回で優先カードの毎日更新と、残りのカードの2日ごとの更新をまかなう）
     - cron: '7 7,19 * * *' # 07:07 / 19:07 UTC = 日本時間 16時7分 / 午前4時7分（毎時0分の混雑を避けて負荷分散）
   workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行
+    inputs:
+      ids:
+        description: '取り直すカードの id（カンマ区切り。空欄なら更新時期が来たカード）'
+        required: false
+        default: ''
+      dry_run:
+        description: '取得結果をログに出すだけで保存しない（--dry-run）'
+        type: boolean
+        default: false
 
 permissions:
   contents: write # cards.json のコミット・プッシュに必要
@@ -48,14 +57,23 @@ jobs:
           key: price-checks-${{ github.run_id }}
           restore-keys: price-checks-
 
+      # 定期実行は --budget=600。手動実行で id を入れたときはそのカードだけ（--ids）、dry_run なら保存しない
       - name: Update prices
-        run: node scripts/update-prices.js --budget=600
+        run: |
+          args=(--budget=600)
+          if [ -n "$IDS" ]; then args=("--ids=$IDS"); fi
+          if [ "$DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          node scripts/update-prices.js "${args[@]}"
         env:
           RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
           RAKUTEN_ACCESS_KEY: ${{ secrets.RAKUTEN_ACCESS_KEY }}
           YAHOO_APP_ID: ${{ secrets.YAHOO_APP_ID }}
+          IDS: ${{ inputs.ids }}
+          DRY_RUN: ${{ inputs.dry_run }}
 
+      # 自動コミットは main で実行したときだけ（ほかのブランチで試したときに main へ push しない）。dry_run のときもしない
       - name: Commit and push if cards.json changed
+        if: github.ref == 'refs/heads/main' && inputs.dry_run != true
         run: |
           if git diff --quiet -- src/data/cards.json; then
             echo "cards.json に変更はありません"

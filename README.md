@@ -28,7 +28,7 @@
 | `npm run ai-highlight-test -- --slug=スラッグ` | 公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて表示（ファイルは変えない。`ANTHROPIC_API_KEY` が必要） |
 | `npm run ai-highlight-review` | 公開済みの記事の見どころを、チェック役の AI（公式テキストと見比べる）にかけて結果を表示（`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の9本も一緒にチェック。ファイルは変えない。`ANTHROPIC_API_KEY` が必要） |
 | `npm run ai-highlight-rewrite` | 公開済みの記事の見どころを Claude API でまとめて書き直す（`highlightBy: "manual"` の記事は対象外。`--limit=5` で試しに5本だけ・`--dry-run` あり・`--only-flagged` で要確認の記事だけ直す・`--tagline-only` で一覧のカードのひとことだけ作る（見どころは変えない。`--tagline-missing` も付けると、ひとことがまだない記事だけ）。ふだんは Actions の「AI highlight rewrite (manual)」から実行して PR にする） |
-| `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・デッキ名の通称ルール・見どころの自動生成（`scripts/lib/highlight.js`）・AI の見どころの点検と切り替え（`scripts/lib/ai-highlight.js`。API は呼ばない）・自動生成の PR 本文（`scripts/lib/pr-body.js`）・X投稿文が上限に収まり「…」で切れないこと（`src/utils/shareText.ts`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
+| `npm test` | ポケカブックのまとめ記事の読み取り（`scripts/lib/pokecabook.js`）・価格更新のまとめ売りの除外（`scripts/update-prices.js`）・デッキ名の通称ルール・見どころの自動生成（`scripts/lib/highlight.js`）・AI の見どころの点検と切り替え（`scripts/lib/ai-highlight.js`。API は呼ばない）・自動生成の PR 本文（`scripts/lib/pr-body.js`）・X投稿文が上限に収まり「…」で切れないこと（`src/utils/shareText.ts`）のテスト。実際の記事の HTML の骨組み（`scripts/test/fixtures/`）と記事ページを使う |
 
 ## 最初にやること
 
@@ -94,13 +94,15 @@ npm run sync-trending                # 追加候補のシードを作り、add-c
 
 ## 価格の自動更新（GitHub Actions）
 
-`.github/workflows/update-prices.yml` が1日2回（日本時間 午前4時7分・16時7分）に `node scripts/update-prices.js --budget=600` を実行し（600秒を過ぎたら新しいカードの取得を始めず、残りは次回）、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます。
+`.github/workflows/update-prices.yml` が1日2回（日本時間 午前4時7分・16時7分）に `node scripts/update-prices.js --budget=600` を実行し（600秒を過ぎたら新しいカードの取得を始めず、残りは次回）、`src/data/cards.json` に差分があれば「chore: daily price update」としてコミット・プッシュします（Vercel が自動デプロイ）。GitHub の Actions タブ →「Update prices」→「Run workflow」から手動実行もできます（入力欄にカードの id をカンマ区切りで入れるとそのカードだけ取り直し、「dry_run」にチェックを入れると保存せずにログに出すだけ。自動コミットは main で実行したときだけ）。
 
 事前に、リポジトリの Settings → Secrets and variables → Actions に `RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`・`YAHOO_APP_ID` を登録してください。全カードで API エラーになった場合（キーの失効など）はワークフローが失敗し、GitHub から通知されます。
 
 楽天APIへのリクエストには、アプリ登録時の「許可されたWebサイト」と一致する Origin が必要です。`scripts/update-prices.js`・`scripts/add-cards.js` の `RAKUTEN_ORIGIN_URL` は、楽天側の登録に合わせて設定してください（現在は本番の https://www.pokeca-factory.com/。楽天側には www 付き・www なし・Vercel のURLの3つを登録済み）。GitHub の Variables・Secrets では設定していません。
 
 楽天市場に在庫のないカードは「在庫なし」となり、買取価格も根拠がないため「要査定」と表示されます。
+
+まとめ売り（「2枚セット」「4枚まとめセット」「〇〇と〇〇のセット」など）と、何種類かから選ぶ形の商品は、1枚の値段ではなく画像にも複数のカードが写るため、最安値・代表画像の候補にしません（`scripts/update-prices.js` の `isBundleTitle`。カード名の「むしとりセット」や「スターターセットex」は対象外）。外した件数と商品名はログに出ます。該当する商品がまとめ売りだけのお店は、もう片方のお店に1枚売りがあれば「在庫なし」（楽天）・「なし」（Yahoo!）にします。両方のお店に1枚売りがなく、カードの値段が全部なくなってしまうときだけ、前回の値段・リンク・画像を残します（どちらもログの最後に一覧で出します）。代表画像は、宣伝帯のない1枚売りの商品（楽天・Yahoo!）を安い順に試し、取得できない画像は飛ばして次の商品の画像を使います。1枚売りの画像が1つも取れないときだけ前の画像を残します。ログの商品名は切らずに全部出します。
 
 ## OG画像（SNSシェア時の画像）
 

@@ -22,7 +22,7 @@
 //    いちばん新しい処理済みの記事も毎回見直し、新しいデッキかどうかはデッキコードで判定する
 //    （scripts/cache/processed-decks.json）
 // 2. 記事ページの●付き小見出し（「●スッカラカン」= デッキ名。ポケカブックの表記を正とする）ごとに、ポケモン公式のデッキURL（deckID）を取り出す
-// 3. 既存の記事がないデッキ名を優先して最大 --max-columns 件を選び、import-official-decks.js で取り込む
+// 3. 既存の記事がないデッキ名を優先し、同じ条件なら新しい日付から最大 --max-columns 件を選び、import-official-decks.js で取り込む
 //    （現行スタンダードの版がないカードを含む・60枚でないデッキは飛ばす。未登録カードは最低レアリティで追加し価格を取得）
 // 4. src/data/deck-columns.json に記事情報を追記し、src/pages/columns/{slug}.astro を生成する。
 //    本文は公式のカードテキストから作る「デッキの構成」「主力カードの効果」と、最安値つき60枚レシピ・代替案の枠。
@@ -41,7 +41,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cardEffects, deckCards, norm, romaji } from './lib/official.js';
-import { CITY_RANKS, FEEDS, articleDecks, cityArticleDecks, feedItems, gymFreshItems, isDeckName } from './lib/pokecabook.js';
+import { CITY_RANKS, FEEDS, articleDecks, cityArticleDecks, dateKey, feedItems, gymFreshItems, isDeckName, orderGymDecks } from './lib/pokecabook.js';
 import { importDecks } from './import-official-decks.js';
 import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
 import { memberNote, placeTitles } from './lib/title-place.js';
@@ -93,8 +93,6 @@ const todayJst = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 
 /** Astro のテンプレートに埋め込む文字列（{ } < > & をエスケープ） */
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/{/g, '&#123;').replace(/}/g, '&#125;');
 
-/** 「9/27」→ 月日の比較用の数値（927） */
-const dateKey = (date) => (date ? date.split('/').map(Number).reduce((m, d) => m * 100 + d) : 0);
 
 /**
  * レシピからデッキ名を推定する（シティリーグのまとめ記事はデッキ名を文字で載せていないため）。
@@ -292,18 +290,10 @@ async function main() {
       d.inferred = true;
     }
   }
-  // 優先順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）
+  // 優先順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）。
   // （シティリーグはこの時点でデッキ名が未定のため、下の成績順で並べる）
-  const occurrence = new Map();
-  const rank = (d) => d.nth * 2 + Number(existingNames.has(norm(d.archetype)));
-  const ordered = candidates
-    .filter(() => opts.source === 'gym')
-    .map((d) => {
-      const nth = occurrence.get(norm(d.archetype)) ?? 0;
-      occurrence.set(norm(d.archetype), nth + 1);
-      return { ...d, nth };
-    })
-    .sort((a, b) => rank(a) - rank(b));
+  // 同じ条件なら新しい日付が先（scripts/lib/pokecabook.js の orderGymDecks）
+  const ordered = opts.source === 'gym' ? orderGymDecks(candidates, (name) => existingNames.has(norm(name))) : [];
   // シティリーグ: 最新の開催日から CITY_WINDOW_DAYS 日以内のデッキを、新しい日付 → 成績（優勝 → 準優勝）→ 会場の掲載順に並べる。
   // 今回選ばなかったデッキは処理済みにしないので、次回以降に順番に記事になる（取りこぼさない）。
   // ●付き小見出しのデッキ名がないデッキは、ここで公式のデッキページを取得してレシピから名前を付け、同じ回に同じデッキ名が重ならないようにする

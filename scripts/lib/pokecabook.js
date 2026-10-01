@@ -2,7 +2,7 @@
 // scripts/auto-deck-updater.js（記事の自動生成）と scripts/check-deck-names.js（公開済み記事のデッキ名の照合）から使う
 
 import * as cheerio from 'cheerio';
-import { fetchText } from './official.js';
+import { fetchText, norm } from './official.js';
 
 /** まとめ記事の RSS と、対象にする記事タイトル（デッキタイプ別のまとめ記事は過去の環境のデッキを含むため対象外） */
 export const FEEDS = {
@@ -18,6 +18,26 @@ export const FEEDS = {
 export function gymFreshItems(items, isDone, max) {
   const firstDone = items.findIndex(isDone);
   return items.slice(0, Math.min(firstDone === -1 ? items.length : firstDone + 1, max));
+}
+
+/** 「9/27」→ 月日の比較用の数値（927） */
+export const dateKey = (date) => (date ? date.split('/').map(Number).reduce((m, d) => m * 100 + d) : 0);
+
+/**
+ * ジムバトルの候補の並び順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）。
+ * 同じ条件なら新しい日付が先（同じデッキ名が複数あるときは、いちばん新しい日付のものを1つ目にする）。同じ日付なら記事の掲載順
+ */
+export function orderGymDecks(decks, hasArticle) {
+  const occurrence = new Map();
+  const rank = (d) => d.nth * 2 + Number(hasArticle(d.archetype));
+  return [...decks]
+    .sort((a, b) => dateKey(b.date) - dateKey(a.date))
+    .map((d) => {
+      const nth = occurrence.get(norm(d.archetype)) ?? 0;
+      occurrence.set(norm(d.archetype), nth + 1);
+      return { ...d, nth };
+    })
+    .sort((a, b) => rank(a) - rank(b));
 }
 
 /** シティリーグで記事にする成績（上位入賞のみ。並び順が優先順） */

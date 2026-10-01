@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { gymFreshItems, parseCityArticle, parseGymArticle } from '../lib/pokecabook.js';
+import { gymFreshItems, orderGymDecks, parseCityArticle, parseGymArticle } from '../lib/pokecabook.js';
 
 const fixture = (name) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
@@ -96,4 +96,21 @@ test('ジムバトル: 同じタイトルのまま追記される処理済みの
   assert.deepEqual(gymFreshItems([next, week, prev], (it) => done.has(it), 3), [next, week]);
   // 処理済みの記事がなければ、上限まで
   assert.deepEqual(gymFreshItems([next, week, prev], () => false, 2), [next, week]);
+});
+
+test('ジムバトル: 記事のないデッキ名を優先し、同じ条件なら新しい日付から選ぶ（orderGymDecks）', () => {
+  const decks = [
+    { deckId: 'a', archetype: 'ケンタロス', date: '9/29' },
+    { deckId: 'b', archetype: 'スッカラカン', date: '9/29' },
+    { deckId: 'c', archetype: 'ケンタロス', date: '10/1' },
+    { deckId: 'd', archetype: 'イイネイヌ', date: '9/30' },
+    { deckId: 'e', archetype: 'ボムファイアロー', date: '10/1' },
+    { deckId: 'f', archetype: 'イイネイヌ', date: '10/1' },
+  ];
+  const hasArticle = (name) => name === 'スッカラカン' || name === 'イイネイヌ';
+  // 記事のない名前の1つ目（10/1 → 9/29 は同じ名前の2つ目） → 記事のある名前の1つ目（新しい日付から）→ 同じ名前の2つ目以降
+  assert.deepEqual(
+    orderGymDecks(decks, hasArticle).map((d) => d.deckId),
+    ['c', 'e', 'f', 'b', 'a', 'd'],
+  );
 });

@@ -111,7 +111,7 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
 
       <CardTags card={card} cheapest={isCheapest(card)} size="lg" />
       <h1 class="mt-2 text-2xl font-extrabold leading-tight text-slate-900 sm:text-3xl">
-        {nameWithRarity(card.data)} <span class="font-mono text-xl font-bold text-slate-600 sm:text-2xl">[{model}]</span>
+        {nameWithRarity(card.data)} <span class="mt-1 block font-mono text-base font-bold text-slate-600 sm:text-lg">[{model}]</span>
         <span class="mt-1 block text-base font-bold text-slate-600 sm:text-lg">販売最安値・買取相場比較</span>
       </h1>
 
@@ -159,16 +159,23 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
               </Fragment>
             )}
             <!-- モール別の価格（安い方に「最安値」ラベル。在庫のある側の購入ボタンを目立たせる） -->
-            <ul class="mt-4 grid grid-cols-2 gap-2">
+            <!-- お店ごとの枠は縦に並べる（横に2つ並べると、スマホ・PC とも店名やボタンの文字が途中で折り返すため）。ボタンは枠の横幅いっぱい -->
+            <ul class="mt-4 grid grid-cols-1 gap-2">
               {mallPanels.map((m) => (
                 <li class:list={['flex flex-col rounded-xl border p-3', m.offer && isBest(m.offer.price) ? 'border-red-300 bg-red-50/60' : 'border-slate-200 bg-slate-50']}>
-                  <p class="flex items-center justify-between gap-1 text-xs font-bold text-slate-700">
-                    {m.name}
-                    {m.offer && isBest(m.offer.price) && <span class="rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] text-white">最安値</span>}
-                  </p>
+                  <div class="flex items-center justify-between gap-2">
+                    <p class="flex items-center gap-2 text-sm font-bold text-slate-700">
+                      <span class="whitespace-nowrap">{m.name}</span>
+                      {m.offer && isBest(m.offer.price) && <span class="whitespace-nowrap rounded-full bg-red-600 px-2 py-0.5 text-xs text-white">最安値</span>}
+                    </p>
+                    {m.offer ? (
+                      <p class="whitespace-nowrap text-lg font-extrabold tabular-nums text-slate-900">{formatYen(m.offer.price)}</p>
+                    ) : (
+                      <p class="whitespace-nowrap text-base font-bold text-slate-600">在庫なし</p>
+                    )}
+                  </div>
                   {m.offer ? (
                     <Fragment>
-                      <p class="mt-1 text-lg font-extrabold tabular-nums text-slate-900">{formatYen(m.offer.price)}</p>
                       <a
                         href={m.offer.url}
                         target="_blank"
@@ -178,7 +185,7 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
                         data-aff-type="sale"
                         data-aff-item={label}
                         class:list={[
-                          'mt-2 px-2 py-2 text-center text-sm font-bold leading-tight transition focus-visible:outline-2 focus-visible:outline-offset-2',
+                          'mt-2 block w-full whitespace-nowrap px-2 py-2.5 text-center text-sm font-bold leading-tight transition focus-visible:outline-2 focus-visible:outline-offset-2',
                           SALE_PRIMARY,
                         ]}
                       >
@@ -187,8 +194,7 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
                     </Fragment>
                   ) : (
                     <Fragment>
-                      <p class="mt-1 text-base font-bold text-slate-600">在庫なし</p>
-                      <a href={m.searchHref} target="_blank" rel="sponsored nofollow noopener noreferrer" data-aff-network="moshimo" data-aff-shop={m.name} data-aff-type="sale_search" data-aff-item={label} class="mt-2 text-center text-xs font-bold text-blue-600 hover:underline">出品を探す →</a>
+                      <a href={m.searchHref} target="_blank" rel="sponsored nofollow noopener noreferrer" data-aff-network="moshimo" data-aff-shop={m.name} data-aff-type="sale_search" data-aff-item={label} class="mt-1 block py-2 text-center text-xs font-bold text-blue-600 hover:underline">出品を探す →</a>
                     </Fragment>
                   )}
                 </li>
@@ -255,7 +261,7 @@ const jsonLd = productJsonLd(card, new URL(cardPath(card), Astro.site).toString(
                     <p class="font-mono text-xs text-slate-600">[{cardModel(sub)}]</p>
                   </div>
                   <div class="shrink-0 text-right">
-                    <p class="text-[11px] text-slate-600">販売最安値</p>
+                    <p class="text-xs text-slate-600">販売最安値</p>
                     {bestOffer(sub) ? (
                       <p class="text-base font-extrabold tabular-nums text-rose-600">{formatYen(bestOffer(sub)!.price)}</p>
                     ) : (

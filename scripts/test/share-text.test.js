@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { TAGLINE_MAX } from '../lib/ai-highlight.js';
-import { BLURB_MAX, PARENT_POST_LIMIT, X_POST_LIMIT, X_URL_LENGTH, buildXPosts, xWeightedLength } from '../../src/utils/shareText.ts';
+import { FALLBACK_BLURB, PARENT_POST_LIMIT, X_POST_LIMIT, X_URL_LENGTH, buildXPosts, xWeightedLength } from '../../src/utils/shareText.ts';
 
 const columns = JSON.parse(readFileSync(new URL('../../src/data/deck-columns.json', import.meta.url), 'utf8'));
 const SITE = 'https://www.pokeca-factory.com/';
@@ -22,8 +22,8 @@ test('X の重み付き文字数: 日本語は1字を2、半角は1、URL は長
   assert.equal(xWeightedLength(`${SITE}columns/very-long-slug-deck-0929/`), X_URL_LENGTH);
 });
 
-test('「・」の行を縮める長さは、ひとことの上限と同じ', () => {
-  assert.equal(BLURB_MAX, TAGLINE_MAX);
+test('差し替え用の決まった1行は、ひとことの上限（40字）以内', () => {
+  assert.ok([...FALLBACK_BLURB].length <= TAGLINE_MAX);
 });
 
 test('ひとことがある記事は、「・」の行にひとことをそのまま使う', () => {
@@ -37,16 +37,12 @@ test('ひとことがない記事は、見どころを「。」の文の切れ�
   assert.equal(blurbLine(posts(c).parent), `${'あ'.repeat(25)}。${'い'.repeat(25)}。`);
 });
 
-test('ひとことがなく1文目も入りきらないときだけ、ひとことと同じ長さ以内の文の切れ目で止め、「…」は付けない', () => {
+test('ひとことがなく1文目も入りきらないときは、見どころを途中で止めず、決まった1行に差し替える', () => {
   const highlight = `メガテストexの「テストワザ」は、相手のバトルポケモンに${'ダメージ'.repeat(10)}を与え、さらに${'ベンチ'.repeat(20)}にも当てる。2文目。`;
-  const line = blurbLine(posts({ deckName: 'テスト', result: '9/29 シティリーグ優勝', highlight }).parent);
-  assert.ok([...line].length <= BLURB_MAX, line);
-  assert.ok(highlight.startsWith(line));
-  assert.doesNotMatch(line, /…|、$|は$/);
-  assert.equal(line, 'メガテストexの「テストワザ」');
-  // 「」」がなければ「、」の手前で止め、文末の「は」を外す
-  const noQuote = blurbLine(posts({ deckName: 'テスト', result: '9/29 シティリーグ優勝', highlight: `メガテストexは、${'ダメージ'.repeat(40)}。` }).parent);
-  assert.equal(noQuote, 'メガテストex');
+  const { parent } = posts({ deckName: 'テスト', result: '9/29 シティリーグ優勝', highlight });
+  assert.equal(blurbLine(parent), FALLBACK_BLURB);
+  assert.doesNotMatch(parent, /…|テストワザ/);
+  assert.ok(xWeightedLength(parent) <= PARENT_POST_LIMIT);
 });
 
 test('すべての記事で、投稿文が X の上限に収まり、途中で「…」で切れない（ひとことあり）', () => {
@@ -67,10 +63,10 @@ test('すべての記事で、ひとことがなくても X の上限に収ま�
     assert.ok(xWeightedLength(parent) <= PARENT_POST_LIMIT, `${c.slug}: 1ポスト目が ${xWeightedLength(parent)}`);
     assert.doesNotMatch(parent, /…/, c.slug);
     const line = blurbLine(parent);
-    // 見どころの書き出しのまま（途中を抜いたり言葉を足したりしない）で、「。」で終わるか、ひとことと同じ長さ以内に縮めたもの
+    // 見どころの書き出しのまま「。」までの文か、決まった1行（見どころを途中で止めた文は使わない）
+    if (line === FALLBACK_BLURB) continue;
     assert.ok(c.highlight.startsWith(line), `${c.slug}: ${line}`);
-    assert.doesNotMatch(line, /、$|は$/, c.slug);
-    assert.ok(line.endsWith('。') || [...line].length <= BLURB_MAX, `${c.slug}: ${line}`);
+    assert.ok(line.endsWith('。'), `${c.slug}: ${line}`);
   }
 });
 

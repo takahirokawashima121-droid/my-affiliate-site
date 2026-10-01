@@ -12,10 +12,10 @@ export const X_POST_LIMIT = 280;
 export const X_URL_LENGTH = 23;
 
 /**
- * ひとことがない記事で、見どころの1文目が入りきらないときに縮める長さ（全角）。
- * ひとこと（scripts/lib/ai-highlight.js の TAGLINE_MAX）と同じ長さ。テストで一致を確かめる
+ * ひとことがなく、見どころの1文目も入りきらないときに「・」の行に入れる決まった1行。
+ * ひとこと（scripts/lib/ai-highlight.js の TAGLINE_MAX = 40字）以内にする。テストで確かめる
  */
-export const BLURB_MAX = 40;
+export const FALLBACK_BLURB = '入賞レシピと最安パーツの内訳は記事でチェック';
 
 /**
  * X の重み付き文字数（全角・絵文字は2、半角英数・記号の多くは1）。
@@ -48,25 +48,9 @@ export type SharePostInput = {
 };
 
 /**
- * 長い文を BLURB_MAX 字以内に縮める。「…」は付けない。
- * カード名・特性名で止まるよう、BLURB_MAX 字以内の最後の「」」のあとで止める（例: 「ドラパルトexは、ワザ「ファントムダイブ」」）。
- * 「」」がなければ最後の「、」の手前（文末の「は」は外す）、それもなければ BLURB_MAX 字で止める
- */
-function shortenAtClause(text: string): string {
-  const chars = [...text];
-  if (chars.length <= BLURB_MAX) return text;
-  const head = chars.slice(0, BLURB_MAX);
-  const quote = head.lastIndexOf('」');
-  if (quote > 0) return head.slice(0, quote + 1).join('');
-  const comma = head.lastIndexOf('、');
-  if (comma > 0) return head.slice(0, comma).join('').replace(/は$/, '');
-  return head.join('');
-}
-
-/**
  * 「・」の行に入れる紹介を決める（途中で「…」で切らない）。
  * - ひとこと（tagline）があればそのまま使う
- * - なければ見どころを文の切れ目（「。」）で止める。入るだけの文を前から入れ、1文目も入りきらないときだけ BLURB_MAX 字以内に縮める
+ * - なければ見どころを文の切れ目（「。」）で止める。入るだけの文を前から入れ、1文目も入りきらないときは見どころを使わず FALLBACK_BLURB にする
  */
 export function postBlurb(compose: (text: string) => string, { highlight, tagline }: { highlight: string; tagline?: string }): string {
   const t = tagline?.trim();
@@ -77,7 +61,7 @@ export function postBlurb(compose: (text: string) => string, { highlight, taglin
     if (xWeightedLength(compose(blurb + sentence)) > PARENT_POST_LIMIT) break;
     blurb += sentence;
   }
-  return blurb || shortenAtClause(sentences[0] ?? highlight.trim());
+  return blurb || FALLBACK_BLURB;
 }
 
 /**

@@ -18,7 +18,8 @@
 //
 // 仕組み:
 // 1. RSS（https://pokecabook.com/archives/category/deck-recipe/feed）から「ジムバトル優勝デッキまとめ」の記事を取り出す。
-//    まとめ記事は同じURLのまま毎日タイトル（日付）が更新されるため、処理済みの判定は「URL＋タイトル」と、デッキコードで行う
+//    まとめ記事は同じURLのまま、1週間同じタイトル（「【9/28(月)～10/4(日)】…」）で毎日デッキが追記されるため、
+//    いちばん新しい処理済みの記事も毎回見直し、新しいデッキかどうかはデッキコードで判定する
 //    （scripts/cache/processed-decks.json）
 // 2. 記事ページの●付き小見出し（「●スッカラカン」= デッキ名。ポケカブックの表記を正とする）ごとに、ポケモン公式のデッキURL（deckID）を取り出す
 // 3. 既存の記事がないデッキ名を優先して最大 --max-columns 件を選び、import-official-decks.js で取り込む
@@ -40,7 +41,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cardEffects, deckCards, norm, romaji } from './lib/official.js';
-import { CITY_RANKS, FEEDS, articleDecks, cityArticleDecks, feedItems, isDeckName } from './lib/pokecabook.js';
+import { CITY_RANKS, FEEDS, articleDecks, cityArticleDecks, feedItems, gymFreshItems, isDeckName } from './lib/pokecabook.js';
 import { importDecks } from './import-official-decks.js';
 import { STAPLES, baseDeckName, variantLabel } from './lib/deck-variant.js';
 import { memberNote, placeTitles } from './lib/title-place.js';
@@ -63,7 +64,7 @@ const SOURCES = {
 const CITY_WINDOW_DAYS = 3;
 /** シティリーグで1回に見るまとめ記事の数（新しい順） */
 const CITY_ARTICLES = 2;
-/** ジムバトルで1回に見るまとめ記事の数の上限（新しい順。処理済みの記事に着いたらそこで止める） */
+/** ジムバトルで1回に見るまとめ記事の数の上限（新しい順。処理済みの記事に着いたら、その記事までで止める） */
 const GYM_ARTICLES = 3;
 const PROCESSED_PATH = path('scripts/cache/processed-decks.json');
 const COLUMNS_PATH = path('src/data/deck-columns.json');
@@ -249,9 +250,9 @@ async function main() {
   console.log(`■ 取得元: ${source.label}（${source.feed}）`);
   const items = (await feedItems(source.feed)).filter((it) => source.title.test(it.title));
   // シティリーグの期間まとめ記事は同じタイトルのまま会場が追記されていくため、記事単位ではなくデッキコード単位で処理済みを判定する
-  // ジムバトルは新しい順に最大 GYM_ARTICLES 件を見て、処理済みの記事に着いた時点で打ち切る（新着がない日は RSS 1回だけで終わる）
-  const firstDone = items.findIndex((it) => doneArticles.has(articleKey(it)));
-  const fresh = opts.source === 'city' ? items.slice(0, CITY_ARTICLES) : items.slice(0, Math.min(firstDone === -1 ? items.length : firstDone, GYM_ARTICLES));
+  // ジムバトルは新しい順に最大 GYM_ARTICLES 件を見て、処理済みの記事に着いたらその記事までで打ち切る
+  // （1週間同じタイトルのまま毎日デッキが追記されるため、処理済みの記事も見直し、新しいデッキはデッキコードで判定する）
+  const fresh = opts.source === 'city' ? items.slice(0, CITY_ARTICLES) : gymFreshItems(items, (it) => doneArticles.has(articleKey(it)), GYM_ARTICLES);
   const decksOf = (it) => (opts.source === 'city' ? cityArticleDecks(it.link, it.title) : articleDecks(it.link));
   console.log(`■ RSS: 対象記事 ${items.length}件 / 未処理 ${fresh.length}件`);
   for (const it of fresh) console.log(`  - ${it.title}（${it.link}）`);
@@ -283,7 +284,7 @@ async function main() {
     for (const d of decks) candidates.push({ ...d, article: it });
     // シティリーグは、最新の記事に新しいデッキがなくても1つ前の記事まで見る（前回選ばれなかったデッキが残っていることがあるため）
   }
-  if (opts.source === 'city' && candidates.length === 0) return console.log('新着はありません。');
+  if (candidates.length === 0) return console.log('新着はありません。');
   // ジムバトル: ●付きの小見出し・デッキ名の見出しがなかったデッキは、レシピからデッキ名を推定する
   if (opts.source === 'gym') {
     for (const d of candidates.filter((c) => !c.archetype)) {
@@ -554,8 +555,8 @@ async function main() {
   for (const it of fresh) {
     // シティリーグは今回確認したデッキと、候補の期間より古いデッキだけを処理済みにする（残りは次回の候補）
     const ids = candidates.filter((c) => c.article === it && (opts.source !== 'city' || checkedIds.has(c.deckId) || !inWindow(c))).map((c) => c.deckId);
-    // シティリーグは同じ記事を毎回見るため、新しいデッキがなかった記事は記録しない（処理済みの判定はデッキコードで行う）
-    if (opts.source === 'city' && ids.length === 0) continue;
+    // 同じ記事を毎回見るため、新しいデッキがなかった記事は記録しない（処理済みの判定はデッキコードで行う）
+    if (ids.length === 0) continue;
     processed.articles.push({ key: articleKey(it), link: it.link, title: it.title, processedAt: todayJst(), decks: ids, columns: generated.filter((g) => selected.some((s) => s.slug === g.slug && s.article === it)).map((g) => g.slug) });
     for (const id of ids) doneDecks.add(id);
   }

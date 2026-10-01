@@ -10,6 +10,16 @@ export const FEEDS = {
   city: { feed: 'https://pokecabook.com/archives/category/tournament/city-league/feed', title: /シティリーグ.*デッキまとめ/ },
 };
 
+/**
+ * ジムバトルで今回見る記事（新しい順に最大 max 件）。処理済みの記事に着いたら、その記事までで止める。
+ * まとめ記事は同じ URL・同じタイトル（「【9/28(月)～10/4(日)】…」のような1週間分）のまま毎日デッキが追記されるため、
+ * いちばん新しい処理済みの記事も見直し、新しいデッキかどうかはデッキコードで判定する
+ */
+export function gymFreshItems(items, isDone, max) {
+  const firstDone = items.findIndex(isDone);
+  return items.slice(0, Math.min(firstDone === -1 ? items.length : firstDone + 1, max));
+}
+
 /** シティリーグで記事にする成績（上位入賞のみ。並び順が優先順） */
 export const CITY_RANKS = ['優勝', '準優勝'];
 

@@ -520,7 +520,7 @@ test('ひとことを書く役に渡すのは、見どころと同じデータ�
   assert.match(prompt, /ワザ「ハングリージョー」/);
   assert.ok(prompt.includes(`## この記事の見どころ（参考）\n${GOOD}`));
   assert.match(prompt, /30字以上・40字以内（40字を超えると使えません/);
-  assert.match(prompt, /tagline には完成したひとこと1本だけ/);
+  assert.match(prompt, /tagline には完成したひとこと1本だけを、1行（30〜40字）で/);
   const column = columns.find((c) => c.slug === SLUG);
   assert.ok(!prompt.includes(column.title));
 });
@@ -578,14 +578,35 @@ test('ひとこと: 30〜40字をはみ出したら「今○字なので、あ�
   assert.equal(client2.calls.length, 3);
 });
 
-test('ひとこと: 答えは JSON の tagline だけを使う。本文に字数の数え方などが混ざった答え・断られた答え・空の答えは書き直させる', async () => {
-  assert.equal(taglineOf(JSON.stringify({ tagline: TAGLINE })), TAGLINE);
+test('ひとこと: 答えは JSON の tagline を使い、余分な行があってもひとことの1行（30〜40字）だけを選ぶ', () => {
+  const main = { main: 'メガサメハダーex' };
+  assert.equal(taglineOf(JSON.stringify({ tagline: TAGLINE }), main), TAGLINE);
   assert.equal(taglineOf('```json\n{"tagline": "a"}\n```'), 'a');
-  // JSON でなければ答えのまま（点検で改行・長さに引っかかる）
-  const thinking = `${TAGLINE}\n\n字数確認：「ハングリージョー」(10)…42。長いので調整します。\n\n**${TAGLINE}**`;
-  assert.equal(taglineOf(thinking), thinking);
-  assert.ok(reviewTagline(cleanTagline(taglineOf(thinking)), taglineInput()).some((p) => /改行/.test(p)));
+  // JSON の前後に文があっても、JSON の tagline を使う
+  assert.equal(taglineOf(`はい、書きました。\n${JSON.stringify({ tagline: TAGLINE })}\n以上です。`, main), TAGLINE);
+  // JSON でない答え: 字数の数え方・前置きの行を外し、30〜40字で主役の名前が入ったいちばん後ろの行を使う
+  const thinking = `${TAGLINE}、モモワロウexと組む\n\n字数確認：「ハングリージョー」(10)…49。長いので調整します。\n\n最終出力のみ：\n\n**${TAGLINE}**`;
+  assert.equal(taglineOf(thinking, main), TAGLINE);
+  assert.deepEqual(reviewTagline(cleanTagline(taglineOf(thinking, main)), taglineInput()), []);
+  // JSON の tagline の中に余分な行があっても、ひとことの1行だけ
+  assert.equal(taglineOf(JSON.stringify({ tagline: `ひとこと：${TAGLINE}\n（36字）` }), main), TAGLINE);
+  assert.equal(taglineOf(JSON.stringify({ tagline: `- ${TAGLINE}。\n数え直し：36字で範囲内です。` }), main), TAGLINE);
+  // 30〜40字の行がなければ、主役の名前が入ったいちばん後ろの行（点検で長さを伝えて書き直させる）
+  const long = `${TAGLINE}、モモワロウexと組む`;
+  assert.equal(taglineOf(`字数を数えます。\n${long}\n（49字）`, main), long);
+  assert.match(reviewTagline(taglineOf(`字数を数えます。\n${long}`, main), taglineInput())[0], /長すぎます（今49字）/);
+});
 
+test('ひとこと: 考えごとの行が混ざった答えからも、ひとことの1行を取り出して1回目で使う（以前はこの答えを会話に戻した書き直しで断られた）', async () => {
+  const thinking = `${TAGLINE}、モモワロウexと組む\n\n数え直し：(10)=49。まだ長いです。\n\n**${TAGLINE}**`;
+  const client = fakeClient([{ text: thinking }]);
+  const r = await createAiHighlighter({ client }).writeTagline(taglineInput());
+  assert.equal(r.text, TAGLINE);
+  assert.equal(r.attempts, 1);
+});
+
+test('ひとこと: 断られた答え・空の答えは書き直させる', async () => {
+  const thinking = `字数確認：「ハングリージョー」(10)…49。\n長いので調整します。`;
   // 1回目: 考えごとが混ざった → 2回目: 断られた → 3回目: 書けた
   const client = fakeClient([{ text: thinking }, { stop_reason: 'refusal', text: '' }, { text: JSON.stringify({ tagline: TAGLINE }) }]);
   const r = await createAiHighlighter({ client }).writeTagline(taglineInput());

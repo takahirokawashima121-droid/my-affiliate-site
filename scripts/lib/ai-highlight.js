@@ -236,19 +236,54 @@ const TAGLINE_SCHEMA = {
   additionalProperties: false,
 };
 
+/** 字数の数え方・考えごと・前置きの行（ひとことの候補にしない） */
+const TAGLINE_META = /字数|文字数|数え|数える|確認|調整|範囲内|超過|最終|候補|下書き|\(\d+\)|（\d+字?）|[=＝]\s*\d|[:：]$/;
+
+/** 1行を整える（前後の空白・太字の「**」・箇条書きの印・「ひとこと：」などの見出しを外し、cleanTagline をかける） */
+function taglineLine(line) {
+  const t = String(line ?? '')
+    .trim()
+    .replace(/\*\*/g, '')
+    .replace(/^(?:[-*・>]|\d+[.．)）])\s*/, '')
+    .replace(/^(?:ひとこと|tagline|最終(?:出力|案)?|答え)\s*[:：]\s*/i, '');
+  return cleanTagline(t);
+}
+
 /**
- * ひとことの答え（JSON の文）から、ひとことを取り出す。JSON でなければ答えの文のまま返す（点検で改行・長さに引っかかる）
- * @param raw AI の答えの本文
+ * 答えの文から、ひとことの1行を選ぶ（余分な行があっても、ひとことの1行だけを使う）
+ * - 1行だけならその行
+ * - 何行もあれば、字数の数え方などの行を外し、TAGLINE_MIN〜TAGLINE_MAX 字で主役のカード名が入っている行のうち、いちばん後ろの行
+ *   （考えごとのあとに最後の案を書く答えが多いため）
+ * - 当てはまる行がなければ、主役のカード名が入っているいちばん後ろの行（なければ最初の行）。点検で長さなどを伝えて書き直させる
  */
-export function taglineOf(raw) {
+function pickTaglineLine(text, main) {
+  const lines = String(text ?? '').split(/\r?\n/).map(taglineLine).filter(Boolean);
+  if (lines.length <= 1) return lines[0] ?? '';
+  const body = lines.filter((l) => !TAGLINE_META.test(l));
+  const hasMain = (l) => !main || nfkc(l).includes(nfkc(main));
+  const fits = (l) => taglineLength(l) >= TAGLINE_MIN && taglineLength(l) <= TAGLINE_MAX;
+  return body.filter((l) => fits(l) && hasMain(l)).at(-1) ?? body.filter(hasMain).at(-1) ?? body[0] ?? lines[0];
+}
+
+/**
+ * ひとことの答え（JSON の文）から、ひとことの1行を取り出す
+ * - JSON（```json で囲まれていても、前後に文があっても）の tagline を使う。JSON がなければ答えの文を使う
+ * - どちらも、余分な行があればひとことの1行だけを選ぶ（pickTaglineLine）
+ * @param raw AI の答えの本文
+ * @param {{ main?: string }} [input] main（主役のカード名）が入っている行を選ぶ
+ */
+export function taglineOf(raw, { main } = {}) {
   const text = String(raw ?? '').trim();
-  try {
-    const json = JSON.parse(text.replace(/^```(?:json)?\s*|\s*```$/g, ''));
-    if (json && typeof json.tagline === 'string') return json.tagline;
-  } catch {
-    // JSON でない答え（そのまま点検にかける）
+  const jsons = [text.replace(/^```(?:json)?\s*|\s*```$/g, ''), ...[...text.matchAll(/\{[^{}]*"tagline"[^{}]*\}/g)].map((m) => m[0]).reverse()];
+  for (const candidate of jsons) {
+    try {
+      const json = JSON.parse(candidate);
+      if (json && typeof json.tagline === 'string') return pickTaglineLine(json.tagline, main);
+    } catch {
+      // JSON でない（次の候補・答えの文を見る）
+    }
   }
-  return text;
+  return pickTaglineLine(text, main);
 }
 
 /**
@@ -262,7 +297,7 @@ export function buildTaglinePrompt(input) {
     '## この記事の見どころ（参考）',
     input.highlight || '（なし）',
     '',
-    `上のデータだけを使って、一覧のカードに出す「ひとこと」を1本書いてください。長さは${TAGLINE_MIN}字以上・${TAGLINE_MAX}字以内（${TAGLINE_MAX}字を超えると使えません。35字くらいが目安）。答えの tagline には完成したひとこと1本だけを入れてください。`,
+    `上のデータだけを使って、一覧のカードに出す「ひとこと」を1本書いてください。長さは${TAGLINE_MIN}字以上・${TAGLINE_MAX}字以内（${TAGLINE_MAX}字を超えると使えません。35字くらいが目安）。答えの tagline には完成したひとこと1本だけを、1行（${TAGLINE_MIN}〜${TAGLINE_MAX}字）で入れてください。`,
   ].join('\n');
 }
 
@@ -550,9 +585,9 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
     ['', `## ${heading}`, previous || '（空でした）', '', request, ...problems.map((p) => `- ${p}`)].join('\n');
 
   /** 答えの本文（format があれば JSON から取り出す）。空のときは、なぜ空かを調べるためにログに応答の形を出す */
-  function answerOf(spec, response) {
+  function answerOf(spec, response, input) {
     const raw = textOf(response);
-    const text = spec.clean(spec.read ? spec.read(raw) : raw);
+    const text = spec.clean(spec.read ? spec.read(raw, input) : raw);
     if (!text) log(`    （空の答え: stop_reason ${response.stop_reason}・応答のブロック ${response.content.map((b) => b.type).join(', ') || 'なし'}）`);
     return text;
   }
@@ -617,7 +652,7 @@ export function createAiHighlighter({ apiKey = process.env.ANTHROPIC_API_KEY, cl
         onCall();
         if (response.stop_reason === 'max_tokens') return { text: null, reason: `応答が長さの上限（max_tokens ${config.maxTokens}）で切れた`, attempts };
         const refused = response.stop_reason === 'refusal';
-        const text = refused ? '' : answerOf(spec, response);
+        const text = refused ? '' : answerOf(spec, response, input);
         problems = refused ? [refusalReason(response)] : spec.check(text, input);
         log(`${logLabel(attempts)}: ${text}${problems.length ? `\n    ⚠ ${problems.join(' / ')}` : '\n    ✓ 点検を通過'}`);
         if (problems.length === 0) return { text, attempts };

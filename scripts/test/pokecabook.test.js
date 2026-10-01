@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { parseCityArticle, parseGymArticle } from '../lib/pokecabook.js';
+import { gymFreshItems, orderGymDecks, parseCityArticle, parseGymArticle } from '../lib/pokecabook.js';
 
 const fixture = (name) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
@@ -83,4 +83,34 @@ test('小見出しの形式: 文字の●あり・なし・<span>●</span> の�
   assert.deepEqual(parseGymArticle(html).map((d) => d.venueNo), [1, 2, 3, 4, 5]);
 
 
+});
+
+test('ジムバトル: 同じタイトルのまま追記される処理済みの記事も見直す（gymFreshItems）', () => {
+  const week = { title: '【9/28(月)～10/4(日)】ジムバトル優勝デッキまとめ【30th CELEBRATION環境】' };
+  const prev = { title: '【9/26(土)～9/27(日)】ジムバトル優勝デッキまとめ【30th CELEBRATION環境】' };
+  const next = { title: '【10/5(月)～10/11(日)】ジムバトル優勝デッキまとめ【30th CELEBRATION環境】' };
+  const done = new Set([week, prev]);
+  // 2026-10-01 の実行: RSS には処理済み（9/29）の週の記事1件だけ → その記事を見直す（以前は 0件で「新着はありません」になっていた）
+  assert.deepEqual(gymFreshItems([week], (it) => done.has(it), 3), [week]);
+  // 新しい週の記事が出たら、新しい記事と、いちばん新しい処理済みの記事（最後の日の追記を取りこぼさない）まで見る
+  assert.deepEqual(gymFreshItems([next, week, prev], (it) => done.has(it), 3), [next, week]);
+  // 処理済みの記事がなければ、上限まで
+  assert.deepEqual(gymFreshItems([next, week, prev], () => false, 2), [next, week]);
+});
+
+test('ジムバトル: 記事のないデッキ名を優先し、同じ条件なら新しい日付から選ぶ（orderGymDecks）', () => {
+  const decks = [
+    { deckId: 'a', archetype: 'ケンタロス', date: '9/29' },
+    { deckId: 'b', archetype: 'スッカラカン', date: '9/29' },
+    { deckId: 'c', archetype: 'ケンタロス', date: '10/1' },
+    { deckId: 'd', archetype: 'イイネイヌ', date: '9/30' },
+    { deckId: 'e', archetype: 'ボムファイアロー', date: '10/1' },
+    { deckId: 'f', archetype: 'イイネイヌ', date: '10/1' },
+  ];
+  const hasArticle = (name) => name === 'スッカラカン' || name === 'イイネイヌ';
+  // 記事のない名前の1つ目（10/1 → 9/29 は同じ名前の2つ目） → 記事のある名前の1つ目（新しい日付から）→ 同じ名前の2つ目以降
+  assert.deepEqual(
+    orderGymDecks(decks, hasArticle).map((d) => d.deckId),
+    ['c', 'e', 'f', 'b', 'a', 'd'],
+  );
 });

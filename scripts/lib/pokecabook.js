@@ -2,13 +2,43 @@
 // scripts/auto-deck-updater.js（記事の自動生成）と scripts/check-deck-names.js（公開済み記事のデッキ名の照合）から使う
 
 import * as cheerio from 'cheerio';
-import { fetchText } from './official.js';
+import { fetchText, norm } from './official.js';
 
 /** まとめ記事の RSS と、対象にする記事タイトル（デッキタイプ別のまとめ記事は過去の環境のデッキを含むため対象外） */
 export const FEEDS = {
   gym: { feed: 'https://pokecabook.com/archives/category/deck-recipe/feed', title: /ジムバトル優勝デッキまとめ/ },
   city: { feed: 'https://pokecabook.com/archives/category/tournament/city-league/feed', title: /シティリーグ.*デッキまとめ/ },
 };
+
+/**
+ * ジムバトルで今回見る記事（新しい順に最大 max 件）。処理済みの記事に着いたら、その記事までで止める。
+ * まとめ記事は同じ URL・同じタイトル（「【9/28(月)～10/4(日)】…」のような1週間分）のまま毎日デッキが追記されるため、
+ * いちばん新しい処理済みの記事も見直し、新しいデッキかどうかはデッキコードで判定する
+ */
+export function gymFreshItems(items, isDone, max) {
+  const firstDone = items.findIndex(isDone);
+  return items.slice(0, Math.min(firstDone === -1 ? items.length : firstDone + 1, max));
+}
+
+/** 「9/27」→ 月日の比較用の数値（927） */
+export const dateKey = (date) => (date ? date.split('/').map(Number).reduce((m, d) => m * 100 + d) : 0);
+
+/**
+ * ジムバトルの候補の並び順: 記事のないデッキ名の1つ目 → 記事のあるデッキ名の1つ目 → 同じデッキ名の2つ目以降（別構築）。
+ * 同じ条件なら新しい日付が先（同じデッキ名が複数あるときは、いちばん新しい日付のものを1つ目にする）。同じ日付なら記事の掲載順
+ */
+export function orderGymDecks(decks, hasArticle) {
+  const occurrence = new Map();
+  const rank = (d) => d.nth * 2 + Number(hasArticle(d.archetype));
+  return [...decks]
+    .sort((a, b) => dateKey(b.date) - dateKey(a.date))
+    .map((d) => {
+      const nth = occurrence.get(norm(d.archetype)) ?? 0;
+      occurrence.set(norm(d.archetype), nth + 1);
+      return { ...d, nth };
+    })
+    .sort((a, b) => rank(a) - rank(b));
+}
 
 /** シティリーグで記事にする成績（上位入賞のみ。並び順が優先順） */
 export const CITY_RANKS = ['優勝', '準優勝'];

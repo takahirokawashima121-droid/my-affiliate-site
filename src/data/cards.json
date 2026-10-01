@@ -8662,5 +8662,24 @@
     "yahooUpdatedAt": "2026-10-01T04:36:35+09:00",
     "buybackPrice": 0,
     "updatedAt": "2026-10-01T04:36:33+09:00"
+  },
+  {
+    "id": "gekogashira-c-sv5a-024",
+    "name": "ゲコガシラ",
+    "rarity": "C",
+    "cardNumber": "024/066",
+    "expansionCode": "SV5a",
+    "regulationMark": "H",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/auc-mediaroad/cabinet/trc62/trc129355.jpg?_ex=300x300",
+    "salePrice": 18,
+    "saleInStock": true,
+    "saleShop": "楽天市場",
+    "saleUrl": "https://af.moshimo.com/af/c/click?a_id=5821460&p_id=54&pc_id=54&pl_id=616&url=https%3A%2F%2Fitem.rakuten.co.jp%2Fauc-mediaroad%2Ft_01j90bbgp2h41fpyt6n6e58zn8_2%2F",
+    "saleImpressionUrl": "https://i.moshimo.com/af/i/impression?a_id=5821460&p_id=54&pc_id=54&pl_id=616",
+    "yahooPrice": 18,
+    "yahooUrl": "https://af.moshimo.com/af/c/click?a_id=5821461&p_id=1225&pc_id=1925&pl_id=18502&url=https%3A%2F%2Fstore.shopping.yahoo.co.jp%2Fotakarajima%2Ftrc-01jdgssn6f4ezmswybzbe6hr4a.html",
+    "yahooUpdatedAt": "2026-10-01T12:31:09+09:00",
+    "buybackPrice": 10,
+    "updatedAt": "2026-10-01T12:31:09+09:00"
   }
 ]

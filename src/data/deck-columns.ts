@@ -53,6 +53,8 @@ export type DeckColumn = {
   titleLabel?: string;
   /** titleLabel を付けたのは誰か（'auto' = ルールで自動 / 'manual' = 人が手で書いた。どちらも自動では上書きしない） */
   titleLabelBy?: 'auto' | 'manual';
+  /** 'manual' = 人が手でデッキ名を付けた（通称ルールに当てはまっても npm run apply-name-rules で変えない） */
+  deckNameBy?: 'manual';
 };
 
 export type EventType = 'city' | 'gym';

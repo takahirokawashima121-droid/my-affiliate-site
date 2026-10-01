@@ -10,6 +10,7 @@
 // 仕組み:
 // - 全記事のレシピ（src/data/official-decks.json）を通称ルールと照らし、当てはまればルールの名前、当てはまらなければ付け足しを外した名前にする。
 //   ルールのカードが少なく迷うもの（ヤドキング1枚だけなど）と、違う名前の2つ以上のルールに当てはまるものは、ルールの名前にせず一覧に出す（PR で人が確認する）
+// - deck-columns.json で "deckNameBy": "manual" の記事（人が手で付けたデッキ名）は、デッキ名を変えない（タイトルの開催地・採用型の区別は付け直す）
 // - 書き換えるのは deck-columns.json の deckName・title・description・highlight と、ページ（src/pages/columns/{slug}.astro）のデッキ名の表記。
 //   付け足しつきの名前（「ドラパルトex（ヨノワール採用型）」）は、ほかの記事のページ・紹介文・コラム（src/content/blog）に出てきても置き換える。
 //   「〇〇デッキ」の形は、その記事自身のページ・紹介文だけで置き換える（カード名と同じデッキ名の「ヤドキング」などを、カード名としての表記まで変えないため）
@@ -62,6 +63,7 @@ async function main() {
   const ruled = []; // 通称ルールに当てはまった記事（もともとルールの名前だったものも含む）
   const changes = [];
   for (const c of columns) {
+    if (c.deckNameBy === 'manual') continue; // 人が手で付けたデッキ名（通称ルールの名前にも戻さない）
     const recipe = recipeOf(c);
     const base = baseDeckName(c.deckName);
     const hit = recipe && matchDeckNameRule(recipe);

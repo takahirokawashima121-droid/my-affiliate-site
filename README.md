@@ -21,7 +21,7 @@
 | `npm run import-decks -- --deck=スラッグ:公式デッキコード` | 公式デッキを取り込む |
 | `npm run auto-decks` / `npm run auto-city` | ジムバトル / シティリーグの新着デッキから記事を自動生成（`--dry-run`） |
 | `npm run backfill-plans` | 既存記事に立ち回り（序盤・中盤・終盤）を追記（`--dry-run` `--force`） |
-| `npm run apply-name-rules` | 既存の記事のデッキ名から付け足し（「（〇〇採用型）」など）を外し、通称ルール（`scripts/lib/deck-name-rules.js`）を当てはめる（`--dry-run` で確認のみ。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない） |
+| `npm run apply-name-rules` | 既存の記事のデッキ名から付け足し（「（〇〇採用型）」など）を外し、通称ルール（`scripts/lib/deck-name-rules.js`）を当てはめる（`--dry-run` で確認のみ。`--report=ファイル` で PR 用の一覧を書き出す。URL は変えない。`deck-columns.json` で `"deckNameBy": "manual"` の記事（手で付けたデッキ名）は変えない） |
 | `npm run check-deck-names` | 公開済み記事のデッキ名をポケカブックの●付き小見出しと照合（記事は書き換えない。結果は `.cache/deck-name-check.md`） |
 | `npm run rewrite-highlights` | 決まった文（「〇〇を採用した〇〇デッキ。主力カードの効果と最安値をまとめて確認」など）のままの見どころ（highlight）を、記事ページに載っている公式のカードテキストから書き直す（`--dry-run` で確認のみ。具体的な見どころは変えない） |
 | `npm run check-highlights` | 見どころの点検だけ（決まった文・同じ日の記事同士の書き出しの似かよい。結果は `.cache/highlight-check.md`） |

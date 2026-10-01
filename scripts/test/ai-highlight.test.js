@@ -78,6 +78,13 @@ test('AI に渡すのはデッキ名・60枚のレシピ・採用カードの公
   assert.ok(!prompt.includes(column.title));
 });
 
+test('指示: カードの効果の条件は省いたり広い言い方に変えたりせず、短くするときは説明の部分を削るよう伝える', async () => {
+  const client = fakeClient([{ text: GOOD }]);
+  await createAiHighlighter({ client }).write(input());
+  assert.match(client.calls[0].system, /カードの効果の「条件」（「〇〇を持つポケモンなら」「〇〇が出ていれば」など）は、省いたり、広い言い方に変えたりしない/);
+  assert.match(client.calls[0].system, /短くするときは、条件ではなく説明の部分を削る/);
+});
+
 test('点検: カードテキストにある名前・数字だけで、主役から書き始めた文は通る', () => {
   assert.deepEqual(reviewAiHighlight(GOOD, input()), []);
 });
@@ -659,4 +666,12 @@ ${TAGLINE}
   assert.equal(long.fix.outcome, 'unfixed');
   assert.match(long.fix.reason, /^直した文が点検を通らなかった（長すぎます/);
   assert.equal(client3.calls.length, 3);
+});
+
+test('指示: ひとことを書く役にも、カードの効果の条件を省かない・広げないよう伝える', async () => {
+  const client = fakeClient([{ text: JSON.stringify({ tagline: TAGLINE }) }]);
+  await createAiHighlighter({ client }).writeTagline(taglineInput());
+  assert.match(client.calls[0].system, /ひとこと/);
+  assert.match(client.calls[0].system, /カードの効果の「条件」（「〇〇を持つポケモンなら」「〇〇が出ていれば」など）は、省いたり、広い言い方に変えたりしない/);
+  assert.match(client.calls[0].system, /短くするときは、条件ではなく説明の部分を削る/);
 });

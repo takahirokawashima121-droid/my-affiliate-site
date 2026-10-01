@@ -26,13 +26,15 @@
 // - まとめ売り（「2枚セット」「〇〇と〇〇のセット」など）・何種類かから選ぶ形の商品は、最安値・代表画像の候補にしない（isBundleTitle）。
 //   外した件数と商品名はログに出す
 // - 全キーワードで在庫のある該当商品がないカードは「在庫なし」（salePrice=0, saleInStock=false）にする。
-//   ただし該当商品がまとめ売りだけだったときは「在庫なし」「該当なし」にせず、前回の値段・リンク・画像を残し、ログの最後に一覧で出す
+//   該当商品がまとめ売りだけのお店は、もう片方のお店に1枚売りがあれば「在庫なし」「なし」にする。両方のお店に1枚売りがない
+//   （カードの値段が全部なくなってしまう）ときだけ、前回の値段・リンク・画像を残す（resolveOutcomes）。どちらもログの最後に一覧で出す
 // - ログの商品名は切らずに全部出す
 // - APIエラーのカードは一切変更しない
 // - 価格・在庫・購入リンク・商品画像のいずれかに変化があったカードだけを更新する（変化がなければ updatedAt も変えない）
 // - 販売側（salePrice / saleShop / saleUrl / saleImpressionUrl / updatedAt）と商品画像（imageUrl）以外の項目は変更しない
-// - 商品画像は、宣伝帯を焼き込む出品者（BANNER_IMAGE_SHOP_CODES）を除いた最安商品の1枚目を 300x300 に変換して保存。
-//   該当する商品がなければ既存のクリーンな画像を維持し、画像がない商品の場合も既存の imageUrl を維持する
+// - 商品画像は、宣伝帯を焼き込む出品者（BANNER_IMAGE_SHOP_CODES）を除いた1枚売りの商品（楽天・Yahoo!）の1枚目を 300x300 に変換して保存。
+//   安い順に試し、取得できない画像は飛ばして次の商品の画像を使う（pickAvailableImage）。
+//   取得できる画像が1つもなければ既存のクリーンな画像を維持し、画像がない商品の場合も既存の imageUrl を維持する
 // - 一時ファイルに書き出してから置き換えるため、途中で失敗しても cards.json が壊れない
 // - API ごとに呼び出し間隔を空ける（楽天 1.05秒・Yahoo! 2.5秒。2つの API は別々の制限のため同じカードを並行して取得する。
 //   Yahoo! の 429 は3秒待って1回だけ再試行し、それでも拒否されたら60秒間 Yahoo! を休む（そのあいだのカードは次回取り直す））
@@ -280,11 +282,20 @@ export function isBannerImageItem(item) {
 }
 
 /**
- * カードの代表画像に使う商品を選ぶ。価格の最安ではなく「宣伝帯のない出品者のうち最も安い商品」を優先する
- * （安い順に見ていき、画像のある最初のクリーンな商品）。クリーンな商品がなければ undefined
+ * 代表画像を選ぶ。宣伝帯のない1枚売りの商品（まとめ売りは items に入らない）を安い順に見て、取得できる最初の画像を使う。
+ * 前回と同じ画像は確認済みなので取得を確かめない。取れる画像が1つもなければ url は undefined（呼び出し側で前の画像を残す）
  */
-export function pickCleanImageItem(matches) {
-  return [...matches].sort((a, b) => a.itemPrice - b.itemPrice).find((item) => !isBannerImageItem(item) && pickImageUrl(item));
+export async function pickAvailableImage(card, items, isAvailable = isImageAvailable) {
+  const checked = new Set();
+  let failed = 0;
+  for (const item of [...items].sort((a, b) => a.itemPrice - b.itemPrice)) {
+    const url = pickImageUrl(item);
+    if (!url || isBannerImageItem(item) || checked.has(url)) continue;
+    checked.add(url);
+    if (url === card.imageUrl || (await isAvailable(url))) return { url, item, failed };
+    failed++;
+  }
+  return { url: undefined, item: undefined, failed };
 }
 
 /** 画像URLが実際に画像を返すか確認する（API が存在しない画像のURLを返すことがあるため） */
@@ -372,12 +383,22 @@ async function findCheapest(card, credentials) {
 }
 
 /**
- * 検索結果からどうするかを決める。
- * 'sale' … 最安の商品で更新 / 'keep' … 該当商品がまとめ売りだけなので前回の値段を残す / 'none' … 該当商品なし（楽天は「在庫なし」・Yahoo!は「なし」）
+ * 1つのお店の検索結果の状態。
+ * 'sale' … 1枚売りの商品がある / 'bundles' … 該当商品がまとめ売りだけ / 'none' … 該当商品なし
  */
 export function saleOutcome({ best, bundles = [] }) {
   if (best) return 'sale';
-  return bundles.length > 0 ? 'keep' : 'none';
+  return bundles.length > 0 ? 'bundles' : 'none';
+}
+
+/**
+ * 楽天・Yahoo!の状態（saleOutcome。エラー・休止で取れなかったお店は 'unknown'）から、それぞれどうするかを決める。
+ * まとめ売りだけのお店は、もう片方に1枚売りがあれば 'none'（楽天は「在庫なし」・Yahoo!は「なし」）。
+ * もう片方にも1枚売りがない（まとめ売りだけ・該当なし・取れなかった）ときだけ、カードの値段が全部なくならないよう 'keep'（前回の値段を残す）
+ */
+export function resolveOutcomes(rakuten, yahoo) {
+  const decide = (self, other) => (self === 'bundles' ? (other === 'sale' ? 'none' : 'keep') : self);
+  return { rakuten: decide(rakuten, yahoo), yahoo: decide(yahoo, rakuten) };
 }
 
 /** 外したまとめ売りを、同じ商品（URL）を重ねずに足す（キーワードを変えた再検索で同じ商品が出るため） */
@@ -555,6 +576,7 @@ async function main() {
   const bundleCount = { rakuten: 0, yahoo: 0 };
   const bundleCards = new Set();
   const onlyBundles = [];
+  const bundlesToNone = [];
   const yen = (n) => `¥${n.toLocaleString()}`;
   // 楽天・Yahoo! それぞれで価格・在庫・リンク等に変化があった項目だけを更新する（更新日時も変化した側のみ）
   for (const [i, card] of targets.entries()) {
@@ -567,45 +589,70 @@ async function main() {
     const label = `[${i + 1}/${targets.length}] ${cardDisplayName(card)}`;
     const lines = [label];
     let next = card;
-    // 楽天と Yahoo! は別々の呼び出し制限のため並行して取得する（Yahoo! の結果は楽天の処理のあとで使う）
-    const yahooResult = yahooAppId ? findYahooCheapest(card, yahooAppId).then((value) => ({ value }), (error) => ({ error })) : null;
+    // 楽天と Yahoo! は別々の呼び出し制限のため並行して取得し、両方の結果がそろってから反映する
+    // （まとめ売りだけのお店をどうするかは、もう片方に1枚売りがあるかで決まるため）
+    const rakutenSearch = findCheapest(card, { appId, accessKey }).then((value) => ({ value }), (error) => ({ error }));
+    const yahooSearch = yahooAppId ? findYahooCheapest(card, yahooAppId).then((value) => ({ value }), (error) => ({ error })) : null;
+    const rakutenFound = await rakutenSearch;
+    const yahooFound = yahooSearch ? await yahooSearch : null;
+    // Yahoo!のキーがないときは「該当なし」と同じ扱い（カードの値段は楽天だけで決まる）
+    const stateOf = (found) => (!found ? 'none' : found.error ? 'unknown' : saleOutcome(found.value));
+    const decided = resolveOutcomes(stateOf(rakutenFound), stateOf(yahooFound));
+    const yahooMatches = yahooFound?.value?.matches ?? [];
     let rakutenOk = false;
     let yahooOk = !yahooAppId;
 
     // ── 楽天市場 ──
     try {
-      const { best, matches, bundles, fallback, tried } = await findCheapest(card, { appId, accessKey });
+      if (rakutenFound.error) throw rakutenFound.error;
+      const { best, matches, bundles, fallback, tried } = rakutenFound.value;
       bundleCount.rakuten += bundles.length;
       if (bundles.length) bundleCards.add(card.id);
       let rakuten;
-      const outcome = saleOutcome({ best, bundles });
-      if (outcome === 'keep') {
-        // 該当する商品がまとめ売りだけ：「在庫なし」にせず、前回の値段・リンク・画像をそのまま残す
+      const before = card.saleInStock ? yen(card.salePrice) : '在庫なし';
+      if (decided.rakuten === 'keep') {
+        // 楽天はまとめ売りだけで、Yahoo!にも1枚売りがない：カードの値段が全部なくならないよう、前回の値段・リンク・画像を残す
         rakuten = card;
-        onlyBundles.push({ card, mall: '楽天', count: bundles.length, kept: card.saleInStock ? yen(card.salePrice) : '在庫なし' });
-        lines.push(`  楽天  : 該当商品がまとめ売りだけ（${bundles.length}件を除外。${tried.join(' → ')}）→ 前回の値段（${card.saleInStock ? yen(card.salePrice) : '在庫なし'}）を維持`);
+        onlyBundles.push({ card, mall: '楽天', count: bundles.length, kept: before });
+        lines.push(`  楽天  : 該当商品がまとめ売りだけ（${bundles.length}件を除外。${tried.join(' → ')}）・Yahoo!にも1枚売りなし → 前回の値段（${before}）を維持`);
         lines.push(...bundleLines(bundles, yen));
-      } else if (outcome === 'none') {
+      } else if (decided.rakuten === 'none') {
         rakuten = markOutOfStock(card);
-        lines.push(`  楽天  : 在庫のある該当商品なし（${tried.join(' → ')}）→「在庫なし」`);
+        if (bundles.length) {
+          // 楽天はまとめ売りだけだが、Yahoo!に1枚売りがある：楽天は「在庫なし」にする
+          bundlesToNone.push({ card, mall: '楽天', count: bundles.length });
+          lines.push(`  楽天  : 該当商品がまとめ売りだけ（${bundles.length}件を除外。${tried.join(' → ')}）・Yahoo!に1枚売りあり →「在庫なし」`);
+          lines.push(...bundleLines(bundles, yen));
+        } else {
+          lines.push(`  楽天  : 在庫のある該当商品なし（${tried.join(' → ')}）→「在庫なし」`);
+        }
       } else {
         if (fallback) lines.push(`  楽天  : ↻ フォールバック検索（${tried.join(' → ')}）`);
-        // 代表画像：宣伝帯のない出品者の商品を優先。なければ既存のクリーンな画像を維持し、それもなければ最安商品の画像
-        const imageItem = pickCleanImageItem(matches);
-        const keepCleanExisting = !imageItem && card.imageUrl !== '' && !isBannerImageUrl(card.imageUrl);
-        let imageUrl = imageItem ? pickImageUrl(imageItem) : keepCleanExisting ? card.imageUrl : pickImageUrl(best);
-        let imageNote = imageUrl
-          ? `${imageUrl}${imageItem && imageItem !== best ? `（宣伝帯のない ${imageItem.shopName} の画像）` : keepCleanExisting ? '（クリーンな画像がないため既存の画像を維持）' : ''}`
-          : '（商品画像なし → 既存の値を維持）';
-        // 画像が前回と同じなら確認済みなので、取得できるかの確認（画像のダウンロード）は省く
-        if (imageUrl && imageUrl !== card.imageUrl && !(await isImageAvailable(imageUrl))) {
-          // 新しい画像が取得できない場合、既存の画像が有効ならそれを維持し、無効なら空にしてプレースホルダー表示にする
-          const keepExisting = card.imageUrl !== '' && card.imageUrl !== imageUrl && (await isImageAvailable(card.imageUrl));
-          imageNote = `（取得できない画像のため保存しません → ${keepExisting ? '既存の画像を維持' : 'プレースホルダー表示'}）`;
-          imageUrl = keepExisting ? card.imageUrl : '';
+        // 代表画像：宣伝帯のない1枚売りの商品（楽天・Yahoo!）を安い順に試し、取得できる最初の画像を使う。
+        // 1つも取れなければ既存のクリーンな画像を維持し、それもなければ最安商品（宣伝帯入り）の画像
+        const image = await pickAvailableImage(card, [...matches, ...yahooMatches]);
+        const skipped = image.failed ? `（取得できない画像 ${image.failed}件を飛ばした）` : '';
+        let imageUrl;
+        let imageNote;
+        if (image.url) {
+          imageUrl = image.url;
+          imageNote = `${image.url}${image.item !== best ? `（宣伝帯のない ${image.item.shopName} の画像）` : ''}${skipped}`;
+        } else if (card.imageUrl !== '' && !isBannerImageUrl(card.imageUrl)) {
+          imageUrl = card.imageUrl;
+          imageNote = `（取得できる1枚売りの画像がないため既存の画像を維持）${skipped}`;
+        } else {
+          const bannerUrl = pickImageUrl(best);
+          if (bannerUrl && (bannerUrl === card.imageUrl || (await isImageAvailable(bannerUrl)))) {
+            imageUrl = bannerUrl;
+            imageNote = `${bannerUrl}${skipped}`;
+          } else {
+            // 取れる画像がない：既存の画像が有効ならそれを維持し、無効なら空にしてプレースホルダー表示にする
+            const keepExisting = card.imageUrl !== '' && (await isImageAvailable(card.imageUrl));
+            imageUrl = keepExisting ? card.imageUrl : '';
+            imageNote = `（取得できる画像がないため → ${keepExisting ? '既存の画像を維持' : 'プレースホルダー表示'}）${skipped}`;
+          }
         }
         rakuten = applySale(card, best, nowJst(), imageUrl);
-        const before = card.saleInStock ? yen(card.salePrice) : '在庫なし';
         lines.push(`  楽天  : ${before} → ${yen(best.itemPrice)}（${best.shopName}）${best.itemName}`, `          画像: ${imageNote}`);
         if (bundles.length) lines.push(`          まとめ売りを除外: ${bundles.length}件`, ...bundleLines(bundles, yen));
       }
@@ -621,36 +668,38 @@ async function main() {
     }
 
     // ── Yahoo!ショッピング ──
-    if (yahooResult) {
+    if (yahooFound) {
       try {
-        const { value, error } = await yahooResult;
+        const { value, error } = yahooFound;
         if (error) throw error;
         const { best, matches, bundles, tried } = value;
         bundleCount.yahoo += bundles.length;
         if (bundles.length) bundleCards.add(card.id);
-        // 該当する商品がまとめ売りだけ：「該当なし」にせず、前回の値段・リンクをそのまま残す
-        const keepYahoo = saleOutcome({ best, bundles }) === 'keep';
-        // 楽天に宣伝帯のない画像がなかった（代表画像が宣伝帯入り・または空の）カードは、Yahoo!のクリーンな商品画像に差し替える
+        // 楽天で代表画像を決められなかった（代表画像が宣伝帯入り・または空の）カードは、Yahoo!の1枚売りの画像を安い順に試して差し替える
         if (next.imageUrl === '' || isBannerImageUrl(next.imageUrl)) {
-          const imageItem = pickCleanImageItem(matches);
-          if (imageItem && (await isImageAvailable(imageItem.imageUrl))) {
-            next = { ...next, imageUrl: imageItem.imageUrl };
-            lines.push(`          画像: ${imageItem.imageUrl}（楽天に宣伝帯のない画像がないため Yahoo!の ${imageItem.shopName} の画像）`);
+          const image = await pickAvailableImage(next, matches);
+          if (image.url && image.url !== next.imageUrl) {
+            next = { ...next, imageUrl: image.url };
+            lines.push(`          画像: ${image.url}（楽天に宣伝帯のない画像がないため Yahoo!の ${image.item.shopName} の画像）`);
           }
         }
         const before = typeof card.yahooPrice === 'number' ? yen(card.yahooPrice) : card.yahooPrice === null ? 'なし' : '未取得';
-        if (keepYahoo) {
-          // 該当する商品がまとめ売りだけ：「該当なし」にせず、前回の値段・リンクをそのまま残す
+        if (decided.yahoo === 'keep') {
+          // Yahoo!はまとめ売りだけで、楽天にも1枚売りがない：カードの値段が全部なくならないよう、前回の値段・リンクを残す
           onlyBundles.push({ card, mall: 'Yahoo!', count: bundles.length, kept: before });
-          lines.push(`  Yahoo!: 該当商品がまとめ売りだけ（${bundles.length}件を除外。${tried.join(' → ')}）→ 前回の値段（${before}）を維持`, ...bundleLines(bundles, yen));
+          lines.push(`  Yahoo!: 該当商品がまとめ売りだけ（${bundles.length}件を除外。${tried.join(' → ')}）・楽天にも1枚売りなし → 前回の値段（${before}）を維持`, ...bundleLines(bundles, yen));
         } else {
           const fields = yahooFields(best);
-          lines.push(
-            best
-              ? `  Yahoo!: ${before} → ${yen(best.itemPrice)}（${best.shopName}）${best.itemName}`
-              : `  Yahoo!: ${before} → 在庫のある該当商品なし（${tried.join(' → ')}）`,
-          );
-          if (best && bundles.length) lines.push(`          まとめ売りを除外: ${bundles.length}件`, ...bundleLines(bundles, yen));
+          if (best) {
+            lines.push(`  Yahoo!: ${before} → ${yen(best.itemPrice)}（${best.shopName}）${best.itemName}`);
+            if (bundles.length) lines.push(`          まとめ売りを除外: ${bundles.length}件`, ...bundleLines(bundles, yen));
+          } else if (bundles.length) {
+            // Yahoo!はまとめ売りだけだが、楽天に1枚売りがある：Yahoo!は「なし」にする
+            bundlesToNone.push({ card, mall: 'Yahoo!', count: bundles.length });
+            lines.push(`  Yahoo!: ${before} → 該当商品がまとめ売りだけ（${bundles.length}件を除外。${tried.join(' → ')}）・楽天に1枚売りあり →「なし」`, ...bundleLines(bundles, yen));
+          } else {
+            lines.push(`  Yahoo!: ${before} → 在庫のある該当商品なし（${tried.join(' → ')}）`);
+          }
           if (card.yahooPrice !== fields.yahooPrice || (card.yahooUrl ?? '') !== fields.yahooUrl) {
             next = { ...next, ...fields, yahooUpdatedAt: nowJst() };
           } else {
@@ -688,8 +737,12 @@ async function main() {
   );
   console.log(`まとめ売り・選ぶ形の商品を除外: 楽天 ${bundleCount.rakuten}件 / Yahoo! ${bundleCount.yahoo}件（${bundleCards.size}枚のカード）`);
   if (onlyBundles.length) {
-    console.log(`\n⚠ 該当商品がまとめ売りだけだったため、前回の値段を残したカード（${onlyBundles.length}件）:`);
+    console.log(`\n⚠ 楽天・Yahoo!のどちらにも1枚売りがなく（まとめ売りだけ）、前回の値段を残したカード（${onlyBundles.length}件）:`);
     for (const { card, mall, count, kept } of onlyBundles) console.log(`  - ${cardDisplayName(card)}（${card.id}）${mall}: まとめ売り ${count}件 → 前回の値段 ${kept} を維持`);
+  }
+  if (bundlesToNone.length) {
+    console.log(`\nまとめ売りだけのため「在庫なし」「なし」にしたお店（もう片方のお店に1枚売りあり。${bundlesToNone.length}件）:`);
+    for (const { card, mall, count } of bundlesToNone) console.log(`  - ${cardDisplayName(card)}（${card.id}）${mall}: まとめ売り ${count}件`);
   }
   // 全件エラー（キーの失効・API障害など）は異常終了にして、GitHub Actions の失敗通知で気づけるようにする
   if (checked > 0 && (failed === checked || (yahooAppId && yahooFailed === checked))) process.exitCode = 1;

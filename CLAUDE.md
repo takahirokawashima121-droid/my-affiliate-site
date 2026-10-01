@@ -34,7 +34,7 @@
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
 - 主要コマンド
   - `npm run dev` / `npm run build` / `npm run preview` / `npx astro check`
-  - `npm run update-prices`（`--ids=` `--budget=秒` `--dry-run`。GitHub Actions では `--budget=600`。手動実行では id と dry_run を入力でき、自動コミットは main のときだけ）。まとめ売り・選ぶ形の商品（「2枚セット」「〇〇と〇〇のセット」など。`isBundleTitle`）は最安値・代表画像の候補にしない。該当商品がまとめ売りだけのカードは前回の値段・リンク・画像を残し、ログの最後に一覧で出す
+  - `npm run update-prices`（`--ids=` `--budget=秒` `--dry-run`。GitHub Actions では `--budget=600`。手動実行では id と dry_run を入力でき、自動コミットは main のときだけ）。まとめ売り・選ぶ形の商品（「2枚セット」「〇〇と〇〇のセット」など。`isBundleTitle`）は最安値・代表画像の候補にしない。まとめ売りだけのお店は、もう片方のお店に1枚売りがあれば「在庫なし」「なし」にし、両方のお店に1枚売りがない（カードの値段が全部なくなる）ときだけ前回の値段・リンク・画像を残す（`resolveOutcomes`。どちらもログの最後に一覧で出す）。代表画像は1枚売りの商品を安い順に試し、取得できない画像は飛ばす（`pickAvailableImage`。1枚売りの画像が1つも取れないときだけ前の画像を残す）
   - `npm run add-cards`（`--dry-run`）/ `npm run sync-trending`（`--dry-run`）
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり

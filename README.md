@@ -131,15 +131,38 @@ npm install --no-save playwright
 node scripts/render-x-assets.js --scale=2   # .cache/x-assets/ にアイコン・ヘッダー・バナーと、確認用の icon-circle・header-guide を保存
 ```
 
-## デザインの相談用スキル（UI UX Pro Max）
+## Claude Code のスキル（外部のもの）
 
-`.claude/skills/ui-ux-pro-max/` に、Claude Code 用のスキル「UI UX Pro Max」（[nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) v2.13.0・MIT ライセンス）を入れています。リポジトリの中にあるので、ブラウザ版の Claude Code でもそのまま使えます（「/ui-ux-pro-max」で呼び出すか、UI の作業のときに Claude が自動で読み込みます）。
+`.claude/skills/` に、外部の Claude Code 用スキルを入れています。リポジトリの中にあるので、ブラウザ版の Claude Code でもそのまま使えます（「/スキル名」で呼び出すか、合う作業のときに Claude が自動で読み込みます）。どれもサイトの表示・ビルド（`src/`・`public/`）には関係しません。スキルの提案と CLAUDE.md（とくに「7. デザインのルール（ホワイトラボ）」）が食い違うときは CLAUDE.md を優先します。
 
-- 中身は説明（`SKILL.md`・`references/`）・配色やUXの指針のデータ（`data/` の CSV）・検索用の Python スクリプト（`scripts/`。標準ライブラリだけで、ネットにはつながない）だけです。サイトの表示・ビルド（`src/`・`public/`）には関係しません
+入れているのはスキル（`SKILL.md` とその資料）だけで、プラグインの自動で動く仕掛け（hooks）・サブエージェント・設定の変更は入れていません。ライセンスの全文は、それぞれのフォルダの `LICENSE` にあります。
+
+| スキル | 元のリポジトリ | ライセンス | 内容 |
+|---|---|---|---|
+| `ui-ux-pro-max` | [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) v2.13.0 | MIT | 配色・フォント・UX の指針の検索 |
+| `impeccable` | [pbakaus/impeccable](https://github.com/pbakaus/impeccable) v4.4.0（c74755d） | Apache-2.0 | UI のデザインの点検・磨き上げ（`/impeccable audit`・`/impeccable polish` など） |
+| `find-skills` | [vercel-labs/skills](https://github.com/vercel-labs/skills) の `skills/find-skills`（3694740） | MIT | ほかのスキルを探す |
+| `ponytail`・`ponytail-review`・`ponytail-audit`・`ponytail-debt`・`ponytail-gain`・`ponytail-help` | [DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail)（e3ba2aa） | MIT | いちばん簡単な実装にする・作りすぎの点検 |
+
+### UI UX Pro Max
+- 中身は説明（`SKILL.md`・`references/`）・配色やUXの指針のデータ（`data/` の CSV）・検索用の Python スクリプト（`scripts/`。標準ライブラリだけで、ネットにはつながない）です
 - リポジトリのルートから `python3 .claude/skills/ui-ux-pro-max/scripts/search.py "キーワード" --stack astro` のように検索できます
-- スキルの提案より CLAUDE.md の「7. デザインのルール（ホワイトラボ）」を優先します
-- 元のリポジトリから変えた点: パスを `${CLAUDE_PLUGIN_ROOT}/…` からリポジトリのルートからの相対パスにした・開発用のテスト（`scripts/tests/`）を外した。ライセンスの全文は `.claude/skills/ui-ux-pro-max/LICENSE`
+- 元のリポジトリから変えた点: パスを `${CLAUDE_PLUGIN_ROOT}/…` からリポジトリのルートからの相対パスにした・開発用のテスト（`scripts/tests/`）を外した
 - 更新するときは、元のリポジトリの `.claude/skills/ui-ux-pro-max/` で置き換え、上の2点を同じように直します
+
+### impeccable
+- 元のリポジトリの `.claude/skills/impeccable/` を入れ、`LICENSE`・`NOTICE.md`（Apache-2.0 で求められるもの）と、変えた所・入れなかった所を書いた `MODIFICATIONS.md` を足しています
+- 入れなかったもの: `.claude/settings.json` の hooks（編集のたびに自動で点検する仕掛け）・`.claude/agents/`（サブエージェント。なくてもスキルの `reference/degraded/` の手順で動きます）
+- **外部のプログラムはダウンロードしない使い方にしています。** 元の `scripts/`（点検用のプログラムを GitHub Releases からダウンロードして動かすランチャー）は外し、`SKILL.md` に「ランチャーを動かさず、スキルの説明（`SKILL.md`・`reference/`）だけで進める」という注記を足しました。そのため、ランチャーを使う機能（自動の点検 `detect`・点検結果の保存・`live`・`hooks`・`pin`・`doctor` など）は使えません
+- `/impeccable init`・`/impeccable document` は、リポジトリのルートに `PRODUCT.md`・`DESIGN.md` を書き出します（ビルドには関係しません）
+- 更新するときは、元のリポジトリの `.claude/skills/impeccable/` で置き換え、`scripts/` を外し、`SKILL.md` の注記・`LICENSE`・`NOTICE.md`・`MODIFICATIONS.md` を入れ直します
+
+### find-skills
+- 見つけたスキルを入れるときは、`npx skills add … -g -y`（ホームフォルダに確認なしで入れる）は使わず、このリポジトリの `.claude/skills/` にライセンスを確かめてから入れ、PR にします
+
+### ponytail
+- 6つのスキルを、元のリポジトリの `skills/` からそのまま入れています（ファイルは変えていません）。hooks を入れていないので、呼び出したときだけ働きます（「/ponytail」で呼び出し、「stop ponytail」で止める）
+- `ponytail-help` に出てくる設定ファイル（`~/.config/ponytail/config.json`）・ステータス行は、hooks を入れていないので使いません
 
 ## コラム記事の追加
 

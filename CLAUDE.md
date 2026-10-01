@@ -32,7 +32,13 @@
   - `public/og-default.png` … 個別の画像がないページの OG 画像（1200×630）。元は `scripts/assets/og-default.html` で、`node scripts/render-og-image.js` で作り直す（手順は README の「OG画像」）
   - `public/generate-assets.html` … X のアイコン・プロフィールのヘッダー（1500×500）・サイト紹介バナー（1200×675）の描画と保存（デザインはサイト・OG画像に合わせた白基調）。`node scripts/render-x-assets.js` でフォントを確認してから PNG に書き出せる（手順は README の「X（旧Twitter）用の画像」）
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
-  - `.claude/skills/ui-ux-pro-max/` … UI・UX の相談用の Claude Code スキル「UI UX Pro Max」（外部の MIT ライセンスのもの。ライセンス全文は同じフォルダの `LICENSE`）。サイトのビルドには関係しない。**提案と「7. デザインのルール（ホワイトラボ）」が食い違うときは 7 を優先する**。`--persist` でファイルを書き出す使い方はしない。入れ方・更新のしかたは README の「デザインの相談用スキル」
+  - `.claude/skills/` … 外部の Claude Code スキル（サイトのビルドには関係しない。入れたのはスキルだけで、hooks・サブエージェント・設定の変更は入れていない。元のリポジトリ・ライセンス・入れ方・更新のしかたは README の「Claude Code のスキル（外部のもの）」。ライセンス全文はそれぞれのフォルダの `LICENSE`）
+    - `ui-ux-pro-max/` … UI・UX の相談（MIT）。`--persist` でファイルを書き出す使い方はしない
+    - `impeccable/` … UI のデザインの点検・磨き上げ（Apache-2.0。`NOTICE.md`・`MODIFICATIONS.md` も同じフォルダ）。**外部のプログラムをダウンロードしない使い方にしている**（元の `scripts/` のランチャーは外した。スキルの説明（`SKILL.md`・`reference/`）だけで使う）。`scripts/impeccable` や `npx impeccable` を入れ直したり、点検用のプログラムをダウンロード・実行したりしない。ランチャーを使う機能（`detect`・`live`・`hooks`・`pin`・`doctor` など）は飛ばす
+    - `find-skills/` … ほかのスキルを探す（MIT）。見つけたスキルは `npx skills add … -g -y` で入れず、人に確認してからこのリポジトリの `.claude/skills/` に入れて PR にする
+    - `ponytail/`・`ponytail-review/`・`ponytail-audit/`・`ponytail-debt/`・`ponytail-gain/`・`ponytail-help/` … いちばん簡単な実装にする・作りすぎの点検（MIT）
+    - **コードを足したり変えたりするときは、ponytail スキルの手順に従う**（1. そもそも必要か → 2. 最初からある機能（標準ライブラリ・ブラウザ・Astro・Tailwind など）で足りないか → 3. 今あるもの（このリポジトリの関数・部品・入れてあるパッケージ）で済まないか → それでも足りないときだけ、最小限のコードを書く）。**ただし、CLAUDE.md の他のルールとアフィリエイト表記のルール（「8. 外部APIとセキュリティ」の広告表記・PR 表記・トレトク・買取目安など）を優先する**（簡単にするために、決められた表記・チェック・テスト・PR の書き方を省かない）
+    - **スキルの提案と、この CLAUDE.md（とくに「7. デザインのルール（ホワイトラボ）」・「4. 作業完了の条件」・「3. Git のルール」）が食い違うときは、CLAUDE.md を優先する**
 - 主要コマンド
   - `npm run dev` / `npm run build` / `npm run preview` / `npx astro check`
   - `npm run update-prices`（`--ids=` `--budget=秒` `--dry-run`。GitHub Actions では `--budget=600`。手動実行では id と dry_run を入力でき、自動コミットは main のときだけ）。まとめ売り・選ぶ形の商品（「2枚セット」「〇〇と〇〇のセット」など。`isBundleTitle`）は最安値・代表画像の候補にしない。まとめ売りだけのお店は、もう片方のお店に1枚売りがあれば「在庫なし」「なし」にし、両方のお店に1枚売りがない（カードの値段が全部なくなる）ときだけ前回の値段・リンク・画像を残す（`resolveOutcomes`。どちらもログの最後に一覧で出す）。代表画像は1枚売りの商品を安い順に試し、取得できない画像は飛ばす（`pickAvailableImage`。1枚売りの画像が1つも取れないときだけ前の画像を残す）
@@ -196,6 +202,7 @@
 - 解説が生成できなかった記事は TODO のまま残し、PR で報告する（中身のない文で埋めない）
 
 ## 7. デザインのルール（ホワイトラボ）
+- `.claude/skills/` のスキル（`ui-ux-pro-max`・`impeccable` など）の提案と、この「7. デザインのルール」が食い違うときは、7 を優先する（配色・フォント・ボタン色・カードの形などはスキルの提案で変えない）
 - 白基調＋微細な方眼グリッド。見出しは「M PLUS Rounded 1c」＋グラデーション
 - ボタン色: 一括購入・パーツ調達＝レッド（#DC2626系）/ 買取・相場＝グリーン（#16A34A系）/ 価格比較・データ＝ローズ系
 - デッキカード: メインカード1枚を `aspect-[63/88] object-cover` で表示。空のサブカード枠を作らない

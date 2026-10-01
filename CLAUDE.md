@@ -23,7 +23,7 @@
   - `scripts/lib/title-place.js` … 同じ日・同じ名前の記事のタイトルに都道府県・店舗名を付けて区別する
   - `scripts/lib/deck-name-rules.js` … デッキ名の通称ルール（`DECK_NAME_RULES`。ポケカブックの名前より優先）。特性で判定するルール用の特性の一覧は `scripts/lib/card-abilities.json`（自動生成のときに公式のカードテキストから追記される）
   - `scripts/lib/pokecabook.js` … ポケカブックのまとめ記事・RSS の読み取り（●付き小見出しとデッキコードの対応）。テストは `scripts/test/`（実際の記事の HTML の骨組みを使う）
-  - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。記事の書き出しの下の「このデッキのポイント」（`src/components/DeckHighlight.astro`）・一覧・トップの特集・X投稿文に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
+  - `scripts/lib/highlight.js` … デッキ記事の見どころ（`highlight`。記事の書き出しの下の「このデッキのポイント」（`src/components/DeckHighlight.astro`）・一覧・トップの特集・X投稿文（ひとことがない記事だけ）に使う）を公式のカードテキストから作る。決まった文の禁止リスト（`BANNED_PHRASES`）と、同じ日の記事の書き出しの点検もここ
   - `scripts/lib/ai-highlight.js` … 自動生成の見どころを Claude API で書く（設定は `AI_HIGHLIGHT_CONFIG`。くわしくは「6. 記事・紹介文の品質基準」）。API のエラーの理由の文（`apiErrorDetail`。キーの文字は伏せる）・見どころのチェック役（`review`）・要確認のときに AI に直させる処理（`checkAndFix`）もここ
   - `scripts/lib/game-rules.md` … ポケカの基本ルールのメモ（公式テキストには書かれていないが、ゲームのルールで決まっていること）。見どころを書く役とチェック役の両方に渡す。足し方は「6. 記事・紹介文の品質基準」
   - `scripts/lib/highlight-rewrite.js` … 公開済みの記事の見どころの AI でのまとめ書き直し（対象の選び方・同じ日の記事との点検・`deck-columns.json` への反映・PR 本文）。実行は `scripts/ai-highlight-rewrite.js`
@@ -39,7 +39,7 @@
   - `npm run import-decks -- --deck=スラッグ:公式デッキコード`
   - `npm run auto-decks`（ジムバトル）/ `npm run auto-city`（シティリーグ）。いずれも `--dry-run` あり
   - `npm run backfill-plans`（既存記事に立ち回りを追記。`--dry-run` `--force`）
-  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/ai-highlight.js` の AI の見どころの点検と従来の方法への切り替え（API は呼ばない）、`scripts/lib/highlight-rewrite.js` のまとめ書き直し（`highlightBy: "manual"` を上書きしないこと・API のエラーの理由。API は呼ばない）、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別、`.github/workflows/` の YAML の書き方（`scripts/test/workflows.test.js`）のテスト。どれかを変更したら必ず実行する）
+  - `npm test`（`scripts/lib/pokecabook.js` の読み取り、`scripts/lib/deck-name-rules.js` の通称ルール、`scripts/lib/highlight.js` の見どころの自動生成、`scripts/lib/ai-highlight.js` の AI の見どころの点検と従来の方法への切り替え（API は呼ばない）、`scripts/lib/highlight-rewrite.js` のまとめ書き直し（`highlightBy: "manual"` を上書きしないこと・API のエラーの理由。API は呼ばない）、`scripts/lib/pr-body.js` の PR 本文、`scripts/lib/title-place.js` のタイトルの区別、`src/utils/shareText.ts` の X投稿文（全記事で上限に収まり「…」で切れないこと。`scripts/test/share-text.test.js`）、`.github/workflows/` の YAML の書き方（`scripts/test/workflows.test.js`）のテスト。どれかを変更したら必ず実行する）
   - `npm run rewrite-highlights`（決まった文のままの見どころを書き直す。`--dry-run` あり）/ `npm run check-highlights`（点検だけ）
   - `npm run ai-highlight-test -- --slug=スラッグ`（公開済みの記事1本の見どころを Claude API で試しに書き、今の見どころと並べて出す。ファイルは変えない。`ANTHROPIC_API_KEY` が必要。GitHub Actions の「AI highlight test (manual)」からも実行できる）
   - `npm run ai-highlight-review`（公開済みの記事の見どころをチェック役の AI にかけて結果を出す。`--slug=スラッグ` で1本だけ・なしなら全部。テスト用の9本（`scripts/test/fixtures/ai-highlight-review-cases.json`）も一緒にチェックし、`mustFlag: true` の2本（手で直す前の文＝`seek-inspiration-deck-0929`・`dipplin-festival-lead-deck-0927`）をどちらも「要確認」にでき、`mustNotFlag: true` の5本（今サイトに出ている文＝`slowking-deck`・`n-zoroark-ex-deck`・`mabusoruex-deck-0928`・`n-zoroark-ex-deck-0927`・`mega-lopunny-ex-deck-0927`）をすべて「問題なし」にできれば合格と出す。ファイルは変えない。GitHub Actions の「AI highlight review (manual)」からも実行できる）
@@ -129,7 +129,7 @@
   - 「〇〇・〇〇を採用した〇〇デッキ。主力カードの効果と最安値をまとめて確認」
 - カードの効果・HP・ダメージは、公式テキスト（取得済みデータ）に基づいて書く。推測で書かない
 - 生成後、同じ一覧に並ぶ記事同士で書き出しや構成が重複していないか確認する
-- 見どころ（`highlight`）は `scripts/lib/highlight.js` が、主役の特性・ワザ（名前・ダメージ・効果）と、主役と組み合わせて使うカードの効果を、公式のカードテキストの文のまま組み立てる。`BANNED_PHRASES` の決まった文や、同じ日の記事と書き出しがそっくりなもの（カード名・「」の中・数字を伏せた骨組みで比較）は、自動生成の PR の「紹介文の確認すべき点」に出る。X投稿文は見どころを文の区切りで詰めて使う
+- 見どころ（`highlight`）は `scripts/lib/highlight.js` が、主役の特性・ワザ（名前・ダメージ・効果）と、主役と組み合わせて使うカードの効果を、公式のカードテキストの文のまま組み立てる。`BANNED_PHRASES` の決まった文や、同じ日の記事と書き出しがそっくりなもの（カード名・「」の中・数字を伏せた骨組みで比較）は、自動生成の PR の「紹介文の確認すべき点」に出る。X投稿文（`src/utils/shareText.ts` の `buildXPosts`）の「・」の1行目は、ひとこと（`tagline`）があればそれを使う。なければ見どころを文の区切り（「。」）で止めて入るだけの文を使い、1文目も入りきらないときだけひとことと同じ長さ（`BLURB_MAX` = `TAGLINE_MAX`）以内に縮める（どちらも途中で「…」で切らない）。ハッシュタグ・価格の行・リンクは変えない。投稿文が X の上限（日本語は1字を2字として数える・URL は23字）に収まるかは `scripts/test/share-text.test.js` で全記事を確かめる
 - **見どころの AI 化**（`scripts/lib/ai-highlight.js`。自動生成の新しい記事と、手動で実行するまとめ書き直しだけ。立ち回り・説明文・X投稿文は AI で書かない）
   - 自動生成では、まず従来の方法（`scripts/lib/highlight.js`）で見どころを作り、そのあと Claude API に書かせる
   - AI に渡すのは、デッキ名・60枚のレシピ・採用カードの公式テキスト（`recipeProfiles` の内容）だけ。渡したものに書かれていないこと（効果・ダメージ・枚数・環境の話など）を書かない・主役のカード（`keyCards` の先頭）から書き始める・説明文を貼らず自然な日本語にする・書くカードは主役とそれを支えるカード1枚まで・長さは従来と同じくらい（`HIGHLIGHT_MAX` 以内）・誇張（最強・必勝・絶対など）を使わない・カードの効果の条件（「〇〇を持つポケモンなら」「〇〇が出ていれば」など）を省いたり広い言い方に変えたりしない（短くするときは条件ではなく説明の部分を削る。ひとことにも同じ指示を渡す。`CONDITION_RULE`）、をプロンプトで指示する
@@ -159,7 +159,7 @@
   - 1回の実行（`npm run auto-decks` / `npm run auto-city` それぞれ）で API を呼ぶ回数の上限は `AI_HIGHLIGHT_CONFIG.maxCallsPerRun`（80回。ひとこと・チェック役・直しの分も数える。1本あたり見どころ最大5回＋ひとこと最大7回。見どころを先に全部書いてから、ひとことを書く）
   - API のエラーのときは、API が返した理由の文（残高不足など）をログと PR 本文に出す（`apiErrorDetail`）。**キーの文字は出さない**（`sk-ant-…` と渡したキーは伏せる）
 - **一覧のカードの「ひとこと」**（`deck-columns.json` の各記事の `tagline`・`taglineBy`。`highlightBy`（なければ `highlight`）のすぐ後ろに置く）
-  - トップの特集・デッキ解説の一覧のカードは、`tagline` があればそれ、なければ `highlight` を出す（`src/data/deck-columns.ts` の `cardBlurb`）。記事の本文の「このデッキのポイント」・X投稿文は見どころのまま
+  - トップの特集・デッキ解説の一覧のカードは、`tagline` があればそれ、なければ `highlight` を出す（`src/data/deck-columns.ts` の `cardBlurb`）。X投稿文の「・」の1行目も `tagline` があればそれを使う（上の「見どころ」の項）。記事の本文の「このデッキのポイント」は見どころのまま
   - 自動生成では、見どころをすべて決めたあとに Claude API で1本書く（`scripts/lib/ai-highlight.js` の `writeTagline`。渡すのは見どころと同じデータ＋その記事の見どころ（参考））。長さは `TAGLINE_MIN`〜`TAGLINE_MAX`（30〜40字）
   - 見どころと同じく、カードの効果の条件を省いたり広い言い方に変えたりしない（短くするときは条件ではなく説明の部分を削る）よう指示する（`CONDITION_RULE`。直すときも同じ指示）
   - 最初の指示で「40字を1字でも超えると使えない（35字くらいが目安）」と強く伝える。**答えは structured outputs の JSON（`{"tagline": "…"}`。`TAGLINE_SCHEMA`）で受け取り、完成したひとこと1本だけを入れさせる**（字数を数える考えごと・下書きを本文に書かせない。以前は本文に考えごとが混ざり、書き直しで refusal・空の答えになった）

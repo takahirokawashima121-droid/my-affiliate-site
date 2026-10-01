@@ -78,7 +78,7 @@ async function main() {
   const nameOfId = new Map(cards.map((c) => [c.id, c.name]));
   const mats = new Map();
   for (const c of columns) mats.set(c.slug, await materials(c, recipes, nameOfId));
-  const xText = (c) => buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, estimate: 0, url: '' }).parent;
+  const xText = (c) => buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, tagline: c.tagline, estimate: 0, url: '' }).parent;
   const auditItems = () => columns.map((c) => ({ slug: c.slug, pubDate: c.pubDate, highlight: c.highlight, names: mats.get(c.slug).names, xText: xText(c) }));
 
   const report = (title) => {

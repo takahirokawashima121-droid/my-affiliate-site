@@ -572,11 +572,11 @@ async function main() {
       return sum + (price ?? 0) * e.qty;
     }, 0);
   const xSection = generated.flatMap((c) => {
-    const { parent, reply } = buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, estimate: estimateOf(c.slug), url: `${SITE_URL}columns/${c.slug}/` });
+    const { parent, reply } = buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, tagline: c.tagline, estimate: estimateOf(c.slug), url: `${SITE_URL}columns/${c.slug}/` });
     return [`#### ${c.deckName}`, '1ポスト目（親）', '```', parent, '```', '2ポスト目（リプライ）', '```', reply, '```', ''];
   });
   // 紹介文の点検: 決まった文（BANNED_PHRASES）と、同じ日の記事同士の書き出しの似かよい
-  const xParentOf = (c) => buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, estimate: estimateOf(c.slug), url: '' }).parent;
+  const xParentOf = (c) => buildXPosts({ deckName: c.deckName, result: c.result, highlight: c.highlight, tagline: c.tagline, estimate: estimateOf(c.slug), url: '' }).parent;
   const audit = auditHighlights([
     ...sameDay.map((c) => ({ ...c, pubDate: todayJst() })),
     ...generated.map((c) => ({ slug: c.slug, pubDate: c.pubDate, highlight: c.highlight, names: namesOf(recipes[c.slug].cards, c), xText: xParentOf(c) })),

@@ -1,4 +1,4 @@
-// デッキ記事の見どころ（deck-columns.json の highlight。一覧・トップの特集・X投稿文に使う）を、公式のカードテキストから組み立てる。
+// デッキ記事の見どころ（deck-columns.json の highlight。一覧・トップの特集・ひとことがない記事の X投稿文に使う）を、公式のカードテキストから組み立てる。
 // scripts/auto-deck-updater.js（新しい記事）と scripts/rewrite-highlights.js（公開済みの記事の書き直し・点検）から使う
 //
 // 方針（CLAUDE.md「6. 記事・紹介文の品質基準」）:
@@ -9,7 +9,7 @@
 
 import { STAPLES } from './deck-variant.js';
 
-/** 見どころの目安の長さ（全角。一覧のカードは2行で省略表示、X投稿文は文単位で詰める） */
+/** 見どころの目安の長さ（全角。一覧のカードは2行で省略表示、ひとことがない記事の X投稿文は文単位で止める） */
 export const HIGHLIGHT_MAX = 170;
 
 /**

@@ -30,8 +30,8 @@ const CARDS_PATH = fileURLToPath(new URL('src/data/cards.json', ROOT));
 const ENV_PATH = fileURLToPath(new URL('.env', ROOT));
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 // 楽天APIの Origin/Referer。新APIはアプリ登録時の「許可されたWebサイト」と一致しないと 403 になるため、
-// 楽天側に www.pokeca-factory.com を登録するまでは登録済みの Vercel のURLのままにする
-const RAKUTEN_ORIGIN_URL = 'https://my-affiliate-site-phi.vercel.app/';
+// 楽天側には www 付き・www なし・Vercel のURLの3つを登録済み。本番のURLを送る
+const RAKUTEN_ORIGIN_URL = 'https://www.pokeca-factory.com/';
 const EXCLUDE = /オリパ|くじ|PSA|BGS|ARS|鑑定|BOX|未開封|英語|韓国|中国/;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

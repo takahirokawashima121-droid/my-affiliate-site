@@ -34,9 +34,10 @@
   - `.cache/` … スクレイピング結果のキャッシュ（Git 管理外）
   - `.claude/skills/` … 外部の Claude Code スキル（サイトのビルドには関係しない。入れたのはスキルだけで、hooks・サブエージェント・設定の変更は入れていない。元のリポジトリ・ライセンス・入れ方・更新のしかたは README の「Claude Code のスキル（外部のもの）」。ライセンス全文はそれぞれのフォルダの `LICENSE`）
     - `ui-ux-pro-max/` … UI・UX の相談（MIT）。`--persist` でファイルを書き出す使い方はしない
-    - `impeccable/` … UI のデザインの点検・磨き上げ（Apache-2.0。`NOTICE.md`・`MODIFICATIONS.md` も同じフォルダ）。`/impeccable hooks on`（hooks を入れる）・`/impeccable pin`（ほかのスキルを作る）・`/impeccable live`（ソースに仕掛けを入れてブラウザで試す）は、人に頼まれたときだけ使う
+    - `impeccable/` … UI のデザインの点検・磨き上げ（Apache-2.0。`NOTICE.md`・`MODIFICATIONS.md` も同じフォルダ）。**外部のプログラムをダウンロードしない使い方にしている**（元の `scripts/` のランチャーは外した。スキルの説明（`SKILL.md`・`reference/`）だけで使う）。`scripts/impeccable` や `npx impeccable` を入れ直したり、点検用のプログラムをダウンロード・実行したりしない。ランチャーを使う機能（`detect`・`live`・`hooks`・`pin`・`doctor` など）は飛ばす
     - `find-skills/` … ほかのスキルを探す（MIT）。見つけたスキルは `npx skills add … -g -y` で入れず、人に確認してからこのリポジトリの `.claude/skills/` に入れて PR にする
     - `ponytail/`・`ponytail-review/`・`ponytail-audit/`・`ponytail-debt/`・`ponytail-gain/`・`ponytail-help/` … いちばん簡単な実装にする・作りすぎの点検（MIT）
+    - **コードを足したり変えたりするときは、ponytail スキルの手順に従う**（1. そもそも必要か → 2. 最初からある機能（標準ライブラリ・ブラウザ・Astro・Tailwind など）で足りないか → 3. 今あるもの（このリポジトリの関数・部品・入れてあるパッケージ）で済まないか → それでも足りないときだけ、最小限のコードを書く）。**ただし、CLAUDE.md の他のルールとアフィリエイト表記のルール（「8. 外部APIとセキュリティ」の広告表記・PR 表記・トレトク・買取目安など）を優先する**（簡単にするために、決められた表記・チェック・テスト・PR の書き方を省かない）
     - **スキルの提案と、この CLAUDE.md（とくに「7. デザインのルール（ホワイトラボ）」・「4. 作業完了の条件」・「3. Git のルール」）が食い違うときは、CLAUDE.md を優先する**
 - 主要コマンド
   - `npm run dev` / `npm run build` / `npm run preview` / `npx astro check`

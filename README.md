@@ -151,11 +151,11 @@ node scripts/render-x-assets.js --scale=2   # .cache/x-assets/ にアイコン�
 - 更新するときは、元のリポジトリの `.claude/skills/ui-ux-pro-max/` で置き換え、上の2点を同じように直します
 
 ### impeccable
-- 元のリポジトリの `.claude/skills/impeccable/` をそのまま入れ、`LICENSE`・`NOTICE.md`（Apache-2.0 で求められるもの）と、変えた所・入れなかった所を書いた `MODIFICATIONS.md` を足しています。スキルのファイル自体は変えていません
+- 元のリポジトリの `.claude/skills/impeccable/` を入れ、`LICENSE`・`NOTICE.md`（Apache-2.0 で求められるもの）と、変えた所・入れなかった所を書いた `MODIFICATIONS.md` を足しています
 - 入れなかったもの: `.claude/settings.json` の hooks（編集のたびに自動で点検する仕掛け）・`.claude/agents/`（サブエージェント。なくてもスキルの `reference/degraded/` の手順で動きます）
-- `scripts/impeccable` は、初めて使うときに点検用のプログラムを元のリポジトリの GitHub Releases からダウンロードします（SHA-256 で確かめてから使う。置き場所はホームフォルダの下で、リポジトリには入りません）。ダウンロードできないときは、スキルの説明だけで動きます
+- **外部のプログラムはダウンロードしない使い方にしています。** 元の `scripts/`（点検用のプログラムを GitHub Releases からダウンロードして動かすランチャー）は外し、`SKILL.md` に「ランチャーを動かさず、スキルの説明（`SKILL.md`・`reference/`）だけで進める」という注記を足しました。そのため、ランチャーを使う機能（自動の点検 `detect`・点検結果の保存・`live`・`hooks`・`pin`・`doctor` など）は使えません
 - `/impeccable init`・`/impeccable document` は、リポジトリのルートに `PRODUCT.md`・`DESIGN.md` を書き出します（ビルドには関係しません）
-- 更新するときは、元のリポジトリの `.claude/skills/impeccable/` で置き換え、`LICENSE`・`NOTICE.md`・`MODIFICATIONS.md` を入れ直します
+- 更新するときは、元のリポジトリの `.claude/skills/impeccable/` で置き換え、`scripts/` を外し、`SKILL.md` の注記・`LICENSE`・`NOTICE.md`・`MODIFICATIONS.md` を入れ直します
 
 ### find-skills
 - 見つけたスキルを入れるときは、`npx skills add … -g -y`（ホームフォルダに確認なしで入れる）は使わず、このリポジトリの `.claude/skills/` にライセンスを確かめてから入れ、PR にします

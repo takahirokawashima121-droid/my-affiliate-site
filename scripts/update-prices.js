@@ -58,8 +58,8 @@ const FEATURED_COLUMNS = 12;
 const ENV_PATH = fileURLToPath(new URL('../.env', import.meta.url));
 const API_URL = 'https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20260701';
 // 楽天APIの Origin/Referer。新APIはアプリ登録時の「許可されたWebサイト」と一致しないと 403 になるため、
-// 楽天側に www.pokeca-factory.com を登録するまでは登録済みの Vercel のURLのままにする
-const RAKUTEN_ORIGIN_URL = 'https://my-affiliate-site-phi.vercel.app/';
+// 楽天側には www 付き・www なし・Vercel のURLの3つを登録済み。本番のURLを送る
+const RAKUTEN_ORIGIN_URL = 'https://www.pokeca-factory.com/';
 /** 楽天の呼び出し間隔（楽天ウェブサービスの上限は1秒1回。わずかに余裕を持たせる） */
 const WAIT_MS = 1050;
 const SHOP_NAME = '楽天市場';

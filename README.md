@@ -98,7 +98,7 @@ npm run sync-trending                # 追加候補のシードを作り、add-c
 
 事前に、リポジトリの Settings → Secrets and variables → Actions に `RAKUTEN_APP_ID`・`RAKUTEN_ACCESS_KEY`・`YAHOO_APP_ID` を登録してください。全カードで API エラーになった場合（キーの失効など）はワークフローが失敗し、GitHub から通知されます。
 
-楽天APIへのリクエストには、アプリ登録時の「許可されたWebサイト」と一致する Origin が必要です。`scripts/update-prices.js`・`scripts/add-cards.js` の `RAKUTEN_ORIGIN_URL` は、楽天側の登録に合わせて設定してください（現在は登録済みの Vercel のURL）。
+楽天APIへのリクエストには、アプリ登録時の「許可されたWebサイト」と一致する Origin が必要です。`scripts/update-prices.js`・`scripts/add-cards.js` の `RAKUTEN_ORIGIN_URL` は、楽天側の登録に合わせて設定してください（現在は本番の https://www.pokeca-factory.com/。楽天側には www 付き・www なし・Vercel のURLの3つを登録済み）。GitHub の Variables・Secrets では設定していません。
 
 楽天市場に在庫のないカードは「在庫なし」となり、買取価格も根拠がないため「要査定」と表示されます。
 

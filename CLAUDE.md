@@ -48,6 +48,7 @@
   - `npm run check-deck-names`（公開済み記事のデッキ名とポケカブックの●付き小見出しを照合。記事は書き換えない。GitHub Actions の `check-deck-names.yml` を手動実行すると結果が Issue になる）
 - 定期実行: `.github/workflows/` 配下（`update-prices.yml`、`sync-trending.yml`、`auto-deck-sync.yml` ほか）
   - `fetch-pokecabook-html.yml`（手動実行のみ）… ポケカブックの記事の HTML を Artifacts に保存し、構造と骨組みをログに出す。この環境からポケカブックにアクセスできないときの調査用
+  - `delete-merged-branches.yml`（手動実行のみ・「Delete merged branches (manual)」）… main に取り込み済みのブランチを一覧にする（「一覧を出すだけ」）か消す（「実際に消す」）。main・開いている PR のブランチ・main の最新と同じブランチ・main にないコミットがあるブランチは消さない。中身は `scripts/delete-merged-branches.sh`
   - 実行時刻は各 yml の cron が正。README と食い違っていたら README を直す
   - **yml を書くときの注意**: `${{ }}` の中に「: 」（コロンと空白）を含む文字（例: `'content: …'`）があるときは、値の全体を `"${{ … }}"` のように `""` で囲む。囲まないと YAML の書き方の誤りになり、GitHub がそのワークフローを読めなくなる（Actions の一覧に名前ではなくファイル名が出る・push のたびに失敗した実行ができる・Run workflow の入力欄が出ない）。yml を変えたら `npm test`（`scripts/test/workflows.test.js` がすべての yml を読んで確かめる）
 

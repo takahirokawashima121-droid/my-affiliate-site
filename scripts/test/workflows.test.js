@@ -51,3 +51,22 @@ test('AI highlight rewrite (manual): 「やること」の入力欄と、PR の�
   // PR に入れるのは deck-columns.json だけ（レシピ・価格・カードのデータは変えない）
   assert.equal(pr['add-paths'].trim(), 'src/data/deck-columns.json');
 });
+
+test('Delete merged branches (manual): 手動実行だけで、「一覧を出すだけ」が既定。開いている PR のブランチを渡して消さない', () => {
+  const workflow = parseDocument(readFileSync(new URL('delete-merged-branches.yml', dir), 'utf8')).toJS();
+  assert.equal(workflow.name, 'Delete merged branches (manual)');
+  assert.deepEqual(Object.keys(workflow.on), ['workflow_dispatch']);
+  const { mode } = workflow.on.workflow_dispatch.inputs;
+  assert.equal(mode.type, 'choice');
+  assert.deepEqual(mode.options, ['一覧を出すだけ', '実際に消す']);
+  assert.equal(mode.default, '一覧を出すだけ');
+  const steps = workflow.jobs.branches.steps;
+  // main に取り込み済みかを調べるため、すべてのブランチと履歴を取る
+  assert.equal(steps.find((s) => s.name === 'Checkout').with['fetch-depth'], 0);
+  const run = steps.find((s) => s.name === 'Delete merged branches');
+  // 「実際に消す」を選んだときだけ delete。それ以外は list
+  assert.equal(run.env.MODE, "${{ github.event.inputs.mode == '実際に消す' && 'delete' || 'list' }}");
+  assert.equal(run.env.BASE, 'main');
+  assert.match(run.env.OPEN_PR_BRANCHES, /steps\.open-prs\.outputs\.branches/);
+  assert.match(steps.find((s) => s.name === 'List open pull request branches').run, /gh pr list .*--state open/);
+});

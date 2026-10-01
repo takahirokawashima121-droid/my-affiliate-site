@@ -220,6 +220,15 @@ PR に「マーク未対応の弾」と表示されたカードは、`scripts/li
 - ログ: ●付きの文字・見出し・デッキコードのリンクがどの要素の中にあるかと、`scripts/lib/pokecabook.js` での読み取り結果（`scripts/debug/outline-html.js`）
 - 骨組み: 本文・画像を除き、見出し・デッキコードのリンク・タグの構造だけを残した HTML（`scripts/debug/skeleton-html.js`）。テスト用の `scripts/test/fixtures/` はこれを使います。取得した HTML そのものはリポジトリにコミットしません（記事本文を転載しないため）
 
+### 使い終わったブランチの削除（GitHub Actions・手動）
+
+`.github/workflows/delete-merged-branches.yml`（`scripts/delete-merged-branches.sh`）は、main に取り込み済みのブランチを一覧にし、選んだときだけ消します。Actions タブ →「Delete merged branches (manual)」→「Run workflow」で、「やること」を選んで実行します（定期実行はしません）。
+
+- 「一覧を出すだけ」（既定）: ブランチごとの判定を実行結果のページ（Summary）に表で出します。何も消しません
+- 「実際に消す」: 「取り込み済み」と出たブランチだけを消します。まず「一覧を出すだけ」で確かめてから実行してください
+- 消さないもの: `main`・開いている PR のブランチ・main の最新と同じところを指すブランチ（作ったばかりの可能性）・main にないコミットがあるブランチ（cherry-pick で取り込んだブランチもここに入るので、要らなければ手で消します）
+- マージした PR のブランチは、リポジトリの Settings → General →「Automatically delete head branches」で自動で消えます。このワークフローは、それより前のブランチや消し忘れの片づけ用です
+
 ## フォルダ構成
 
 ```

@@ -1,0 +1,51 @@
+# main に取り込み済みのブランチを一覧にし、「実際に消す」を選んだときだけ消す（中身は scripts/delete-merged-branches.sh）
+# main・開いている PR のブランチ・main の最新と同じところを指すブランチ（作ったばかりの可能性）・main にないコミットがあるブランチは消さない
+# Actions タブの「Run workflow」ボタンから手動実行のみ。結果は実行結果のページ（Summary）に表で出る
+name: Delete merged branches (manual)
+
+on:
+  workflow_dispatch: # Actions タブの「Run workflow」ボタンから手動実行（定期実行はしない）
+    inputs:
+      mode:
+        description: やること（まず「一覧を出すだけ」で確かめてから「実際に消す」）
+        type: choice
+        options:
+          - 一覧を出すだけ
+          - 実際に消す
+        default: 一覧を出すだけ
+
+permissions:
+  contents: write # ブランチの削除
+  pull-requests: read # 開いている PR のブランチを調べる
+
+concurrency:
+  group: delete-merged-branches
+  cancel-in-progress: false
+
+jobs:
+  branches:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # すべてのブランチと履歴（main に取り込み済みかを調べるため）
+
+      - name: List open pull request branches
+        id: open-prs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo 'branches<<EOF'
+            gh pr list --repo "${{ github.repository }}" --state open --limit 1000 --json headRefName --jq '.[].headRefName'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Delete merged branches
+        env:
+          MODE: "${{ github.event.inputs.mode == '実際に消す' && 'delete' || 'list' }}"
+          BASE: main
+          OPEN_PR_BRANCHES: ${{ steps.open-prs.outputs.branches }}
+        run: bash scripts/delete-merged-branches.sh

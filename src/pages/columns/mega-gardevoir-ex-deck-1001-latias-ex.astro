@@ -1,0 +1,66 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-10-03 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="mega-gardevoir-ex-deck-1001-latias-ex">
+  <p>
+    10/1 ジムバトル優勝の<strong>メガサーナイトexデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 19枚・グッズ 18枚・サポート 9枚・スタジアム 2枚・エネルギー 12枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="msanaitoex-rr-m1s-042" qty={2}>
+    <ul>
+        <li><strong>ワザ「あふれるねがい」</strong>（超）：自分のベンチポケモン全員に、山札から「基本超エネルギー」を1枚ずつつける。そして山札を切る。</li>
+        <li><strong>ワザ「メガシンフォニア」</strong>（超・50×）：自分のポケモン全員についている超エネルギーの数×50ダメージ。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="burungeruex-rr-sv11w-042" qty={2}>
+    <ul>
+        <li><strong>特性「うみののろい」</strong>：このポケモンがバトル場にいるかぎり、相手は手札から「グッズ」を出して使えず、「ポケモンのどうぐ」も出してつけられない。</li>
+        <li><strong>ワザ「パワープレス」</strong>（超無・80＋）：このワザを使うためのエネルギーより、2個多くエネルギーがついているなら、80ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="lillies-clefairy-ex-rr-sv9-033" qty={1}>
+    <ul>
+        <li><strong>特性「フェアリーゾーン」</strong>：このポケモンがいるかぎり、相手の場の竜ポケモン全員の弱点は、すべて超タイプになる。［弱点は「×2」で計算する。］</li>
+        <li><strong>ワザ「フルムーンロンド」</strong>（超無・20＋）：おたがいのベンチポケモンの数×20ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="latias-ex-rr-sv7a-019" qty={1}>
+    <ul>
+        <li><strong>特性「スカイライン」</strong>：このポケモンがいるかぎり、自分のたねポケモン全員のにげるためのエネルギーは、すべてなくなる。</li>
+        <li><strong>ワザ「むげんのやいば」</strong>（超超無・200）：次の自分の番、このポケモンはワザが使えない。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="terepasuchixyouenerugi-r-m3-079" qty={4}>
+    <ul>
+        <li><strong>特殊エネルギー</strong>：このカードは、ポケモンについているかぎり、超エネルギー1個ぶんとしてはたらく。このカードを手札から超ポケモンにつけたとき、自分の山札から超タイプのたねポケモンを2枚まで選び、ベンチに出す。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="wandapatchi-mbd-015" qty={2}>
+    <ul>
+        <li><strong>グッズ</strong>：自分のトラッシュから「基本超エネルギー」を1枚選び、ベンチの超ポケモンにつける。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

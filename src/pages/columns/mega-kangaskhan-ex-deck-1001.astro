@@ -1,0 +1,65 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-10-03 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="mega-kangaskhan-ex-deck-1001">
+  <p>
+    10/1 ジムバトル優勝の<strong>メガガルーラex＋トリデプスデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 7枚・グッズ 23枚・ポケモンのどうぐ 2枚・サポート 12枚・スタジアム 4枚・エネルギー 12枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="mega-kangaskhan-ex-rr-m1s-051" qty={4}>
+    <ul>
+        <li><strong>特性「おつかいダッシュ」</strong>：このポケモンがバトル場にいるなら、自分の番に1回使える。自分の山札を2枚引く。この特性は別の「おつかいダッシュ」を使った番は使えない。</li>
+        <li><strong>ワザ「マシンガンコンボ」</strong>（無無無・200＋）：ウラが出るまでコインを投げ、オモテの数×50ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="toridepusu-r-m5-060" qty={2}>
+    <ul>
+        <li><strong>特性「たいこのぼうへき」</strong>：このポケモンがベンチにいるかぎり、自分のポケモン全員は、ついているエネルギーが2個以下の相手のポケモンからワザのダメージを受けない。</li>
+        <li><strong>ワザ「ぶちかます」</strong>（鋼鋼無・160）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="tatetopusu-c-m5-059" qty={1}>
+    <ul>
+        <li><strong>ワザ「くだく」</strong>（鋼無・50）：相手のバトルポケモンについているエネルギーを1個選び、トラッシュする。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="furubitatatenokaseki-c-m5-072" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：このカードは、HP60の無タイプのたねポケモンとして、場に出せる。このカードは、特殊状態にならず、にげられない。自分の番の中でなら、場に出ているこのカードをトラッシュできる。</li>
+        <li><strong>特性「たてのまもり」</strong>：このポケモンがバトル場にいるかぎり、自分のポケモン全員が、相手のポケモンから受けるワザのダメージは「-10」される。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="jixyanboaisu-u-m2-073" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：エネルギーが3個以上ついている自分のバトルポケモンのHPを「80」回復する。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="kurasshixyuhanma-mc-644" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：コインを1回投げオモテなら、相手の場のポケモンについているエネルギーを1個選び、トラッシュする。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

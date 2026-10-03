@@ -13886,5 +13886,575 @@
         "officialCardId": "49711"
       }
     ]
+  },
+  "igglybuff-deck-1002": {
+    "deckId": "RppRpU-bdt2Fq-MpXy2y",
+    "url": "https://www.pokemon-card.com/deck/result.html/deckID/RppRpU-bdt2Fq-MpXy2y/",
+    "cards": [
+      {
+        "name": "ププリン",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "igglybuff-m6a-096",
+        "officialCardId": "50708"
+      },
+      {
+        "name": "スボミー",
+        "qty": 3,
+        "category": "ポケモン",
+        "cardId": "budew-m2a-011",
+        "officialCardId": "46662"
+      },
+      {
+        "name": "ヒビキのピチュー",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "ethans-pichu-c-sv9a-036",
+        "officialCardId": "47331"
+      },
+      {
+        "name": "ロケット団のリーシャン",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "rokettodannorishixyan-c-sv10-041",
+        "officialCardId": "47434"
+      },
+      {
+        "name": "ロケット団のフリーザー",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "rokettodannofuriza-r-sv10-022",
+        "officialCardId": "47415"
+      },
+      {
+        "name": "ポケパッド",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "poke-pad-u-m3-070",
+        "officialCardId": "49378"
+      },
+      {
+        "name": "なかよしポフィン",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "buddy-buddy-poffin-u-sv5k-063",
+        "officialCardId": "49364"
+      },
+      {
+        "name": "ロケット団のレシーバー",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "rokettodannoreshiba-u-sv10-090",
+        "officialCardId": "49391"
+      },
+      {
+        "name": "夜のタンカ",
+        "qty": 3,
+        "category": "グッズ",
+        "cardId": "night-stretcher-u-sv6a-056",
+        "officialCardId": "49386"
+      },
+      {
+        "name": "スペシャルレッドカード",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "special-red-card-u-m4-072",
+        "officialCardId": "50156"
+      },
+      {
+        "name": "せいなるはい",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "sacred-ash-u-sv9a-056",
+        "officialCardId": "48672"
+      },
+      {
+        "name": "ツールスクラッパー",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "tsurusukurappa-u-sv11w-080",
+        "officialCardId": "48673"
+      },
+      {
+        "name": "むしよけスプレー",
+        "qty": 2,
+        "category": "グッズ",
+        "cardId": "mushiyokesupure-u-m1l-060",
+        "officialCardId": "47793"
+      },
+      {
+        "name": "アンフェアスタンプ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "unfair-stamp-ace-sv5a-053",
+        "note": "ACE SPEC（デッキに1枚まで）",
+        "officialCardId": "47870"
+      },
+      {
+        "name": "ブレイブバングル",
+        "qty": 4,
+        "category": "ポケモンのどうぐ",
+        "cardId": "bureibubanguru-u-sv11w-082",
+        "officialCardId": "49405"
+      },
+      {
+        "name": "ハンディサーキュレーター",
+        "qty": 2,
+        "category": "ポケモンのどうぐ",
+        "cardId": "handeisakixyureta-u-sv6-095",
+        "officialCardId": "45786"
+      },
+      {
+        "name": "緊急ボード",
+        "qty": 2,
+        "category": "ポケモンのどうぐ",
+        "cardId": "rescue-board-u-sv5k-064",
+        "officialCardId": "47201"
+      },
+      {
+        "name": "ボスの指令",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "bosunoshireigechisu-r-sv1a-069",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "49440"
+      },
+      {
+        "name": "ロケット団のランス",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "rokettodannoransu-u-sv10-095",
+        "officialCardId": "49451"
+      },
+      {
+        "name": "ロケット団のラムダ",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "rokettodannoramuda-u-sv10-094",
+        "officialCardId": "49450"
+      },
+      {
+        "name": "ロケット団のサカキ",
+        "qty": 3,
+        "category": "サポート",
+        "cardId": "rokettodannosakaki-u-sv10-093",
+        "officialCardId": "49449"
+      },
+      {
+        "name": "ロケット団のアテナ",
+        "qty": 4,
+        "category": "サポート",
+        "cardId": "rokettodannoatena-u-sv10-091",
+        "officialCardId": "49447"
+      },
+      {
+        "name": "からておうの稽古",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "karateounokeiko-mc-704",
+        "officialCardId": "49420"
+      },
+      {
+        "name": "バトルコロシアム",
+        "qty": 1,
+        "category": "スタジアム",
+        "cardId": "battle-colosseum-u-m2-079",
+        "officialCardId": "48419"
+      },
+      {
+        "name": "ロケット団のファクトリー",
+        "qty": 3,
+        "category": "スタジアム",
+        "cardId": "rokettodannofuakutori-u-sv10-097",
+        "officialCardId": "47490"
+      }
+    ]
+  },
+  "dipplin-festival-lead-deck-1002": {
+    "deckId": "LgnigN-UxZbWA-Nng9iL",
+    "url": "https://www.pokemon-card.com/deck/result.html/deckID/LgnigN-UxZbWA-Nng9iL/",
+    "cards": [
+      {
+        "name": "サルノリ",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "sarunori-c-sv6-008",
+        "officialCardId": "46667"
+      },
+      {
+        "name": "バチンキー",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "bachinki-c-sv6-009",
+        "officialCardId": "46668"
+      },
+      {
+        "name": "カジッチュ",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "kajitchixyu-c-sv5a-048",
+        "officialCardId": "45624"
+      },
+      {
+        "name": "カジッチュ",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "kajitchixyu-c-sv6-011",
+        "officialCardId": "45702"
+      },
+      {
+        "name": "カミッチュ",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "kamitchixyu-u-sv6-012",
+        "officialCardId": "46670"
+      },
+      {
+        "name": "トサキント",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "tosakinto-c-sv6-026",
+        "officialCardId": "46689"
+      },
+      {
+        "name": "アズマオウ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "azumaou-sv8a-029",
+        "officialCardId": "46869"
+      },
+      {
+        "name": "シェイミ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "shieimi-u-sv9a-006",
+        "officialCardId": "48534"
+      },
+      {
+        "name": "ポケモンいれかえ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "switch-u-sv5a-056",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "44961"
+      },
+      {
+        "name": "シークレットボックス",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "secret-box-ace-sv6-092",
+        "note": "ACE SPEC（デッキに1枚まで）",
+        "officialCardId": "45783"
+      },
+      {
+        "name": "夜のタンカ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "night-stretcher-u-sv6a-056",
+        "officialCardId": "48681"
+      },
+      {
+        "name": "なかよしポフィン",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "buddy-buddy-poffin-u-sv5k-063",
+        "officialCardId": "49364"
+      },
+      {
+        "name": "むしとりセット",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "bug-catching-set-u-sv6-094",
+        "officialCardId": "49383"
+      },
+      {
+        "name": "ポケパッド",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "poke-pad-u-m3-070",
+        "officialCardId": "49573"
+      },
+      {
+        "name": "せいなるはい",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "sacred-ash-u-sv9a-056",
+        "officialCardId": "50069"
+      },
+      {
+        "name": "ハイパーボール",
+        "qty": 3,
+        "category": "グッズ",
+        "cardId": "haipaboru-u-sv1v-070",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "50742"
+      },
+      {
+        "name": "ふうせん",
+        "qty": 2,
+        "category": "ポケモンのどうぐ",
+        "officialCardId": "38377"
+      },
+      {
+        "name": "ブレイブバングル",
+        "qty": 2,
+        "category": "ポケモンのどうぐ",
+        "cardId": "bureibubanguru-u-sv11w-082",
+        "officialCardId": "50327"
+      },
+      {
+        "name": "スグリ",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "kieran-u-sv6-096",
+        "officialCardId": "45864"
+      },
+      {
+        "name": "ボスの指令",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "bosunoshireigechisu-r-sv1a-069",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "46227"
+      },
+      {
+        "name": "リーリエの決心",
+        "qty": 4,
+        "category": "サポート",
+        "cardId": "ririenokesshin-u-m1l-062",
+        "officialCardId": "49586"
+      },
+      {
+        "name": "グラジオの決戦",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "gurajionokessen-u-m5-076",
+        "officialCardId": "50336"
+      },
+      {
+        "name": "ジャッジマン",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "jixyajjiman-u-sv9a-062",
+        "officialCardId": "41173"
+      },
+      {
+        "name": "お祭り会場",
+        "qty": 4,
+        "category": "スタジアム",
+        "cardId": "omatsurikaijixyou-u-sv6-099",
+        "officialCardId": "46841"
+      },
+      {
+        "name": "グロウ草エネルギー",
+        "qty": 4,
+        "category": "エネルギー",
+        "cardId": "guroukusaenerugi-r-m3-078",
+        "officialCardId": "49711"
+      },
+      {
+        "name": "基本草エネルギー",
+        "qty": 2,
+        "category": "エネルギー",
+        "officialCardId": "50745"
+      }
+    ]
+  },
+  "mega-lucario-ex-deck-1002": {
+    "deckId": "8YGxK8-BKlWic-xYcDcx",
+    "url": "https://www.pokemon-card.com/deck/result.html/deckID/8YGxK8-BKlWic-xYcDcx/",
+    "cards": [
+      {
+        "name": "リオル",
+        "qty": 4,
+        "category": "ポケモン",
+        "cardId": "riolu-c-m1l-028",
+        "officialCardId": "47761"
+      },
+      {
+        "name": "メガルカリオex",
+        "qty": 3,
+        "category": "ポケモン",
+        "cardId": "mega-lucario-ex-rr-m1l-029",
+        "officialCardId": "47762"
+      },
+      {
+        "name": "ハリテヤマ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "hariteyama-r-m1l-025",
+        "officialCardId": "47758"
+      },
+      {
+        "name": "マクノシタ",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "makunoshita-c-m1l-024",
+        "officialCardId": "47757"
+      },
+      {
+        "name": "ルナトーン",
+        "qty": 2,
+        "category": "ポケモン",
+        "cardId": "runaton-r-m1l-026",
+        "officialCardId": "47759"
+      },
+      {
+        "name": "ソルロック",
+        "qty": 3,
+        "category": "ポケモン",
+        "cardId": "sorurokku-u-m1l-027",
+        "officialCardId": "47760"
+      },
+      {
+        "name": "ニャースex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "nixyasuex-rr-m3-061",
+        "officialCardId": "49694"
+      },
+      {
+        "name": "ミュウex",
+        "qty": 1,
+        "category": "ポケモン",
+        "cardId": "mixyuuiekkusu-rr-m6a-057",
+        "officialCardId": "50669"
+      },
+      {
+        "name": "パワープロテイン",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "pawapurotein-u-m1l-058",
+        "officialCardId": "47791"
+      },
+      {
+        "name": "ファイトゴング",
+        "qty": 4,
+        "category": "グッズ",
+        "cardId": "fuaitogongu-u-m1l-059",
+        "officialCardId": "47792"
+      },
+      {
+        "name": "スペシャルレッドカード",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "special-red-card-u-m4-072",
+        "officialCardId": "50156"
+      },
+      {
+        "name": "ハイパーボール",
+        "qty": 3,
+        "category": "グッズ",
+        "cardId": "haipaboru-u-sv1v-070",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "50742"
+      },
+      {
+        "name": "夜のタンカ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "night-stretcher-u-sv6a-056",
+        "officialCardId": "45931"
+      },
+      {
+        "name": "ポケパッド",
+        "qty": 3,
+        "category": "グッズ",
+        "cardId": "poke-pad-u-m3-070",
+        "officialCardId": "50743"
+      },
+      {
+        "name": "ポケパッド",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "poke-pad-u-m3-070",
+        "officialCardId": "49703"
+      },
+      {
+        "name": "ポケモンいれかえ",
+        "qty": 1,
+        "category": "グッズ",
+        "cardId": "switch-u-sv5a-056",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "50744"
+      },
+      {
+        "name": "ふうせん",
+        "qty": 1,
+        "category": "ポケモンのどうぐ",
+        "cardId": "fuusen-u-sv11b-082",
+        "officialCardId": "48279"
+      },
+      {
+        "name": "リーリエの決心",
+        "qty": 4,
+        "category": "サポート",
+        "cardId": "ririenokesshin-u-m1l-062",
+        "officialCardId": "47900"
+      },
+      {
+        "name": "ボスの指令",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "bosunoshireigechisu-r-sv1a-069",
+        "note": "公式の例外リストにより版を問わずスタンダードで使用可",
+        "officialCardId": "41340"
+      },
+      {
+        "name": "ジャッジマン",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "jixyajjiman-u-sv9a-062",
+        "officialCardId": "49608"
+      },
+      {
+        "name": "トウコ",
+        "qty": 1,
+        "category": "サポート",
+        "cardId": "touko-u-sv11w-085",
+        "officialCardId": "48694"
+      },
+      {
+        "name": "暗号マニアの解読",
+        "qty": 2,
+        "category": "サポート",
+        "cardId": "ciphermaniacs-codebreaking-u-sv5m-067",
+        "officialCardId": "45284"
+      },
+      {
+        "name": "バトルコロシアム",
+        "qty": 1,
+        "category": "スタジアム",
+        "cardId": "battle-colosseum-u-m2-079",
+        "officialCardId": "48419"
+      },
+      {
+        "name": "グラビティーマウンテン",
+        "qty": 1,
+        "category": "スタジアム",
+        "cardId": "gurabiteimaunten-u-sv8-106",
+        "officialCardId": "48705"
+      },
+      {
+        "name": "ロック闘エネルギー",
+        "qty": 2,
+        "category": "エネルギー",
+        "cardId": "rokkutouenerugi-r-m3-080",
+        "officialCardId": "49713"
+      },
+      {
+        "name": "基本闘エネルギー",
+        "qty": 9,
+        "category": "エネルギー",
+        "officialCardId": "50750"
+      },
+      {
+        "name": "レガシーエネルギー",
+        "qty": 1,
+        "category": "エネルギー",
+        "cardId": "legacy-energy-ace-sv6-101",
+        "officialCardId": "45792"
+      }
+    ]
   }
 }

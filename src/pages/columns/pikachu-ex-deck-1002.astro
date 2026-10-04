@@ -1,0 +1,68 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-10-04 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="pikachu-ex-deck-1002">
+  <p>
+    10/2 ジムバトル優勝の<strong>ピカチュウexデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 16枚・グッズ 16枚・ポケモンのどうぐ 2枚・サポート 11枚・スタジアム 2枚・エネルギー 13枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="pikachu-ex-rr-sv8-033" qty={2}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>特性「がんばりハート」</strong>：このポケモンのHPがまんたんの状態で、このポケモンがワザのダメージを受けてきぜつするとき、きぜつせず、残りHPが「10」の状態で場に残る。</li>
+        <li><strong>ワザ「トパーズボルト」</strong>（草雷鋼・300）：このポケモンについているエネルギーを3個選び、トラッシュする。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="mega-kangaskhan-ex-rr-m1s-051" qty={3}>
+    <ul>
+        <li><strong>特性「おつかいダッシュ」</strong>：このポケモンがバトル場にいるなら、自分の番に1回使える。自分の山札を2枚引く。この特性は別の「おつかいダッシュ」を使った番は使えない。</li>
+        <li><strong>ワザ「マシンガンコンボ」</strong>（無無無・200＋）：ウラが出るまでコインを投げ、オモテの数×50ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="ogerpon-teal-ex-rr-sv6-016" qty={2}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>特性「みどりのまい」</strong>：自分の番に1回使える。自分の手札から「基本草エネルギー」を1枚選び、このポケモンにつける。その後、自分の山札を1枚引く。</li>
+        <li><strong>ワザ「まんようしぐれ」</strong>（草草草・30＋）：おたがいのバトルポケモンについているエネルギーの数×30ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="talonflame-ex-rr-m6-062" qty={2}>
+    <ul>
+        <li><strong>特性「エキサイトダイブ」</strong>：自分の番に、このカードが手札にあり、自分の場に無タイプの「メガシンカex」がいるなら、1回使える。このカードをベンチに出す。</li>
+        <li><strong>ワザ「かぎづめハント」</strong>（無無・150）：のぞむなら、自分の山札から好きなカードを2枚まで選び、手札に加える。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="enerugitsukekae-mc-638" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：自分の場のポケモンについている基本エネルギーを1個選び、自分の別のポケモンにつけ替える。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="crispin-u-sv7-097" qty={4}>
+    <ul>
+        <li><strong>サポート</strong>：自分の山札から、それぞれちがうタイプの基本エネルギーを2枚まで選び、相手に見せて、どちらか1枚を手札に加え、残りのエネルギーを自分のポケモンにつける。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

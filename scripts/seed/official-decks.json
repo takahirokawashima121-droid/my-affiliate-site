@@ -4,14 +4,154 @@
   ],
   "cards": [
     {
-      "id": "kajitchixyu-c-sv5a-048",
-      "name": "カジッチュ",
+      "id": "bidoru-c-m4-001",
+      "name": "ビードル",
       "rarity": "C",
-      "cardNumber": "048/066",
-      "expansionCode": "SV5a",
+      "cardNumber": "001/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "beedrill-ex-deck-1002",
+      "role": "ポケモン（公式カードID 50085）"
+    },
+    {
+      "id": "kokun-c-m4-002",
+      "name": "コクーン",
+      "rarity": "C",
+      "cardNumber": "002/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "beedrill-ex-deck-1002",
+      "role": "ポケモン（公式カードID 50086）"
+    },
+    {
+      "id": "supiaex-rr-m4-003",
+      "name": "スピアーex",
+      "rarity": "RR",
+      "cardNumber": "003/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "beedrill-ex-deck-1002",
+      "role": "ポケモン（公式カードID 50087）"
+    },
+    {
+      "id": "kofukimushi-c-sv8-004",
+      "name": "コフキムシ",
+      "rarity": "C",
+      "cardNumber": "004/106",
+      "expansionCode": "SV8",
       "regulationMark": "H",
-      "deck": "dipplin-festival-lead-deck-1002",
-      "role": "ポケモン（公式カードID 45624）"
+      "deck": "beedrill-ex-deck-1002",
+      "role": "ポケモン（公式カードID 46344）"
+    },
+    {
+      "id": "kofurai-c-m3-008",
+      "name": "コフーライ",
+      "rarity": "C",
+      "cardNumber": "008/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "beedrill-ex-deck-1002",
+      "role": "ポケモン（公式カードID 49641）"
+    },
+    {
+      "id": "bibiyon-u-m3-009",
+      "name": "ビビヨン",
+      "rarity": "U",
+      "cardNumber": "009/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "beedrill-ex-deck-1002",
+      "role": "ポケモン（公式カードID 49642）"
+    },
+    {
+      "id": "tsurizaomax-sv8a-142",
+      "name": "つりざおMAX",
+      "rarity": "-",
+      "cardNumber": "142/187",
+      "expansionCode": "SV8a",
+      "regulationMark": "H",
+      "deck": "beedrill-ex-deck-1002",
+      "role": "グッズ（公式カードID 46803・再録弾のためマークは推定）"
+    },
+    {
+      "id": "matsubanokakushin-u-sv5k-069",
+      "name": "マツバの確信",
+      "rarity": "U",
+      "cardNumber": "069/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "beedrill-ex-deck-1002",
+      "role": "サポート（公式カードID 45215）"
+    },
+    {
+      "id": "kachikoru-c-m4-023",
+      "name": "カチコール",
+      "rarity": "C",
+      "cardNumber": "023/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "avalugg-deck-1002",
+      "role": "ポケモン（公式カードID 50107）"
+    },
+    {
+      "id": "kurebesu-u-m4-024",
+      "name": "クレベース",
+      "rarity": "U",
+      "cardNumber": "024/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "avalugg-deck-1002",
+      "role": "ポケモン（公式カードID 50108）"
+    },
+    {
+      "id": "kaioga-r-m1s-016",
+      "name": "カイオーガ",
+      "rarity": "R",
+      "cardNumber": "016/063",
+      "expansionCode": "M1S",
+      "regulationMark": "I",
+      "deck": "avalugg-deck-1002",
+      "role": "ポケモン（公式カードID 47812）"
+    },
+    {
+      "id": "handotorima-u-sv5m-061",
+      "name": "ハンドトリマー",
+      "rarity": "U",
+      "cardNumber": "061/071",
+      "expansionCode": "SV5M",
+      "regulationMark": "H",
+      "deck": "pikachu-ex-deck-1002",
+      "role": "グッズ（公式カードID 45278）"
+    },
+    {
+      "id": "denkidama-m2a-163",
+      "name": "でんきだま",
+      "rarity": "-",
+      "cardNumber": "163/193",
+      "expansionCode": "M2a",
+      "regulationMark": "I",
+      "deck": "pikachu-ex-deck-1002",
+      "role": "ポケモンのどうぐ（公式カードID 48685・再録弾のためマークは推定）"
+    },
+    {
+      "id": "sabonea-c-m6-004",
+      "name": "サボネア",
+      "rarity": "C",
+      "cardNumber": "004/076",
+      "expansionCode": "M6",
+      "regulationMark": "J",
+      "deck": "arboliva-ex-deck-1002",
+      "role": "ポケモン（公式カードID 50342）"
+    },
+    {
+      "id": "nokutasu-r-m6-005",
+      "name": "ノクタス",
+      "rarity": "R",
+      "cardNumber": "005/076",
+      "expansionCode": "M6",
+      "regulationMark": "J",
+      "deck": "arboliva-ex-deck-1002",
+      "role": "ポケモン（公式カードID 50343）"
     }
   ]
 }

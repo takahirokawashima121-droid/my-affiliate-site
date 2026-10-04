@@ -1,0 +1,66 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-10-04 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="mega-kangaskhan-ex-deck-1003-ethans-ho-oh-ex">
+  <p>
+    10/3 シティリーグ優勝の<strong>メガガルーラexデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 14枚・グッズ 13枚・サポート 13枚・スタジアム 5枚・エネルギー 15枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="mega-kangaskhan-ex-rr-m1s-051" qty={3}>
+    <ul>
+        <li><strong>特性「おつかいダッシュ」</strong>：このポケモンがバトル場にいるなら、自分の番に1回使える。自分の山札を2枚引く。この特性は別の「おつかいダッシュ」を使った番は使えない。</li>
+        <li><strong>ワザ「マシンガンコンボ」</strong>（無無無・200＋）：ウラが出るまでコインを投げ、オモテの数×50ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="hibikinohououex-rr-sv9a-020" qty={3}>
+    <ul>
+        <li><strong>特性「こんじきのほのお」</strong>：自分の番に1回使える。自分の手札から「基本炎エネルギー」を2枚まで選び、ベンチの「ヒビキのポケモン」1匹につける。</li>
+        <li><strong>ワザ「シャイニングフェザー」</strong>（炎炎炎炎・160）：自分のポケモン全員のHPを、それぞれ「50」回復する。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="mega-rayquaza-ex-rr-m6-058" qty={2}>
+    <ul>
+        <li><strong>特性「はしゃのほうこう」</strong>：自分の番に、このカードを手札からベンチに出したとき、1回使える。自分の山札を上から4枚見て、その中から基本エネルギーを1枚選び、このポケモンにつける。残りのカードはウラにして切り、山札の下にもどす。</li>
+        <li><strong>ワザ「ストームエメラルダ」</strong>（炎雷無・50×）：自分のポケモン全員についている炎と雷エネルギーの数×50ダメージ。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="talonflame-ex-rr-m6-062" qty={2}>
+    <ul>
+        <li><strong>特性「エキサイトダイブ」</strong>：自分の番に、このカードが手札にあり、自分の場に無タイプの「メガシンカex」がいるなら、1回使える。このカードをベンチに出す。</li>
+        <li><strong>ワザ「かぎづめハント」</strong>（無無・150）：のぞむなら、自分の山札から好きなカードを2枚まで選び、手札に加える。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="densetsunoyougandou-u-m6-075" qty={4}>
+    <ul>
+        <li><strong>スタジアム</strong>：おたがいの場の進化ポケモン全員は、特性がすべてなくなる。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="enerugitsukekae-mc-638" qty={3}>
+    <ul>
+        <li><strong>グッズ</strong>：自分の場のポケモンについている基本エネルギーを1個選び、自分の別のポケモンにつけ替える。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

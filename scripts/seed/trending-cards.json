@@ -1,158 +1,118 @@
 {
   "_comment": [
-    "npm run sync-trending が 2026-09-28 08:10（JST）に自動生成。",
+    "npm run sync-trending が 2026-10-05 08:18（JST）に自動生成。",
     "出典: https://pokecabook.com/archives/category/deck-recipe（2ページ、現環境「30th CELEBRATION環境」200デッキ）の公式デッキコードを集計。版は公式カード検索のスタンダード絞り込みで選択。"
   ],
   "cards": [
     {
-      "id": "hibikinohououex-rr-sv9a-020",
-      "name": "ヒビキのホウオウex",
-      "rarity": "RR",
-      "cardNumber": "020/063",
+      "id": "nixyaoha-mem-003",
+      "name": "ニャオハ",
+      "rarity": "-",
+      "cardNumber": "003/017",
+      "expansionCode": "MEM",
+      "regulationMark": "J",
+      "deck": "マスカーニャex",
+      "role": "採用 6デッキ（公式カードID 50454・再録弾のためマークは推定）"
+    },
+    {
+      "id": "nixyarote-mem-004",
+      "name": "ニャローテ",
+      "rarity": "-",
+      "cardNumber": "004/017",
+      "expansionCode": "MEM",
+      "regulationMark": "J",
+      "deck": "マスカーニャex",
+      "role": "採用 6デッキ（公式カードID 50455・再録弾のためマークは推定）"
+    },
+    {
+      "id": "masukanixyaiekkusu-mem-005",
+      "name": "マスカーニャex",
+      "rarity": "-",
+      "cardNumber": "005/017",
+      "expansionCode": "MEM",
+      "regulationMark": "J",
+      "deck": "マスカーニャex",
+      "role": "採用 6デッキ（公式カードID 50456・再録弾のためマークは推定）"
+    },
+    {
+      "id": "higananoshinrai-u-m6-069",
+      "name": "ヒガナの信頼",
+      "rarity": "U",
+      "cardNumber": "069/076",
+      "expansionCode": "M6",
+      "regulationMark": "J",
+      "deck": "マスカーニャex",
+      "role": "採用 4デッキ（公式カードID 50407）"
+    },
+    {
+      "id": "tsurizaomax-sv8a-142",
+      "name": "つりざおMAX",
+      "rarity": "-",
+      "cardNumber": "142/187",
+      "expansionCode": "SV8a",
+      "regulationMark": "H",
+      "deck": "10/3【土】ジムバトル優勝",
+      "role": "採用 4デッキ（公式カードID 46803・再録弾のためマークは推定）"
+    },
+    {
+      "id": "shironanofukamaru-c-sv9a-042",
+      "name": "シロナのフカマル",
+      "rarity": "C",
+      "cardNumber": "042/063",
       "expansionCode": "SV9a",
       "regulationMark": "I",
-      "deck": "メガレックウザex",
-      "role": "採用 48デッキ（公式カードID 47315）"
+      "deck": "9/29【火】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47337）"
     },
     {
-      "id": "densetsunoyougandou-u-m6-075",
-      "name": "伝説の溶岩洞",
-      "rarity": "U",
-      "cardNumber": "075/076",
-      "expansionCode": "M6",
-      "regulationMark": "J",
-      "deck": "メガレックウザex",
-      "role": "採用 37デッキ（公式カードID 50411）"
-    },
-    {
-      "id": "tetsunoibaraex-rr-sv5a-033",
-      "name": "テツノイバラex",
-      "rarity": "RR",
-      "cardNumber": "033/066",
-      "expansionCode": "SV5a",
-      "regulationMark": "H",
-      "deck": "テツノイバラex",
-      "role": "採用 17デッキ（公式カードID 45609）"
-    },
-    {
-      "id": "yorunokouzan-m2a-188",
-      "name": "夜の鉱山",
-      "rarity": "-",
-      "cardNumber": "188/193",
-      "expansionCode": "M2a",
+      "id": "shironanogabaito-c-sv9a-043",
+      "name": "シロナのガバイト",
+      "rarity": "C",
+      "cardNumber": "043/063",
+      "expansionCode": "SV9a",
       "regulationMark": "I",
-      "deck": "テツノイバラex",
-      "role": "採用 12デッキ（公式カードID 48710・再録弾のためマークは推定）"
+      "deck": "9/29【火】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47338）"
     },
     {
-      "id": "ekisaitosutajiamu-u-sv8-105",
-      "name": "エキサイトスタジアム",
-      "rarity": "U",
-      "cardNumber": "105/106",
-      "expansionCode": "SV8",
-      "regulationMark": "H",
-      "deck": "メガレックウザex",
-      "role": "採用 10デッキ（公式カードID 46445）"
+      "id": "shironanorozeria-c-sv9a-004",
+      "name": "シロナのロゼリア",
+      "rarity": "C",
+      "cardNumber": "004/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "9/29【火】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47299）"
     },
     {
-      "id": "dakuboru-u-sv7a-054",
-      "name": "ダークボール",
+      "id": "shironanorozureido-r-sv9a-005",
+      "name": "シロナのロズレイド",
+      "rarity": "R",
+      "cardNumber": "005/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "9/29【火】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47300）"
+    },
+    {
+      "id": "shironanopawaueito-u-sv9a-060",
+      "name": "シロナのパワーウエイト",
       "rarity": "U",
-      "cardNumber": "054/064",
+      "cardNumber": "060/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "9/29【火】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47355）"
+    },
+    {
+      "id": "ritchienerugi-sv7a-064",
+      "name": "リッチエネルギー",
+      "rarity": "-",
+      "cardNumber": "064/064",
       "expansionCode": "SV7a",
       "regulationMark": "H",
-      "deck": "メガレックウザex",
-      "role": "採用 7デッキ（公式カードID 46283）"
-    },
-    {
-      "id": "handeisakixyureta-u-sv6-095",
-      "name": "ハンディサーキュレーター",
-      "rarity": "U",
-      "cardNumber": "095/101",
-      "expansionCode": "SV6",
-      "regulationMark": "H",
-      "deck": "テツノイバラex",
-      "role": "採用 7デッキ（公式カードID 45786）"
-    },
-    {
-      "id": "miareshitei-u-m3-077",
-      "name": "ミアレシティ",
-      "rarity": "U",
-      "cardNumber": "077/080",
-      "expansionCode": "M3",
-      "regulationMark": "J",
-      "deck": "テツノイバラex",
-      "role": "採用 6デッキ（公式カードID 49710）"
-    },
-    {
-      "id": "parudeakentarosu-u-sv8-011",
-      "name": "パルデア ケンタロス",
-      "rarity": "U",
-      "cardNumber": "011/106",
-      "expansionCode": "SV8",
-      "regulationMark": "H",
-      "deck": "メガレックウザex",
-      "role": "採用 5デッキ（公式カードID 46351）"
-    },
-    {
-      "id": "supinrotomu-c-sv7-080",
-      "name": "スピンロトム",
-      "rarity": "C",
-      "cardNumber": "080/102",
-      "expansionCode": "SV7",
-      "regulationMark": "H",
-      "deck": "イッカネズミ",
-      "role": "採用 4デッキ（公式カードID 46019）"
-    },
-    {
-      "id": "wakkanezumi-c-sv8-091",
-      "name": "ワッカネズミ",
-      "rarity": "C",
-      "cardNumber": "091/106",
-      "expansionCode": "SV8",
-      "regulationMark": "H",
-      "deck": "イッカネズミ",
-      "role": "採用 3デッキ（公式カードID 46431）"
-    },
-    {
-      "id": "ikkanezumi-m6a-100",
-      "name": "イッカネズミ",
-      "rarity": "-",
-      "cardNumber": "100/103",
-      "expansionCode": "M6a",
-      "regulationMark": "J",
-      "deck": "イッカネズミ",
-      "role": "採用 3デッキ（公式カードID 50712・再録弾のためマークは推定）"
-    },
-    {
-      "id": "biwa-u-sv5k-068",
-      "name": "ビワ",
-      "rarity": "U",
-      "cardNumber": "068/071",
-      "expansionCode": "SV5K",
-      "regulationMark": "H",
-      "deck": "イッカネズミ",
-      "role": "採用 3デッキ（公式カードID 45214）"
-    },
-    {
-      "id": "mrekkuuzakixyappu-u-m6-066",
-      "name": "メガレックウザキャップ",
-      "rarity": "U",
-      "cardNumber": "066/076",
-      "expansionCode": "M6",
-      "regulationMark": "J",
-      "deck": "テツノイバラex",
-      "role": "採用 3デッキ（公式カードID 50404）"
-    },
-    {
-      "id": "hitobana-u-m2-074",
-      "name": "ヒートバーナー",
-      "rarity": "U",
-      "cardNumber": "074/080",
-      "expansionCode": "M2",
-      "regulationMark": "I",
-      "deck": "メガレックウザex",
-      "role": "採用 3デッキ（公式カードID 48414）"
+      "deck": "9/30【水】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 46293）"
     }
   ]
 }

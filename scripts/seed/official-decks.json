@@ -4,14 +4,24 @@
   ],
   "cards": [
     {
-      "id": "kajitchixyu-c-sv5a-048",
-      "name": "カジッチュ",
+      "id": "tosakinto-c-m5-012",
+      "name": "トサキント",
       "rarity": "C",
-      "cardNumber": "048/066",
-      "expansionCode": "SV5a",
+      "cardNumber": "012/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "dipplin-festival-lead-deck-1004",
+      "role": "ポケモン（公式カードID 50231）"
+    },
+    {
+      "id": "handotorima-u-sv5m-061",
+      "name": "ハンドトリマー",
+      "rarity": "U",
+      "cardNumber": "061/071",
+      "expansionCode": "SV5M",
       "regulationMark": "H",
-      "deck": "dipplin-festival-lead-deck-1002",
-      "role": "ポケモン（公式カードID 45624）"
+      "deck": "dipplin-festival-lead-deck-1004",
+      "role": "グッズ（公式カードID 45278）"
     }
   ]
 }

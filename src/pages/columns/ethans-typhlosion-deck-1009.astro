@@ -1,0 +1,64 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-10-10 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="ethans-typhlosion-deck-1009">
+  <p>
+    10/9 ジムバトル優勝の<strong>ヒビキのバクフーンデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 21枚・グッズ 17枚・ポケモンのどうぐ 2枚・サポート 12枚・スタジアム 2枚・エネルギー 6枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="hibikinobakufun-r-sv9a-017" qty={4}>
+    <ul>
+        <li><strong>ワザ「バディブラスト」</strong>（炎・40＋）：自分のトラッシュにある「ヒビキの冒険」の枚数×60ダメージ追加。</li>
+        <li><strong>ワザ「ばくねつほう」</strong>（炎炎無・160）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="hibikinohinoarashi-c-sv9a-015" qty={4}>
+    <ul>
+        <li><strong>ワザ「ひのこ」</strong>（炎・30）：このポケモンについているエネルギーを1個選び、トラッシュする。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="hibikinomagumarashi-c-sv9a-016" qty={4}>
+    <ul>
+        <li><strong>特性「たびのきずな」</strong>：自分の番に1回使える。自分の山札から「ヒビキの冒険」を1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
+        <li><strong>ワザ「かえん」</strong>（炎・40）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="tsutsukera-c-m5-064" qty={2}>
+    <ul>
+        <li><strong>ワザ「にどづき」</strong>（無・10×）：コインを2回投げ、オモテの数×10ダメージ。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="hibikinobouken-u-sv9a-063" qty={4}>
+    <ul>
+        <li><strong>サポート</strong>：自分の山札から「ヒビキのポケモン」と「基本炎エネルギー」を合計3枚まで選び、相手に見せて、手札に加える。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="bureibubanguru-u-sv11w-082" qty={2}>
+    <ul>
+        <li><strong>ポケモンのどうぐ</strong>：このカードをつけているポケモン（「ルールを持つポケモン」をのぞく）が使うワザの、相手のバトル場の「ポケモンex」へのダメージは「+30」される。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

@@ -4,24 +4,144 @@
   ],
   "cards": [
     {
-      "id": "tosakinto-c-m5-012",
-      "name": "トサキント",
+      "id": "hibikinohinoarashi-c-sv9a-015",
+      "name": "ヒビキのヒノアラシ",
       "rarity": "C",
-      "cardNumber": "012/081",
-      "expansionCode": "M5",
-      "regulationMark": "J",
-      "deck": "dipplin-festival-lead-deck-1004",
-      "role": "ポケモン（公式カードID 50231）"
+      "cardNumber": "015/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "ethans-typhlosion-deck-1009",
+      "role": "ポケモン（公式カードID 47310）"
     },
     {
-      "id": "handotorima-u-sv5m-061",
-      "name": "ハンドトリマー",
+      "id": "hibikinomagumarashi-c-sv9a-016",
+      "name": "ヒビキのマグマラシ",
+      "rarity": "C",
+      "cardNumber": "016/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "ethans-typhlosion-deck-1009",
+      "role": "ポケモン（公式カードID 47311）"
+    },
+    {
+      "id": "hibikinobakufun-r-sv9a-017",
+      "name": "ヒビキのバクフーン",
+      "rarity": "R",
+      "cardNumber": "017/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "ethans-typhlosion-deck-1009",
+      "role": "ポケモン（公式カードID 47312）"
+    },
+    {
+      "id": "tsutsukera-c-m5-064",
+      "name": "ツツケラ",
+      "rarity": "C",
+      "cardNumber": "064/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "ethans-typhlosion-deck-1009",
+      "role": "ポケモン（公式カードID 50283）"
+    },
+    {
+      "id": "dodekabashi-u-m5-066",
+      "name": "ドデカバシ",
       "rarity": "U",
-      "cardNumber": "061/071",
-      "expansionCode": "SV5M",
+      "cardNumber": "066/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "ethans-typhlosion-deck-1009",
+      "role": "ポケモン（公式カードID 50285）"
+    },
+    {
+      "id": "bikuteini-u-sv8-012",
+      "name": "ビクティニ",
+      "rarity": "U",
+      "cardNumber": "012/106",
+      "expansionCode": "SV8",
       "regulationMark": "H",
-      "deck": "dipplin-festival-lead-deck-1004",
-      "role": "グッズ（公式カードID 45278）"
+      "deck": "ethans-typhlosion-deck-1009",
+      "role": "ポケモン（公式カードID 46352）"
+    },
+    {
+      "id": "hibikinobouken-u-sv9a-063",
+      "name": "ヒビキの冒険",
+      "rarity": "U",
+      "cardNumber": "063/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "ethans-typhlosion-deck-1009",
+      "role": "サポート（公式カードID 47358）"
+    },
+    {
+      "id": "matsubanokakushin-u-sv5k-069",
+      "name": "マツバの確信",
+      "rarity": "U",
+      "cardNumber": "069/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "ethans-typhlosion-deck-1009",
+      "role": "サポート（公式カードID 45215）"
+    },
+    {
+      "id": "shironanogaburiasuex-rr-sv9a-044",
+      "name": "シロナのガブリアスex",
+      "rarity": "RR",
+      "cardNumber": "044/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "cynthias-garchomp-ex-deck-1009",
+      "role": "ポケモン（公式カードID 47339）"
+    },
+    {
+      "id": "shironanomikaruge-u-sv9a-050",
+      "name": "シロナのミカルゲ",
+      "rarity": "U",
+      "cardNumber": "050/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "cynthias-garchomp-ex-deck-1009",
+      "role": "ポケモン（公式カードID 47345）"
+    },
+    {
+      "id": "masukanixya-r-sv9-012",
+      "name": "マスカーニャ",
+      "rarity": "R",
+      "cardNumber": "012/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "meowscarada-ex-deck-1008",
+      "role": "ポケモン（公式カードID 47020）"
+    },
+    {
+      "id": "rokettodannofuaiyaex-rr-sv10-015",
+      "name": "ロケット団のファイヤーex",
+      "rarity": "RR",
+      "cardNumber": "015/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "mega-absol-ex-deck-1008",
+      "role": "ポケモン（公式カードID 47408）"
+    },
+    {
+      "id": "ruriri-c-m6-054",
+      "name": "ルリリ",
+      "rarity": "C",
+      "cardNumber": "054/076",
+      "expansionCode": "M6",
+      "regulationMark": "J",
+      "deck": "mega-absol-ex-deck-1008",
+      "role": "ポケモン（公式カードID 50392）"
+    },
+    {
+      "id": "rokettodanenerugi-u-sv10-098",
+      "name": "ロケット団エネルギー",
+      "rarity": "U",
+      "cardNumber": "098/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "mega-absol-ex-deck-1008",
+      "role": "エネルギー（公式カードID 47491）"
     }
   ]
 }

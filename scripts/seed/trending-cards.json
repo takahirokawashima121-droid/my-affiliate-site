@@ -1,118 +1,148 @@
 {
   "_comment": [
-    "npm run sync-trending が 2026-10-05 08:18（JST）に自動生成。",
+    "npm run sync-trending が 2026-10-12 08:47（JST）に自動生成。",
     "出典: https://pokecabook.com/archives/category/deck-recipe（2ページ、現環境「30th CELEBRATION環境」200デッキ）の公式デッキコードを集計。版は公式カード検索のスタンダード絞り込みで選択。"
   ],
   "cards": [
     {
-      "id": "nixyaoha-mem-003",
-      "name": "ニャオハ",
-      "rarity": "-",
-      "cardNumber": "003/017",
-      "expansionCode": "MEM",
-      "regulationMark": "J",
-      "deck": "マスカーニャex",
-      "role": "採用 6デッキ（公式カードID 50454・再録弾のためマークは推定）"
-    },
-    {
-      "id": "nixyarote-mem-004",
-      "name": "ニャローテ",
-      "rarity": "-",
-      "cardNumber": "004/017",
-      "expansionCode": "MEM",
-      "regulationMark": "J",
-      "deck": "マスカーニャex",
-      "role": "採用 6デッキ（公式カードID 50455・再録弾のためマークは推定）"
-    },
-    {
-      "id": "masukanixyaiekkusu-mem-005",
-      "name": "マスカーニャex",
-      "rarity": "-",
-      "cardNumber": "005/017",
-      "expansionCode": "MEM",
-      "regulationMark": "J",
-      "deck": "マスカーニャex",
-      "role": "採用 6デッキ（公式カードID 50456・再録弾のためマークは推定）"
-    },
-    {
-      "id": "higananoshinrai-u-m6-069",
-      "name": "ヒガナの信頼",
+      "id": "rokettodanenerugi-u-sv10-098",
+      "name": "ロケット団エネルギー",
       "rarity": "U",
-      "cardNumber": "069/076",
+      "cardNumber": "098/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 6デッキ（公式カードID 47491）"
+    },
+    {
+      "id": "rokettodannoaporo-u-sv10-092",
+      "name": "ロケット団のアポロ",
+      "rarity": "U",
+      "cardNumber": "092/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 5デッキ（公式カードID 47485）"
+    },
+    {
+      "id": "erebu-c-m6-022",
+      "name": "エレブー",
+      "rarity": "C",
+      "cardNumber": "022/076",
       "expansionCode": "M6",
       "regulationMark": "J",
-      "deck": "マスカーニャex",
-      "role": "採用 4デッキ（公式カードID 50407）"
+      "deck": "エレキブル＋ブーバーン",
+      "role": "採用 4デッキ（公式カードID 50360）"
     },
     {
-      "id": "tsurizaomax-sv8a-142",
-      "name": "つりざおMAX",
-      "rarity": "-",
-      "cardNumber": "142/187",
-      "expansionCode": "SV8a",
-      "regulationMark": "H",
-      "deck": "10/3【土】ジムバトル優勝",
-      "role": "採用 4デッキ（公式カードID 46803・再録弾のためマークは推定）"
-    },
-    {
-      "id": "shironanofukamaru-c-sv9a-042",
-      "name": "シロナのフカマル",
-      "rarity": "C",
-      "cardNumber": "042/063",
-      "expansionCode": "SV9a",
-      "regulationMark": "I",
-      "deck": "9/29【火】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47337）"
-    },
-    {
-      "id": "shironanogabaito-c-sv9a-043",
-      "name": "シロナのガバイト",
-      "rarity": "C",
-      "cardNumber": "043/063",
-      "expansionCode": "SV9a",
-      "regulationMark": "I",
-      "deck": "9/29【火】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47338）"
-    },
-    {
-      "id": "shironanorozeria-c-sv9a-004",
-      "name": "シロナのロゼリア",
-      "rarity": "C",
-      "cardNumber": "004/063",
-      "expansionCode": "SV9a",
-      "regulationMark": "I",
-      "deck": "9/29【火】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47299）"
-    },
-    {
-      "id": "shironanorozureido-r-sv9a-005",
-      "name": "シロナのロズレイド",
-      "rarity": "R",
-      "cardNumber": "005/063",
-      "expansionCode": "SV9a",
-      "regulationMark": "I",
-      "deck": "9/29【火】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47300）"
-    },
-    {
-      "id": "shironanopawaueito-u-sv9a-060",
-      "name": "シロナのパワーウエイト",
+      "id": "erekiburu-u-m6-023",
+      "name": "エレキブル",
       "rarity": "U",
-      "cardNumber": "060/063",
-      "expansionCode": "SV9a",
-      "regulationMark": "I",
-      "deck": "9/29【火】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47355）"
+      "cardNumber": "023/076",
+      "expansionCode": "M6",
+      "regulationMark": "J",
+      "deck": "エレキブル＋ブーバーン",
+      "role": "採用 4デッキ（公式カードID 50361）"
     },
     {
-      "id": "ritchienerugi-sv7a-064",
-      "name": "リッチエネルギー",
+      "id": "hakkoushitei-u-sv9-098",
+      "name": "ハッコウシティ",
+      "rarity": "U",
+      "cardNumber": "098/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "エレキブル＋ブーバーン",
+      "role": "採用 4デッキ（公式カードID 47106）"
+    },
+    {
+      "id": "shironanomikaruge-u-sv9a-050",
+      "name": "シロナのミカルゲ",
+      "rarity": "U",
+      "cardNumber": "050/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "10/8【木】ジムバトル優勝",
+      "role": "採用 4デッキ（公式カードID 47345）"
+    },
+    {
+      "id": "densetsunosanchixyou-u-m6-073",
+      "name": "伝説の山頂",
+      "rarity": "U",
+      "cardNumber": "073/076",
+      "expansionCode": "M6",
+      "regulationMark": "J",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 4デッキ（公式カードID 50410）"
+    },
+    {
+      "id": "tsutsukera-c-m5-064",
+      "name": "ツツケラ",
+      "rarity": "C",
+      "cardNumber": "064/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 50283）"
+    },
+    {
+      "id": "dodekabashi-u-m5-066",
+      "name": "ドデカバシ",
+      "rarity": "U",
+      "cardNumber": "066/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 50285）"
+    },
+    {
+      "id": "pixyuru-u-m3-074",
+      "name": "ピュール",
+      "rarity": "U",
+      "cardNumber": "074/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 49707）"
+    },
+    {
+      "id": "rokettodannoyamikarasu-u-sv10-071",
+      "name": "ロケット団のヤミカラス",
+      "rarity": "U",
+      "cardNumber": "071/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47464）"
+    },
+    {
+      "id": "rokettodannodonkarasu-m2a-103",
+      "name": "ロケット団のドンカラス",
       "rarity": "-",
-      "cardNumber": "064/064",
-      "expansionCode": "SV7a",
-      "regulationMark": "H",
-      "deck": "9/30【水】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 46293）"
+      "cardNumber": "103/193",
+      "expansionCode": "M2a",
+      "regulationMark": "I",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 48625・再録弾のためマークは推定）"
+    },
+    {
+      "id": "rokettodannoporigon-c-sv10-081",
+      "name": "ロケット団のポリゴン",
+      "rarity": "C",
+      "cardNumber": "081/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47474）"
+    },
+    {
+      "id": "rokettodannoporigon2-c-sv10-082",
+      "name": "ロケット団のポリゴン2",
+      "rarity": "C",
+      "cardNumber": "082/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "10/10【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47475）"
     }
   ]
 }

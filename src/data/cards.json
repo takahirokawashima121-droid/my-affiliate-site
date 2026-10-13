@@ -10277,5 +10277,24 @@
     "yahooUpdatedAt": "2026-10-13T07:23:25+09:00",
     "buybackPrice": 720,
     "updatedAt": "2026-10-13T07:23:25+09:00"
+  },
+  {
+    "id": "rigure-c-sv11b-043",
+    "name": "リグレー",
+    "rarity": "C",
+    "cardNumber": "043/086",
+    "expansionCode": "SV11B",
+    "regulationMark": "I",
+    "imageUrl": "https://thumbnail.image.rakuten.co.jp/@0_mall/bamp/cabinet/trc33/trc152987.jpg?_ex=300x300",
+    "salePrice": 19,
+    "saleInStock": true,
+    "saleShop": "楽天市場",
+    "saleUrl": "https://af.moshimo.com/af/c/click?a_id=5821460&p_id=54&pc_id=54&pl_id=616&url=https%3A%2F%2Fitem.rakuten.co.jp%2Fbamp%2Ft_01k19z8tvcr9ec6cxm1406jbnr_1%2F",
+    "saleImpressionUrl": "https://i.moshimo.com/af/i/impression?a_id=5821460&p_id=54&pc_id=54&pl_id=616",
+    "yahooPrice": 19,
+    "yahooUrl": "https://af.moshimo.com/af/c/click?a_id=5821461&p_id=1225&pc_id=1925&pl_id=18502&url=https%3A%2F%2Fstore.shopping.yahoo.co.jp%2Fotakarajima%2Ftrc-01m3tx9zdmcj018pd7yx4405d0.html",
+    "yahooUpdatedAt": "2026-10-14T05:22:48+09:00",
+    "buybackPrice": 10,
+    "updatedAt": "2026-10-14T05:22:48+09:00"
   }
 ]

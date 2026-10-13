@@ -4,54 +4,14 @@
   ],
   "cards": [
     {
-      "id": "rejigigasu-sv8a-132",
-      "name": "レジギガス",
-      "rarity": "-",
-      "cardNumber": "132/187",
-      "expansionCode": "SV8a",
-      "regulationMark": "H",
-      "deck": "mega-venusaur-ex-deck-1012-regigigas",
-      "role": "ポケモン（公式カードID 46793・再録弾のためマークは推定）"
-    },
-    {
-      "id": "genosekuto-r-m2-008",
-      "name": "ゲノセクト",
-      "rarity": "R",
-      "cardNumber": "008/080",
-      "expansionCode": "M2",
+      "id": "rigure-c-sv11b-043",
+      "name": "リグレー",
+      "rarity": "C",
+      "cardNumber": "043/086",
+      "expansionCode": "SV11B",
       "regulationMark": "I",
-      "deck": "mega-venusaur-ex-deck-1012-regigigas",
-      "role": "ポケモン（公式カードID 48348）"
-    },
-    {
-      "id": "matsubanokakushin-u-sv5k-069",
-      "name": "マツバの確信",
-      "rarity": "U",
-      "cardNumber": "069/071",
-      "expansionCode": "SV5K",
-      "regulationMark": "H",
-      "deck": "mega-venusaur-ex-deck-1012-regigigas",
-      "role": "サポート（公式カードID 45215）"
-    },
-    {
-      "id": "reshiramuex-rr-sv11w-017",
-      "name": "レシラムex",
-      "rarity": "RR",
-      "cardNumber": "017/086",
-      "expansionCode": "SV11W",
-      "regulationMark": "I",
-      "deck": "mega-kangaskhan-ex-deck-1012-mega-rayquaza-ex",
-      "role": "ポケモン（公式カードID 47639）"
-    },
-    {
-      "id": "rioru-svm-064",
-      "name": "リオル",
-      "rarity": "-",
-      "cardNumber": "064/175",
-      "expansionCode": "SVM",
-      "regulationMark": "H",
-      "deck": "mega-lucario-ex-deck-1012-dudunsparce-ex",
-      "role": "ポケモン（公式カードID 46518・再録弾のためマークは推定）"
+      "deck": "mega-gardevoir-ex-deck-1012-mew-ex",
+      "role": "ポケモン（公式カードID 47579）"
     }
   ]
 }

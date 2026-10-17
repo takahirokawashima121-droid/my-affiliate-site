@@ -4,14 +4,14 @@
   ],
   "cards": [
     {
-      "id": "rigure-c-sv11b-043",
-      "name": "リグレー",
-      "rarity": "C",
-      "cardNumber": "043/086",
-      "expansionCode": "SV11B",
+      "id": "rioru-mc-379",
+      "name": "リオル",
+      "rarity": "-",
+      "cardNumber": "379/742",
+      "expansionCode": "MC",
       "regulationMark": "I",
-      "deck": "mega-gardevoir-ex-deck-1012-mew-ex",
-      "role": "ポケモン（公式カードID 47579）"
+      "deck": "mega-lucario-ex-deck-1017-dunsparce",
+      "role": "ポケモン（公式カードID 49095・再録弾のためマークは推定）"
     }
   ]
 }

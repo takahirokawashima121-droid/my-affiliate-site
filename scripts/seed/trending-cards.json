@@ -1,148 +1,38 @@
 {
   "_comment": [
-    "npm run sync-trending が 2026-10-12 08:47（JST）に自動生成。",
+    "npm run sync-trending が 2026-10-19 07:30（JST）に自動生成。",
     "出典: https://pokecabook.com/archives/category/deck-recipe（2ページ、現環境「30th CELEBRATION環境」200デッキ）の公式デッキコードを集計。版は公式カード検索のスタンダード絞り込みで選択。"
   ],
   "cards": [
     {
-      "id": "rokettodanenerugi-u-sv10-098",
-      "name": "ロケット団エネルギー",
-      "rarity": "U",
-      "cardNumber": "098/098",
-      "expansionCode": "SV10",
-      "regulationMark": "I",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 6デッキ（公式カードID 47491）"
-    },
-    {
-      "id": "rokettodannoaporo-u-sv10-092",
-      "name": "ロケット団のアポロ",
-      "rarity": "U",
-      "cardNumber": "092/098",
-      "expansionCode": "SV10",
-      "regulationMark": "I",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 5デッキ（公式カードID 47485）"
-    },
-    {
-      "id": "erebu-c-m6-022",
-      "name": "エレブー",
+      "id": "kasuminokoikingu-c-sv9a-025",
+      "name": "カスミのコイキング",
       "rarity": "C",
-      "cardNumber": "022/076",
-      "expansionCode": "M6",
-      "regulationMark": "J",
-      "deck": "エレキブル＋ブーバーン",
-      "role": "採用 4デッキ（公式カードID 50360）"
-    },
-    {
-      "id": "erekiburu-u-m6-023",
-      "name": "エレキブル",
-      "rarity": "U",
-      "cardNumber": "023/076",
-      "expansionCode": "M6",
-      "regulationMark": "J",
-      "deck": "エレキブル＋ブーバーン",
-      "role": "採用 4デッキ（公式カードID 50361）"
-    },
-    {
-      "id": "hakkoushitei-u-sv9-098",
-      "name": "ハッコウシティ",
-      "rarity": "U",
-      "cardNumber": "098/100",
-      "expansionCode": "SV9",
-      "regulationMark": "I",
-      "deck": "エレキブル＋ブーバーン",
-      "role": "採用 4デッキ（公式カードID 47106）"
-    },
-    {
-      "id": "shironanomikaruge-u-sv9a-050",
-      "name": "シロナのミカルゲ",
-      "rarity": "U",
-      "cardNumber": "050/063",
+      "cardNumber": "025/063",
       "expansionCode": "SV9a",
       "regulationMark": "I",
-      "deck": "10/8【木】ジムバトル優勝",
-      "role": "採用 4デッキ（公式カードID 47345）"
+      "deck": "ぷにぷにサークル",
+      "role": "採用 1デッキ（公式カードID 47320）"
     },
     {
-      "id": "densetsunosanchixyou-u-m6-073",
-      "name": "伝説の山頂",
-      "rarity": "U",
-      "cardNumber": "073/076",
-      "expansionCode": "M6",
-      "regulationMark": "J",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 4デッキ（公式カードID 50410）"
-    },
-    {
-      "id": "tsutsukera-c-m5-064",
-      "name": "ツツケラ",
-      "rarity": "C",
-      "cardNumber": "064/081",
-      "expansionCode": "M5",
-      "regulationMark": "J",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 50283）"
-    },
-    {
-      "id": "dodekabashi-u-m5-066",
-      "name": "ドデカバシ",
-      "rarity": "U",
-      "cardNumber": "066/081",
-      "expansionCode": "M5",
-      "regulationMark": "J",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 50285）"
-    },
-    {
-      "id": "pixyuru-u-m3-074",
-      "name": "ピュール",
-      "rarity": "U",
-      "cardNumber": "074/080",
-      "expansionCode": "M3",
-      "regulationMark": "J",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 49707）"
-    },
-    {
-      "id": "rokettodannoyamikarasu-u-sv10-071",
-      "name": "ロケット団のヤミカラス",
-      "rarity": "U",
-      "cardNumber": "071/098",
-      "expansionCode": "SV10",
-      "regulationMark": "I",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47464）"
-    },
-    {
-      "id": "rokettodannodonkarasu-m2a-103",
-      "name": "ロケット団のドンカラス",
+      "id": "ibui-m6a-094",
+      "name": "イーブイ",
       "rarity": "-",
-      "cardNumber": "103/193",
-      "expansionCode": "M2a",
-      "regulationMark": "I",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 48625・再録弾のためマークは推定）"
+      "cardNumber": "094/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "30th CELEBRATION",
+      "role": "採用 4デッキ（公式カードID 50706・再録弾のためマークは推定）"
     },
     {
-      "id": "rokettodannoporigon-c-sv10-081",
-      "name": "ロケット団のポリゴン",
-      "rarity": "C",
-      "cardNumber": "081/098",
-      "expansionCode": "SV10",
-      "regulationMark": "I",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47474）"
-    },
-    {
-      "id": "rokettodannoporigon2-c-sv10-082",
-      "name": "ロケット団のポリゴン2",
-      "rarity": "C",
-      "cardNumber": "082/098",
-      "expansionCode": "SV10",
-      "regulationMark": "I",
-      "deck": "10/10【土】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47475）"
+      "id": "ritoraibajji-u-m5-074",
+      "name": "リトライバッジ",
+      "rarity": "U",
+      "cardNumber": "074/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "イッカネズミ",
+      "role": "採用 3デッキ（公式カードID 50293）"
     }
   ]
 }

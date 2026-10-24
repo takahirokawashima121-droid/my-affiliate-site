@@ -4,14 +4,24 @@
   ],
   "cards": [
     {
-      "id": "rioru-mc-379",
-      "name": "リオル",
-      "rarity": "-",
-      "cardNumber": "379/742",
-      "expansionCode": "MC",
+      "id": "mariinoorongeex-sar-m2a-243",
+      "name": "マリィのオーロンゲex",
+      "rarity": "SAR",
+      "cardNumber": "243/193",
+      "expansionCode": "M2a",
       "regulationMark": "I",
-      "deck": "mega-lucario-ex-deck-1017-dunsparce",
-      "role": "ポケモン（公式カードID 49095・再録弾のためマークは推定）"
+      "deck": "marnies-grimmsnarl-ex-deck-1020",
+      "role": "ポケモン（公式カードID 50003・再録弾のためマークは推定）"
+    },
+    {
+      "id": "yukimenoko-r-sv6-033",
+      "name": "ユキメノコ",
+      "rarity": "R",
+      "cardNumber": "033/101",
+      "expansionCode": "SV6",
+      "regulationMark": "H",
+      "deck": "marnies-grimmsnarl-ex-deck-1020",
+      "role": "ポケモン（公式カードID 45724）"
     }
   ]
 }

@@ -1,0 +1,70 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-10-25 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="flareon-ex-deck-1023">
+  <p>
+    10/23 ジムバトル優勝の<strong>ブースターexデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 22枚・グッズ 16枚・ポケモンのどうぐ 1枚・サポート 7枚・スタジアム 3枚・エネルギー 11枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="busutaex-rr-sv8a-022" qty={2}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>ワザ「バーニングチャージ」</strong>（炎無・130）：自分の山札から基本エネルギーを2枚まで選び、自分のポケモン1匹につける。そして山札を切る。</li>
+        <li><strong>ワザ「カーネリアン」</strong>（炎水雷・280）：次の自分の番、このポケモンはワザが使えない。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="ibuiex-rr-sv8a-126" qty={1}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>特性「にじいろDNA」</strong>：このポケモンは、「イーブイ」から進化する「ポケモンex」を手札から出して、このポケモンにのせて進化できる。（最初の自分の番や、出したばかりの番には進化できない。）</li>
+        <li><strong>ワザ「クォーツシャイン」</strong>（炎水雷・200）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="rifuiaex-rr-sv8a-003" qty={1}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>ワザ「あおばのあらし」</strong>（草無・60×）：相手のポケモン全員についているエネルギーの数×60ダメージ。</li>
+        <li><strong>ワザ「モスアゲート」</strong>（草炎水・230）：自分のベンチポケモン全員のHPを、それぞれ「100」回復する。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="ogerpon-wellspring-ex-rr-sv6-038" qty={1}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>ワザ「すすりなく」</strong>（無・20）：次の相手の番、このワザを受けたポケモンは、にげられない。</li>
+        <li><strong>ワザ「げきりゅうポンプ」</strong>（水無無・100）：のぞむなら、このポケモンについているエネルギーを3個選び、山札にもどして切る。その場合、相手のベンチポケモン1匹にも、120ダメージ。［ベンチは弱点・抵抗力を計算しない。］</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="crispin-u-sv7-097" qty={2}>
+    <ul>
+        <li><strong>サポート</strong>：自分の山札から、それぞれちがうタイプの基本エネルギーを2枚まで選び、相手に見せて、どちらか1枚を手札に加え、残りのエネルギーを自分のポケモンにつける。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="area-zero-underdepths-u-sv7-102" qty={2}>
+    <ul>
+        <li><strong>スタジアム</strong>：自分の場に「テラスタル」のポケモンがいるプレイヤーが、ベンチに出せるポケモンの数は8匹になる。（このカードがトラッシュされたときか、自分の場に「テラスタル」のポケモンがいなくなったとき、ベンチが5匹になるまでトラッシュする。おたがいにトラッシュするなら、このカードの持ち主から行う。）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

@@ -1,0 +1,52 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-10-31 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="pikachu-ex-deck-1029">
+  <p>
+    10/29 ジムバトル優勝の<strong>ピカチュウexデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 17枚・グッズ 15枚・ポケモンのどうぐ 5枚・サポート 9枚・スタジアム 3枚・エネルギー 11枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="pikachu-ex-rr-sv8-033" qty={2}>
+    <ul>
+        <li><strong>ルール</strong>：このポケモンは、ベンチにいるかぎり、ワザのダメージを受けない。</li>
+        <li><strong>特性「がんばりハート」</strong>：このポケモンのHPがまんたんの状態で、このポケモンがワザのダメージを受けてきぜつするとき、きぜつせず、残りHPが「10」の状態で場に残る。</li>
+        <li><strong>ワザ「トパーズボルト」</strong>（草雷鋼・300）：このポケモンについているエネルギーを3個選び、トラッシュする。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="pikachixyuu-m6a-028" qty={4}>
+    <ul>
+        <li><strong>ワザ「ピカれんさ」</strong>（雷雷雷・40×）：自分の場の「ピカチュウ（『ポケモンex』をふくむ）」の数×40ダメージ。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="area-zero-underdepths-u-sv7-102" qty={3}>
+    <ul>
+        <li><strong>スタジアム</strong>：自分の場に「テラスタル」のポケモンがいるプレイヤーが、ベンチに出せるポケモンの数は8匹になる。（このカードがトラッシュされたときか、自分の場に「テラスタル」のポケモンがいなくなったとき、ベンチが5匹になるまでトラッシュする。おたがいにトラッシュするなら、このカードの持ち主から行う。）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="fuusen-u-sv11b-082" qty={2}>
+    <ul>
+        <li><strong>ポケモンのどうぐ</strong>：このカードをつけているポケモンは、にげるためのエネルギーが2個ぶん少なくなる。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

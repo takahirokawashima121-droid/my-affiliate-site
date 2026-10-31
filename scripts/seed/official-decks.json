@@ -4,14 +4,104 @@
   ],
   "cards": [
     {
-      "id": "rioru-mc-379",
-      "name": "リオル",
-      "rarity": "-",
-      "cardNumber": "379/742",
-      "expansionCode": "MC",
+      "id": "baketchixya-c-m4-040",
+      "name": "バケッチャ",
+      "rarity": "C",
+      "cardNumber": "040/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "gourgeist-ex-deck-1030",
+      "role": "ポケモン（公式カードID 50124）"
+    },
+    {
+      "id": "panpujinex-rr-m4-041",
+      "name": "パンプジンex",
+      "rarity": "RR",
+      "cardNumber": "041/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "gourgeist-ex-deck-1030",
+      "role": "ポケモン（公式カードID 50125）"
+    },
+    {
+      "id": "deokishisu-u-m4-033",
+      "name": "デオキシス",
+      "rarity": "U",
+      "cardNumber": "033/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "gourgeist-ex-deck-1030",
+      "role": "ポケモン（公式カードID 50117）"
+    },
+    {
+      "id": "nanjixyamonozupika-c-sv9-029",
+      "name": "ナンジャモのズピカ",
+      "rarity": "C",
+      "cardNumber": "029/100",
+      "expansionCode": "SV9",
       "regulationMark": "I",
-      "deck": "mega-lucario-ex-deck-1017-dunsparce",
-      "role": "ポケモン（公式カードID 49095・再録弾のためマークは推定）"
+      "deck": "ionos-bellibolt-ex-deck-1030",
+      "role": "ポケモン（公式カードID 47037）"
+    },
+    {
+      "id": "nanjixyamonobiriridama-c-sv9-026",
+      "name": "ナンジャモのビリリダマ",
+      "rarity": "C",
+      "cardNumber": "026/100",
+      "expansionCode": "SV9",
+      "regulationMark": "I",
+      "deck": "ionos-bellibolt-ex-deck-1030",
+      "role": "ポケモン（公式カードID 47034）"
+    },
+    {
+      "id": "jixyurarudon-c-sv7-072",
+      "name": "ジュラルドン",
+      "rarity": "C",
+      "cardNumber": "072/102",
+      "expansionCode": "SV7",
+      "regulationMark": "H",
+      "deck": "archaludon-ex-deck-1030",
+      "role": "ポケモン（公式カードID 46011）"
+    },
+    {
+      "id": "jiransu-r-sv5k-034",
+      "name": "ジーランス",
+      "rarity": "R",
+      "cardNumber": "034/071",
+      "expansionCode": "SV5K",
+      "regulationMark": "H",
+      "deck": "archaludon-ex-deck-1030",
+      "role": "ポケモン（公式カードID 45180）"
+    },
+    {
+      "id": "pikachixyuu-m6a-028",
+      "name": "ピカチュウ",
+      "rarity": "-",
+      "cardNumber": "028/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "pikachu-ex-deck-1029",
+      "role": "ポケモン（公式カードID 50640・再録弾のためマークは推定）"
+    },
+    {
+      "id": "pikachixyuuiekkusu-rr-m6a-048",
+      "name": "ピカチュウex",
+      "rarity": "RR",
+      "cardNumber": "048/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "pikachu-ex-deck-1029",
+      "role": "ポケモン（公式カードID 50660・再録弾のためマークは推定）"
+    },
+    {
+      "id": "pikachixyuuiekkusu-rr-m6a-047",
+      "name": "ピカチュウex",
+      "rarity": "RR",
+      "cardNumber": "047/103",
+      "expansionCode": "M6a",
+      "regulationMark": "J",
+      "deck": "pikachu-ex-deck-1029",
+      "role": "ポケモン（公式カードID 50659・再録弾のためマークは推定）"
     }
   ]
 }

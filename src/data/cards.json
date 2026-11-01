@@ -10904,5 +10904,24 @@
     "yahooUpdatedAt": "2026-10-26T07:39:42+09:00",
     "buybackPrice": 40,
     "updatedAt": "2026-10-26T07:39:42+09:00"
+  },
+  {
+    "id": "supaikuenerugi-u-sv9-100",
+    "name": "スパイクエネルギー",
+    "rarity": "U",
+    "cardNumber": "100/100",
+    "expansionCode": "SV9",
+    "regulationMark": "I",
+    "imageUrl": "https://item-shopping.c.yimg.jp/i/j/furiiaiyk_pcene210",
+    "salePrice": 80,
+    "saleInStock": true,
+    "saleShop": "楽天市場",
+    "saleUrl": "https://af.moshimo.com/af/c/click?a_id=5821460&p_id=54&pc_id=54&pl_id=616&url=https%3A%2F%2Fitem.rakuten.co.jp%2Fiimoreuse%2F18288%2F",
+    "saleImpressionUrl": "https://i.moshimo.com/af/i/impression?a_id=5821460&p_id=54&pc_id=54&pl_id=616",
+    "yahooPrice": 10,
+    "yahooUrl": "https://af.moshimo.com/af/c/click?a_id=5821461&p_id=1225&pc_id=1925&pl_id=18502&url=https%3A%2F%2Fstore.shopping.yahoo.co.jp%2Ffuriiaiyk%2Fpcene210.html",
+    "yahooUpdatedAt": "2026-11-02T08:41:28+09:00",
+    "buybackPrice": 0,
+    "updatedAt": "2026-11-02T08:41:28+09:00"
   }
 ]

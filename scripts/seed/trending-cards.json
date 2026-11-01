@@ -1,68 +1,18 @@
 {
   "_comment": [
-    "npm run sync-trending が 2026-10-26 07:39（JST）に自動生成。",
+    "npm run sync-trending が 2026-11-02 08:41（JST）に自動生成。",
     "出典: https://pokecabook.com/archives/category/deck-recipe（2ページ、現環境「30th CELEBRATION環境」200デッキ）の公式デッキコードを集計。版は公式カード検索のスタンダード絞り込みで選択。"
   ],
   "cards": [
     {
-      "id": "ruriri-c-m6-054",
-      "name": "ルリリ",
-      "rarity": "C",
-      "cardNumber": "054/076",
-      "expansionCode": "M6",
-      "regulationMark": "J",
-      "deck": "10/25【日】ジムバトル優勝",
-      "role": "採用 6デッキ（公式カードID 50392）"
-    },
-    {
-      "id": "girateina-r-m6-031",
-      "name": "ギラティナ",
-      "rarity": "R",
-      "cardNumber": "031/076",
-      "expansionCode": "M6",
-      "regulationMark": "J",
-      "deck": "ミュウex",
-      "role": "採用 3デッキ（公式カードID 50369）"
-    },
-    {
-      "id": "rifuiaex-rr-sv8a-003",
-      "name": "リーフィアex",
-      "rarity": "RR",
-      "cardNumber": "003/187",
-      "expansionCode": "SV8a",
-      "regulationMark": "H",
-      "deck": "10/23【金】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 46664・再録弾のためマークは推定）"
-    },
-    {
-      "id": "kixyuwawa-c-sv7-042",
-      "name": "キュワワー",
-      "rarity": "C",
-      "cardNumber": "042/102",
-      "expansionCode": "SV7",
-      "regulationMark": "H",
-      "deck": "イッカネズミ",
-      "role": "採用 3デッキ（公式カードID 45981）"
-    },
-    {
-      "id": "bashixyamo-r-sv10-020",
-      "name": "バシャーモ",
-      "rarity": "R",
-      "cardNumber": "020/098",
-      "expansionCode": "SV10",
+      "id": "supaikuenerugi-u-sv9-100",
+      "name": "スパイクエネルギー",
+      "rarity": "U",
+      "cardNumber": "100/100",
+      "expansionCode": "SV9",
       "regulationMark": "I",
-      "deck": "30th CELEBRATION",
-      "role": "採用 3デッキ（公式カードID 47413）"
-    },
-    {
-      "id": "yukimenoko-r-sv6-033",
-      "name": "ユキメノコ",
-      "rarity": "R",
-      "cardNumber": "033/101",
-      "expansionCode": "SV6",
-      "regulationMark": "H",
-      "deck": "10/23【金】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 45724）"
+      "deck": "10/30【金】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47108）"
     }
   ]
 }

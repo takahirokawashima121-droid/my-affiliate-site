@@ -1,0 +1,65 @@
+---
+// このページは scripts/auto-deck-updater.js が 2026-11-07 に自動生成しました（出典: 公式デッキコード）。
+// 立ち回り（序盤・中盤・終盤）は自動生成済み（deck-columns.json の gamePlan）。公開前に「代替カード・カスタマイズ案」を追記してください（TODO の箇所）。
+import DeckColumn from '../../layouts/DeckColumn.astro';
+import CardLink from '../../components/CardLink.astro';
+import KeyCardEffect from '../../components/KeyCardEffect.astro';
+---
+
+<DeckColumn slug="team-rockets-honchkrow-deck-1105">
+  <p>
+    11/5 ジムバトル優勝の<strong>ロケット団のドンカラスデッキ</strong>を、公式のデッキコードから60枚そのまま紹介します。採用カードの効果と、同じ効果で最もレアリティの低い版の最安値をまとめました。記事の下に、採用カード全種の最安値つきレシピ表を掲載しています。
+  </p>
+
+  <h2>デッキの構成</h2>
+  <p>ポケモン 12枚・グッズ 16枚・サポート 20枚・スタジアム 4枚・エネルギー 8枚（合計60枚）。</p>
+
+  <h2>主力カードの効果</h2>
+  <p>効果は公式のカードテキストから引用しています。カード名をタップすると、そのカードの最安値・買取相場ページへ移動します。</p>
+  <KeyCardEffect id="rokettodannodonkarasu-m2a-103" qty={3}>
+    <ul>
+        <li><strong>ワザ「ロケットフェザー」</strong>（無無・60×）：自分の手札から、名前に「ロケット団」とつくサポートを好きなだけトラッシュし、その枚数×60ダメージ。</li>
+        <li><strong>ワザ「ぶちかます」</strong>（悪無無・100）</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="rokettodannoyamikarasu-u-sv10-071" qty={4}>
+    <ul>
+        <li><strong>ワザ「たぶらかす」</strong>（無）：自分の山札からサポートを1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
+        <li><strong>ワザ「いちゃもん」</strong>（悪無・30）：相手のバトルポケモンが持つワザを1つ選ぶ。次の相手の番、このワザを受けたポケモンは、選ばれたワザが使えない。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="rokettodannoporigon-c-sv10-081" qty={2}>
+    <ul>
+        <li><strong>ワザ「ハッキング」</strong>（無）：自分の手札を1枚選び、トラッシュする。その後、相手は相手自身の手札を1枚選び、トラッシュする。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="rokettodannofuriza-r-sv10-022" qty={2}>
+    <ul>
+        <li><strong>特性「レジストヴェール」</strong>：このポケモンがいるかぎり、自分の場のたねポケモンの「ロケット団のポケモン」全員は、相手のポケモンが使うワザの効果を受けない。（すでに受けている効果は、なくならない。）</li>
+        <li><strong>ワザ「ダークフロスト」</strong>（水無無・60＋）：このポケモンに「ロケット団エネルギー」がついているなら、60ダメージ追加。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="rokettodannoreshiba-u-sv10-090" qty={4}>
+    <ul>
+        <li><strong>グッズ</strong>：自分の山札から、名前に「ロケット団」とつくサポートを1枚選び、相手に見せて、手札に加える。そして山札を切る。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <KeyCardEffect id="rokettodannoatena-u-sv10-091" qty={4}>
+    <ul>
+        <li><strong>サポート</strong>：自分の手札が5枚になるように、山札を引く。自分の場のポケモン全員が「ロケット団のポケモン」なら、8枚になるように引く。</li>
+    </ul>
+  </KeyCardEffect>
+
+  <Fragment slot="custom">
+    <h3>予算を抑えるなら：同じ効果の安い版を選ぶ</h3>
+    <p>
+      レシピ表のカードは、すべて<strong>効果が同じ版の中で最もレアリティの低い版</strong>にリンクしています。SAR などの高レアリティ版と効果は同じなので、対戦用にはこの版で十分です。価格の高いカードは、楽天市場・Yahoo!ショッピングの両方の価格を確認してから購入しましょう。
+    </p>
+    {/* TODO: 代替カード・カスタマイズ案を追記する */}
+  </Fragment>
+</DeckColumn>

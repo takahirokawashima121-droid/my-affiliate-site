@@ -4,14 +4,24 @@
   ],
   "cards": [
     {
-      "id": "rioru-mc-379",
-      "name": "リオル",
-      "rarity": "-",
-      "cardNumber": "379/742",
-      "expansionCode": "MC",
+      "id": "hibikinousokki-c-sv9a-041",
+      "name": "ヒビキのウソッキー",
+      "rarity": "C",
+      "cardNumber": "041/063",
+      "expansionCode": "SV9a",
       "regulationMark": "I",
-      "deck": "mega-lucario-ex-deck-1017-dunsparce",
-      "role": "ポケモン（公式カードID 49095・再録弾のためマークは推定）"
+      "deck": "mega-lucario-ex-deck-1106",
+      "role": "ポケモン（公式カードID 47336）"
+    },
+    {
+      "id": "genosekuto-u-sv6a-040",
+      "name": "ゲノセクト",
+      "rarity": "U",
+      "cardNumber": "040/064",
+      "expansionCode": "SV6a",
+      "regulationMark": "H",
+      "deck": "lillies-clefairy-ex-deck-1105-alakazam",
+      "role": "ポケモン（公式カードID 45915）"
     }
   ]
 }

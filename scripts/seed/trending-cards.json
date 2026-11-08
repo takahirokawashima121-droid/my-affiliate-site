@@ -1,18 +1,78 @@
 {
   "_comment": [
-    "npm run sync-trending が 2026-11-02 08:41（JST）に自動生成。",
+    "npm run sync-trending が 2026-11-09 08:48（JST）に自動生成。",
     "出典: https://pokecabook.com/archives/category/deck-recipe（2ページ、現環境「30th CELEBRATION環境」200デッキ）の公式デッキコードを集計。版は公式カード検索のスタンダード絞り込みで選択。"
   ],
   "cards": [
     {
-      "id": "supaikuenerugi-u-sv9-100",
-      "name": "スパイクエネルギー",
+      "id": "sabiguminoshitappa-u-m5-077",
+      "name": "サビ組のしたっぱ",
       "rarity": "U",
-      "cardNumber": "100/100",
-      "expansionCode": "SV9",
+      "cardNumber": "077/081",
+      "expansionCode": "M5",
+      "regulationMark": "J",
+      "deck": "11/7【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 50296）"
+    },
+    {
+      "id": "enehataki-u-m3-067",
+      "name": "エネはたき",
+      "rarity": "U",
+      "cardNumber": "067/080",
+      "expansionCode": "M3",
+      "regulationMark": "J",
+      "deck": "ぷにぷにサークル",
+      "role": "採用 1デッキ（公式カードID 49700）"
+    },
+    {
+      "id": "deokishisu-u-m4-032",
+      "name": "デオキシス",
+      "rarity": "U",
+      "cardNumber": "032/083",
+      "expansionCode": "M4",
+      "regulationMark": "J",
+      "deck": "11/8【日】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 50116）"
+    },
+    {
+      "id": "ishizumai-c-sv9a-007",
+      "name": "イシズマイ",
+      "rarity": "C",
+      "cardNumber": "007/063",
+      "expansionCode": "SV9a",
       "regulationMark": "I",
-      "deck": "10/30【金】ジムバトル優勝",
-      "role": "採用 3デッキ（公式カードID 47108）"
+      "deck": "11/7【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47302）"
+    },
+    {
+      "id": "iwaparesu-r-sv9a-008",
+      "name": "イワパレス",
+      "rarity": "R",
+      "cardNumber": "008/063",
+      "expansionCode": "SV9a",
+      "regulationMark": "I",
+      "deck": "11/7【土】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 47303）"
+    },
+    {
+      "id": "gobitto-c-m6-032",
+      "name": "ゴビット",
+      "rarity": "C",
+      "cardNumber": "032/076",
+      "expansionCode": "M6",
+      "regulationMark": "J",
+      "deck": "11/6【金】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 50370）"
+    },
+    {
+      "id": "mgoruguiekkusu-rr-m6-033",
+      "name": "メガゴルーグex",
+      "rarity": "RR",
+      "cardNumber": "033/076",
+      "expansionCode": "M6",
+      "regulationMark": "J",
+      "deck": "11/6【金】ジムバトル優勝",
+      "role": "採用 3デッキ（公式カードID 50371）"
     }
   ]
 }

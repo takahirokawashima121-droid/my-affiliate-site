@@ -4,14 +4,34 @@
   ],
   "cards": [
     {
-      "id": "rioru-mc-379",
-      "name": "リオル",
-      "rarity": "-",
-      "cardNumber": "379/742",
-      "expansionCode": "MC",
-      "regulationMark": "I",
-      "deck": "mega-lucario-ex-deck-1017-dunsparce",
-      "role": "ポケモン（公式カードID 49095・再録弾のためマークは推定）"
+      "id": "namiiruka-c-sv6-034",
+      "name": "ナミイルカ",
+      "rarity": "C",
+      "cardNumber": "034/101",
+      "expansionCode": "SV6",
+      "regulationMark": "H",
+      "deck": "mega-starmie-ex-deck-1112-palafin-ex",
+      "role": "ポケモン（公式カードID 45725）"
+    },
+    {
+      "id": "irukaman-u-sv6-035",
+      "name": "イルカマン",
+      "rarity": "U",
+      "cardNumber": "035/101",
+      "expansionCode": "SV6",
+      "regulationMark": "H",
+      "deck": "mega-starmie-ex-deck-1112-palafin-ex",
+      "role": "ポケモン（公式カードID 45726）"
+    },
+    {
+      "id": "irukamanex-rr-sv6-036",
+      "name": "イルカマンex",
+      "rarity": "RR",
+      "cardNumber": "036/101",
+      "expansionCode": "SV6",
+      "regulationMark": "H",
+      "deck": "mega-starmie-ex-deck-1112-palafin-ex",
+      "role": "ポケモン（公式カードID 45727）"
     }
   ]
 }

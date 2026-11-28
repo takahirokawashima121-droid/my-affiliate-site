@@ -4,14 +4,24 @@
   ],
   "cards": [
     {
-      "id": "rioru-mc-379",
-      "name": "リオル",
-      "rarity": "-",
-      "cardNumber": "379/742",
-      "expansionCode": "MC",
+      "id": "orinixyo-c-sv10-011",
+      "name": "オリーニョ",
+      "rarity": "C",
+      "cardNumber": "011/098",
+      "expansionCode": "SV10",
       "regulationMark": "I",
-      "deck": "mega-lucario-ex-deck-1017-dunsparce",
-      "role": "ポケモン（公式カードID 49095・再録弾のためマークは推定）"
+      "deck": "arboliva-ex-deck-1115",
+      "role": "ポケモン（公式カードID 47404）"
+    },
+    {
+      "id": "minibu-c-sv10-010",
+      "name": "ミニーブ",
+      "rarity": "C",
+      "cardNumber": "010/098",
+      "expansionCode": "SV10",
+      "regulationMark": "I",
+      "deck": "arboliva-ex-deck-1115",
+      "role": "ポケモン（公式カードID 47403）"
     }
   ]
 }
